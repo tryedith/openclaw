@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getDigitalOceanClient } from "@/lib/digitalocean/client";
+import { getECSClient } from "@/lib/aws/ecs-client";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
@@ -79,7 +79,7 @@ export async function POST() {
   const gatewayToken = crypto.randomBytes(32).toString("hex");
   console.log("[instances] POST - Generated gateway token");
 
-  // Create instance record first (status: pending)
+  // Create instance record first (status: provisioning)
   console.log("[instances] POST - Creating Supabase record...");
   const { data: instance, error: insertError } = await supabase
     .from("instances")
@@ -87,6 +87,7 @@ export async function POST() {
       user_id: user.id,
       name: "default",
       status: "provisioning",
+      provider: "aws",
       gateway_token_encrypted: gatewayToken, // TODO: encrypt in production
     })
     .select()
@@ -101,33 +102,34 @@ export async function POST() {
   }
   console.log("[instances] POST - Supabase record created:", instance.id);
 
-  // Provision container on DigitalOcean App Platform
+  // Provision container on AWS ECS
   try {
-    console.log("[instances] POST - Getting DO client...");
-    const doClient = getDigitalOceanClient();
-
-    // Get the platform Anthropic API key (we provide Claude access)
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
     if (!anthropicApiKey) {
       throw new Error("ANTHROPIC_API_KEY not configured");
     }
     console.log("[instances] POST - Anthropic key found");
 
-    console.log("[instances] POST - Calling DO App Platform API...");
-    const { appId, url } = await doClient.createApp({
+    console.log("[instances] POST - Provisioning on AWS ECS...");
+    const ecsClient = getECSClient();
+
+    const { serviceArn, targetGroupArn, ruleArn, url } = await ecsClient.createInstance({
       userId: user.id,
       instanceId: instance.id,
       gatewayToken,
       anthropicApiKey,
     });
-    console.log("[instances] POST - DO App created:", { appId, url });
+    console.log("[instances] POST - ECS Service created:", { serviceArn, url });
 
-    // Update instance with DO app details
-    console.log("[instances] POST - Updating Supabase with DO details...");
+    // Update instance with AWS details
+    console.log("[instances] POST - Updating Supabase with AWS details...");
     await supabase
       .from("instances")
       .update({
-        do_app_id: appId,
+        provider_resource_id: serviceArn,
+        aws_service_arn: serviceArn,
+        aws_target_group_arn: targetGroupArn,
+        aws_rule_arn: ruleArn,
         public_url: url,
         status: "provisioning",
       })
@@ -140,9 +142,8 @@ export async function POST() {
       message: "Instance is being created. This may take 2-3 minutes.",
     });
   } catch (error) {
-    console.error("[instances] POST - DO provisioning error:", error);
+    console.error("[instances] POST - Provisioning error:", error);
 
-    // Update instance status to error
     const errorMsg = error instanceof Error ? error.message : "Unknown error";
     await supabase
       .from("instances")

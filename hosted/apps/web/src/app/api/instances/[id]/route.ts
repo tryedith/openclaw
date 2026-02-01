@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getDigitalOceanClient } from "@/lib/digitalocean/client";
+import { getECSClient } from "@/lib/aws/ecs-client";
 import { NextResponse } from "next/server";
 
 // DELETE /api/instances/[id] - Delete an instance
@@ -32,15 +32,20 @@ export async function DELETE(
     return NextResponse.json({ error: "Instance not found" }, { status: 404 });
   }
 
-  // If there's a DO app, try to delete it
-  if (instance.do_app_id) {
+  // Delete AWS ECS resources
+  if (instance.aws_service_arn) {
     try {
-      console.log("[instances] DELETE - Deleting DO app:", instance.do_app_id);
-      const doClient = getDigitalOceanClient();
-      await doClient.deleteApp(instance.do_app_id);
-      console.log("[instances] DELETE - DO app deleted");
+      console.log("[instances] DELETE - Deleting ECS service:", instance.aws_service_arn);
+      const ecsClient = getECSClient();
+      await ecsClient.deleteInstance({
+        instanceId: id,
+        serviceArn: instance.aws_service_arn,
+        targetGroupArn: instance.aws_target_group_arn,
+        ruleArn: instance.aws_rule_arn,
+      });
+      console.log("[instances] DELETE - ECS service deleted");
     } catch (error) {
-      console.error("[instances] DELETE - Error deleting DO app:", error);
+      console.error("[instances] DELETE - Error deleting ECS service:", error);
       // Continue anyway - we still want to delete the DB record
     }
   }

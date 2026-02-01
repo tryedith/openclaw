@@ -1,7 +1,27 @@
-# Copy this file to terraform.tfvars and fill in your values
-# DO NOT commit terraform.tfvars to version control
+# Copy this to terraform.tfvars and fill in your values
 
-do_token               = "your-digitalocean-api-token"
-region                 = "sfo3"  # Same region as your existing registry
-project_name           = "openclaw-hosted"
-existing_registry_name = "edith-registry"  # Your existing registry
+aws_region = "us-west-2"
+environment = "production"
+
+# Your domain for user instances (e.g., "openclaw.app")
+# Users will get subdomains like "abc123.openclaw.app"
+domain_name = "openclaw.app"
+
+# ACM certificate ARN for HTTPS
+# Must be a wildcard cert for *.openclaw.app
+acm_certificate_arn = "arn:aws:acm:us-west-2:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Spot instance configuration
+spot_max_price = "0.02"  # Max price per hour in USD
+
+# Auto Scaling Group sizing
+asg_min_size         = 1
+asg_max_size         = 20
+asg_desired_capacity = 2
+
+# Instance types for Spot fleet (will use capacity-optimized strategy)
+instance_types = ["t3.medium", "t3a.medium"]
+
+# Task resources
+task_cpu    = 512   # 0.5 vCPU
+task_memory = 1024  # 1 GB RAM

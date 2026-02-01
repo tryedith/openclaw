@@ -23,6 +23,7 @@ export default function DashboardPage() {
     { role: "user" | "assistant"; content: string }[]
   >([]);
   const [sending, setSending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [deployStatus, setDeployStatus] = useState<DeploymentStatus | null>(null);
 
   // Fetch instance on load
@@ -94,15 +95,19 @@ export default function DashboardPage() {
 
   async function deleteInstance() {
     if (!instance) return;
-    if (!confirm("Delete this instance and try again?")) return;
+    if (!confirm("Are you sure you want to delete this instance? This action cannot be undone.")) return;
 
+    setDeleting(true);
     try {
       const response = await fetch(`/api/instances/${instance.id}`, { method: "DELETE" });
       if (response.ok) {
         setInstance(null);
+        setChatHistory([]);
       }
     } catch (error) {
       console.error("Error deleting instance:", error);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -213,6 +218,17 @@ export default function DashboardPage() {
                     </button>
                   )}
                 </div>
+              </div>
+            )}
+            {instance.status === "running" && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={deleteInstance}
+                  disabled={deleting}
+                  className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
+                >
+                  {deleting ? "Deleting..." : "Delete Instance"}
+                </button>
               </div>
             )}
             {instance.status === "provisioning" && (

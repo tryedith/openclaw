@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-ecs": "^3.980.0",
+    "@aws-sdk/client-elastic-load-balancing-v2": "^3.980.0",
+    "@aws-sdk/client-secrets-manager": "^3.980.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.14",
     "next": "15.2.3",

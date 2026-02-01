@@ -1,34 +1,44 @@
+# AWS ECS Infrastructure for OpenClaw Hosted Platform
+# Provisions ECS cluster with Spot instances for cost-effective container hosting
+
 terraform {
   required_version = ">= 1.0"
 
   required_providers {
-    digitalocean = {
-      source  = "digitalocean/digitalocean"
-      version = "~> 2.0"
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
     }
   }
 }
 
-# Configure the DigitalOcean Provider
-provider "digitalocean" {
-  token = var.do_token
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = "openclaw"
+      Environment = var.environment
+      ManagedBy   = "terraform"
+    }
+  }
 }
 
-# Variables
-variable "do_token" {
-  description = "DigitalOcean API Token"
-  type        = string
-  sensitive   = true
+# Get current AWS account ID
+data "aws_caller_identity" "current" {}
+
+# Get available AZs
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
-variable "region" {
-  description = "DigitalOcean region"
-  type        = string
-  default     = "nyc1"
-}
+# Get ECS-optimized AMI
+data "aws_ami" "ecs_optimized" {
+  most_recent = true
+  owners      = ["amazon"]
 
-variable "project_name" {
-  description = "Project name prefix"
-  type        = string
-  default     = "openclaw-hosted"
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-ecs-hvm-*-x86_64-ebs"]
+  }
 }
