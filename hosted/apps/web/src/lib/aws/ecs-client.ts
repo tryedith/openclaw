@@ -313,7 +313,7 @@ export class ECSClawClient {
             { name: "PORT", value: "8080" },
             { name: "NODE_ENV", value: "production" },
             { name: "OPENCLAW_STATE_DIR", value: "/tmp/.openclaw" },
-            { name: "OPENCLAW_CONFIG_PATH", value: "/app/hosted-config.json" },
+            { name: "OPENCLAW_CONFIG_PATH", value: "/tmp/.openclaw/config.json" },
             { name: "INSTANCE_ID", value: instanceId },
           ],
           secrets: [
@@ -540,6 +540,53 @@ export class ECSClawClient {
    */
   private getServiceName(instanceId: string): string {
     return `openclaw-${instanceId.slice(0, 8)}`;
+  }
+
+  /**
+   * Get service status from ECS
+   */
+  async getServiceStatus(serviceArn: string): Promise<{
+    runningCount: number;
+    desiredCount: number;
+    pendingCount: number;
+    failedCount: number;
+    healthy: boolean;
+  }> {
+    const response = await this.ecs.send(
+      new DescribeServicesCommand({
+        cluster: ECS_CLUSTER,
+        services: [serviceArn],
+      })
+    );
+
+    const service = response.services?.[0];
+    if (!service) {
+      return {
+        runningCount: 0,
+        desiredCount: 0,
+        pendingCount: 0,
+        failedCount: 0,
+        healthy: false,
+      };
+    }
+
+    // Check if any tasks have failed recently
+    const failedCount = service.deployments?.reduce((acc, d) => {
+      return acc + (d.failedTasks || 0);
+    }, 0) || 0;
+
+    // Service is healthy if running count matches desired and there are running tasks
+    const healthy =
+      (service.runningCount || 0) >= (service.desiredCount || 1) &&
+      (service.runningCount || 0) > 0;
+
+    return {
+      runningCount: service.runningCount || 0,
+      desiredCount: service.desiredCount || 0,
+      pendingCount: service.pendingCount || 0,
+      failedCount,
+      healthy,
+    };
   }
 }
 

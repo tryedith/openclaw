@@ -42,7 +42,7 @@ The OpenClaw hosted platform runs on AWS ECS with EC2 Spot instances, providing 
 │  │   │              │              │  │                              │        │    │
 │  │   │  ┌───────────▼───────────┐  │  │                              │        │    │
 │  │   │  │   EC2 Instance        │  │  │  (scales here when needed)   │        │    │
-│  │   │  │   t3.micro            │  │  │                              │        │    │
+│  │   │  │   c7i-flex.large      │  │  │                              │        │    │
 │  │   │  │   i-05a7aa32c32bd3876 │  │  │                              │        │    │
 │  │   │  │                       │  │  │                              │        │    │
 │  │   │  │   ┌─────────────────┐ │  │  │                              │        │    │
@@ -79,12 +79,12 @@ The OpenClaw hosted platform runs on AWS ECS with EC2 Spot instances, providing 
 | Private Subnets | `subnet-03c50e41febb37e3a`, `subnet-0ea32a1c6b949fa50` | ECS Tasks | Free |
 | NAT Gateway | `nat-0bb5ae4bc6ce111a4` | Outbound internet for private subnets | ~$32 |
 | ALB | `openclaw-alb-422691962...` | Load balancing & routing | ~$16 |
-| EC2 Instance | `i-05a7aa32c32bd3876` (t3.micro) | Container host | ~$7.50 |
+| EC2 Instance | `i-050798d9de0deff7f` (c7i-flex.large) | Container host | ~$35 |
 | ECS Cluster | `openclaw-cluster` | Container orchestration | Free |
 | ECR Repository | `openclaw` | Docker image storage | ~$0.50 |
 | CloudWatch Logs | `/ecs/openclaw` | Container logs | ~$1 |
 
-**Current Total: ~$57/month** (no user instances)
+**Current Total: ~$80/month** (no user instances)
 
 ---
 
@@ -122,8 +122,8 @@ The OpenClaw hosted platform runs on AWS ECS with EC2 Spot instances, providing 
 │                              ECS Cluster: openclaw-cluster                         │
 │                                                                                    │
 │   ┌─────────────────────────────────────────────────────────────────────────────┐ │
-│   │                    EC2 Instance: i-05a7aa32c32bd3876                        │ │
-│   │                           t3.micro (1 vCPU, 1GB RAM)                        │ │
+│   │                    EC2 Instance: i-050798d9de0deff7f                        │ │
+│   │                         c7i-flex.large (2 vCPU, 4GB RAM)                    │ │
 │   │                                                                             │ │
 │   │   ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐            │ │
 │   │   │   ECS Task      │  │   ECS Task      │  │   ECS Task      │            │ │
@@ -172,7 +172,7 @@ The OpenClaw hosted platform runs on AWS ECS with EC2 Spot instances, providing 
 │                                                                                  │
 │  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐      │
 │  │  EC2 Spot Instance  │  │  EC2 Spot Instance  │  │  EC2 Spot Instance  │      │
-│  │  t3.micro           │  │  t3.micro           │  │  t3.micro           │      │
+│  │  c7i-flex.large     │  │  c7i-flex.large     │  │  c7i-flex.large     │      │
 │  │  (AZ: us-west-2a)   │  │  (AZ: us-west-2b)   │  │  (AZ: us-west-2a)   │      │
 │  │                     │  │                     │  │                     │      │
 │  │  ┌───┐ ┌───┐ ┌───┐  │  │  ┌───┐ ┌───┐ ┌───┐  │  │  ┌───┐ ┌───┐ ┌───┐  │      │

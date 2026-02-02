@@ -59,9 +59,9 @@ variable "asg_desired_capacity" {
 }
 
 variable "instance_types" {
-  description = "List of EC2 instance types for Spot fleet"
+  description = "List of EC2 instance types for Spot fleet (must be Free Tier eligible)"
   type        = list(string)
-  default     = ["t3.medium", "t3a.medium"]
+  default     = ["c7i-flex.large", "m7i-flex.large"]
 }
 
 variable "task_cpu" {

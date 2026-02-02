@@ -3,19 +3,93 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Primary - Soft purple */
+  --primary: #8B5CF6;
+  --primary-hover: #7C3AED;
+  --primary-light: #EDE9FE;
+  --primary-dark: #6D28D9;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Secondary - Warm teal */
+  --secondary: #14B8A6;
+  --secondary-hover: #0D9488;
+  --secondary-light: #CCFBF1;
+
+  /* Backgrounds - Light and clean */
+  --background: #FFFFFF;
+  --background-secondary: #F9FAFB;
+  --background-tertiary: #F3F4F6;
+
+  /* Foreground */
+  --foreground: #111827;
+  --foreground-muted: #6B7280;
+  --foreground-subtle: #9CA3AF;
+
+  /* Borders */
+  --border: #E5E7EB;
+  --border-hover: #D1D5DB;
+
+  /* Status colors */
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --success-dark: #059669;
+
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --warning-dark: #D97706;
+
+  --error: #EF4444;
+  --error-light: #FEE2E2;
+  --error-dark: #DC2626;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground-subtle);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--primary-light);
+  color: var(--primary-dark);
 }

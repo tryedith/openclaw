@@ -25,6 +25,7 @@ export async function GET() {
       created_at,
       updated_at,
       last_health_at,
+      aws_service_arn,
       channels (
         id,
         channel_type,
@@ -41,6 +42,44 @@ export async function GET() {
       { error: "Failed to fetch instances" },
       { status: 500 }
     );
+  }
+
+  // Sync status for provisioning instances
+  if (instances && instances.length > 0) {
+    const ecsClient = getECSClient();
+
+    for (const instance of instances) {
+      if (instance.status === "provisioning" && instance.aws_service_arn) {
+        try {
+          // Check ECS service status
+          const ecsStatus = await ecsClient.getServiceStatus(instance.aws_service_arn);
+
+          if (ecsStatus.runningCount > 0 && ecsStatus.healthy) {
+            // Update to running
+            await supabase
+              .from("instances")
+              .update({
+                status: "running",
+                last_health_at: new Date().toISOString(),
+              })
+              .eq("id", instance.id);
+            instance.status = "running";
+          } else if (ecsStatus.failedCount > 0) {
+            // Update to error
+            await supabase
+              .from("instances")
+              .update({
+                status: "error",
+                error_message: "ECS task failed to start",
+              })
+              .eq("id", instance.id);
+            instance.status = "error";
+          }
+        } catch (err) {
+          console.error("[instances] Error checking ECS status:", err);
+        }
+      }
+    }
   }
 
   return NextResponse.json({ instances: instances || [] });

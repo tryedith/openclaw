@@ -19,8 +19,8 @@ asg_min_size         = 1
 asg_max_size         = 20
 asg_desired_capacity = 2
 
-# Instance types for Spot fleet (will use capacity-optimized strategy)
-instance_types = ["t3.medium", "t3a.medium"]
+# Instance types for Spot fleet (must be Free Tier eligible due to account restrictions)
+instance_types = ["c7i-flex.large", "m7i-flex.large"]
 
 # Task resources
 task_cpu    = 512   # 0.5 vCPU
