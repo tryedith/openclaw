@@ -320,7 +320,10 @@ export async function handleOpenResponsesHttpRequest(
   opts: OpenResponsesHttpOptions,
 ): Promise<boolean> {
   const url = new URL(req.url ?? "/", `http://${req.headers.host || "localhost"}`);
-  if (url.pathname !== "/v1/responses") return false;
+  // Support path-based routing with prefix (e.g., /abc123/v1/responses)
+  if (url.pathname !== "/v1/responses" && !url.pathname.endsWith("/v1/responses")) {
+    return false;
+  }
 
   if (req.method !== "POST") {
     sendMethodNotAllowed(res);

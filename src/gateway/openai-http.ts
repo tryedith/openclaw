@@ -157,7 +157,11 @@ export async function handleOpenAiHttpRequest(
   opts: OpenAiHttpOptions,
 ): Promise<boolean> {
   const url = new URL(req.url ?? "/", `http://${req.headers.host || "localhost"}`);
-  if (url.pathname !== "/v1/chat/completions") return false;
+  // Support path-based routing with prefix (e.g., /abc123/v1/chat/completions)
+  // Used by hosted platform where ALB routes by path prefix
+  if (url.pathname !== "/v1/chat/completions" && !url.pathname.endsWith("/v1/chat/completions")) {
+    return false;
+  }
 
   if (req.method !== "POST") {
     sendMethodNotAllowed(res);
