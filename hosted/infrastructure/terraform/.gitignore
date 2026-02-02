@@ -1,0 +1,26 @@
+# Terraform working files
+.terraform/
+.terraform.lock.hcl
+
+# State files (contain sensitive data - use remote backend in production)
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+
+# Variable files (may contain secrets)
+*.tfvars
+*.tfvars.json
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI config
+.terraformrc
+terraform.rc
