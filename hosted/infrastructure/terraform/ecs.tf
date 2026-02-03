@@ -19,7 +19,7 @@ resource "aws_ecs_capacity_provider" "spot" {
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.ecs_spot.arn
-    managed_termination_protection = "DISABLED"
+    managed_termination_protection = "ENABLED"
 
     managed_scaling {
       status                    = "ENABLED"

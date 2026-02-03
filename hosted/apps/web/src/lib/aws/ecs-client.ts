@@ -121,7 +121,14 @@ export class ECSClawClient {
       serviceName,
       taskDefinition: userTaskDefFamily, // Use user-specific task def with secrets
       desiredCount: 1,
-      launchType: "EC2",
+      // Use capacity provider strategy instead of launchType to enable auto-scaling
+      capacityProviderStrategy: [
+        {
+          capacityProvider: "openclaw-spot",
+          weight: 100,
+          base: 0,
+        },
+      ],
       networkConfiguration: {
         awsvpcConfiguration: {
           subnets: SUBNET_IDS,
