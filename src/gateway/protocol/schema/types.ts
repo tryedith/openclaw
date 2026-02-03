@@ -116,6 +116,11 @@ import type {
   WizardStatusResultSchema,
   WizardStepSchema,
 } from "./wizard.js";
+import type {
+  ChannelPairingApproveParamsSchema,
+  ChannelPairingClearParamsSchema,
+  ChannelPairingListParamsSchema,
+} from "./channel-pairing.js";
 
 export type ConnectParams = Static<typeof ConnectParamsSchema>;
 export type HelloOk = Static<typeof HelloOkSchema>;
@@ -211,3 +216,6 @@ export type ChatEvent = Static<typeof ChatEventSchema>;
 export type UpdateRunParams = Static<typeof UpdateRunParamsSchema>;
 export type TickEvent = Static<typeof TickEventSchema>;
 export type ShutdownEvent = Static<typeof ShutdownEventSchema>;
+export type ChannelPairingListParams = Static<typeof ChannelPairingListParamsSchema>;
+export type ChannelPairingApproveParams = Static<typeof ChannelPairingApproveParamsSchema>;
+export type ChannelPairingClearParams = Static<typeof ChannelPairingClearParamsSchema>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface Instance {
   id: string;
@@ -22,6 +22,28 @@ interface ChannelMeta {
 interface ChannelsData {
   channels: Record<string, ChannelStatus>;
   channelMeta: Record<string, ChannelMeta>;
+  channelAccounts?: Record<string, ChannelAccountSnapshot[]>;
+}
+
+interface PairingRequest {
+  id: string;
+  code: string;
+  createdAt: string;
+  lastSeenAt: string;
+  meta?: Record<string, string>;
+}
+
+interface ChannelAccountSnapshot {
+  accountId: string;
+  configured?: boolean;
+  enabled?: boolean;
+  linked?: boolean;
+  probe?: {
+    ok?: boolean;
+    bot?: {
+      username?: string | null;
+    };
+  };
 }
 
 // Channels we support configuring
@@ -67,10 +89,52 @@ export default function ChannelsPage() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [pairingRequests, setPairingRequests] = useState<Record<string, PairingRequest[]>>({});
+  const [approvingCode, setApprovingCode] = useState<string | null>(null);
+  const [botUsernames, setBotUsernames] = useState<Record<string, string>>({});
+  const [gatewayRestarting, setGatewayRestarting] = useState(false);
+  const [approvedChannels, setApprovedChannels] = useState<Set<string>>(new Set());
+  const hasProbed = useRef(false);
 
   useEffect(() => {
     fetchInstance();
   }, []);
+
+  // Poll for pairing requests every 5 seconds when there are configured channels
+  useEffect(() => {
+    if (!instance || instance.status !== "running" || !channelsData) return;
+
+    const configuredChannels = SUPPORTED_CHANNELS.filter((channel) => {
+      const status = channelsData.channels?.[channel.id];
+      return status?.configured || status?.enabled;
+    });
+
+    if (configuredChannels.length === 0) return;
+
+    const interval = setInterval(() => {
+      for (const channel of configuredChannels) {
+        fetchPairingRequests(instance.id, channel.id);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [instance, channelsData]);
+
+  // Fetch bot usernames for configured channels (only once)
+  useEffect(() => {
+    if (!instance || instance.status !== "running" || !channelsData || hasProbed.current) return;
+
+    const hasConfiguredChannels = SUPPORTED_CHANNELS.some((channel) => {
+      const status = channelsData.channels?.[channel.id];
+      return status?.configured || status?.enabled;
+    });
+
+    if (hasConfiguredChannels) {
+      hasProbed.current = true;
+      // Fetch with probe to get bot usernames
+      fetchChannels(instance.id, true);
+    }
+  }, [instance, channelsData]);
 
   async function fetchInstance() {
     try {
@@ -93,12 +157,57 @@ export default function ChannelsPage() {
     }
   }
 
-  async function fetchChannels(instanceId: string) {
+  async function fetchChannels(instanceId: string, withProbe = false, retryCount = 0) {
     try {
-      const response = await fetch(`/api/instances/${instanceId}/channels`);
+      let url = withProbe
+        ? `/api/instances/${instanceId}/channels?probe=true`
+        : `/api/instances/${instanceId}/channels`;
+      let response = await fetch(url);
+
+      // If probe request fails, fall back to non-probe request
+      if (!response.ok && withProbe) {
+        console.log("Probe request failed, falling back to non-probe");
+        url = `/api/instances/${instanceId}/channels`;
+        response = await fetch(url);
+      }
+
+      // If gateway is restarting (503), retry silently up to 5 times
+      if (response.status === 503 && retryCount < 5) {
+        console.log(`Gateway restarting, retry ${retryCount + 1}/5 in 3s...`);
+        setTimeout(() => {
+          fetchChannels(instanceId, withProbe, retryCount + 1);
+        }, 3000);
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
         setChannelsData(data);
+
+        // Extract bot usernames from channel accounts
+        if (data.channelAccounts) {
+          const usernames: Record<string, string> = {};
+          for (const [channelId, accounts] of Object.entries(data.channelAccounts)) {
+            const accountList = accounts as ChannelAccountSnapshot[];
+            for (const account of accountList) {
+              if (account.probe?.bot?.username) {
+                usernames[channelId] = account.probe.bot.username;
+                break;
+              }
+            }
+          }
+          if (Object.keys(usernames).length > 0) {
+            setBotUsernames(prev => ({ ...prev, ...usernames }));
+          }
+        }
+
+        // Fetch pairing requests for configured channels
+        for (const channel of SUPPORTED_CHANNELS) {
+          const status = data.channels?.[channel.id];
+          if (status?.configured || status?.enabled) {
+            fetchPairingRequests(instanceId, channel.id);
+          }
+        }
       }
     } catch (err) {
       console.error("Error fetching channels:", err);
@@ -107,7 +216,62 @@ export default function ChannelsPage() {
     }
   }
 
-  async function configureChannel(channelId: string) {
+  async function fetchPairingRequests(instanceId: string, channelId: string) {
+    try {
+      const response = await fetch(`/api/instances/${instanceId}/channels/${channelId}/pairing`);
+      const data = await response.json();
+      if (response.ok) {
+        setPairingRequests((prev) => ({
+          ...prev,
+          [channelId]: data.requests || [],
+        }));
+      } else {
+        console.error(`Error fetching pairing requests for ${channelId}:`, data.error, data.details);
+      }
+    } catch (err) {
+      console.error(`Error fetching pairing requests for ${channelId}:`, err);
+    }
+  }
+
+  async function approvePairingRequest(channelId: string, code: string) {
+    if (!instance) return;
+    setApprovingCode(code);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/instances/${instance.id}/channels/${channelId}/pairing/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, notify: true }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Failed to approve pairing request");
+        return;
+      }
+
+      // Mark channel as having approved users
+      setApprovedChannels(prev => new Set([...prev, channelId]));
+
+      // Refresh pairing requests immediately to remove the approved one
+      fetchPairingRequests(instance.id, channelId);
+      // Refresh channels to update linked status
+      fetchChannels(instance.id, false);
+
+      // Show brief success, then auto-dismiss
+      setSuccess(`Pairing approved! The user can now chat with your bot.`);
+      setTimeout(() => setSuccess(null), 4000);
+    } catch (err) {
+      setError("Failed to approve pairing request");
+      console.error(err);
+    } finally {
+      setApprovingCode(null);
+    }
+  }
+
+  async function configureChannel(channelId: string, retryCount = 0) {
     if (!instance) return;
 
     setError(null);
@@ -136,18 +300,43 @@ export default function ChannelsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to configure channel");
+        // Handle gateway restarting - auto-retry up to 3 times
+        if (response.status === 503 && data.retryable && retryCount < 3) {
+          setGatewayRestarting(true);
+          setTimeout(() => {
+            configureChannel(channelId, retryCount + 1);
+          }, 3000); // Wait 3 seconds before retry
+          return;
+        }
+
+        setGatewayRestarting(false);
+        if (response.status === 503) {
+          setError("Gateway is still restarting. Please wait a moment and try again.");
+        } else {
+          setError(data.error || "Failed to configure channel");
+        }
         return;
       }
 
-      setSuccess(`${channel.name} configured successfully! The bot will restart to apply changes.`);
+      setGatewayRestarting(false);
+      setSuccess(`${channel.name} bot connected! Now message your bot to complete pairing.`);
       setFormData({});
+      // Auto-dismiss after 6 seconds
+      setTimeout(() => setSuccess(null), 6000);
 
       // Refresh channels after a delay to allow restart
+      // First fetch without probe to update status quickly
       setTimeout(() => {
-        fetchChannels(instance.id);
+        fetchChannels(instance.id, false);
       }, 3000);
+
+      // Then fetch with probe after more time to get bot username
+      setTimeout(() => {
+        hasProbed.current = false; // Allow probing again for the new bot
+        fetchChannels(instance.id, true);
+      }, 8000);
     } catch (err) {
+      setGatewayRestarting(false);
       setError("Failed to configure channel");
       console.error(err);
     } finally {
@@ -165,7 +354,14 @@ export default function ChannelsPage() {
       });
 
       if (response.ok) {
-        setSuccess(`${channelId} disabled successfully`);
+        // Clear approved state for this channel
+        setApprovedChannels(prev => {
+          const next = new Set(prev);
+          next.delete(channelId);
+          return next;
+        });
+        setSuccess(`${channelId} disconnected`);
+        setTimeout(() => setSuccess(null), 3000);
         setTimeout(() => fetchChannels(instance.id), 3000);
       }
     } catch (err) {
@@ -260,12 +456,19 @@ export default function ChannelsPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-foreground">{channel.name}</h3>
-                      {isConfigured && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-success-light text-success-dark">
-                          <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                          Connected
-                        </span>
-                      )}
+                      {isConfigured && (() => {
+                        const hasLinkedUsers = status?.linked || approvedChannels.has(channel.id);
+                        return (
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            hasLinkedUsers
+                              ? "bg-success-light text-success-dark"
+                              : "bg-warning-light text-warning-dark"
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${hasLinkedUsers ? "bg-success" : "bg-warning"}`} />
+                            {hasLinkedUsers ? "Active" : "Awaiting pairing"}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <p className="text-sm text-foreground-muted">{channel.description}</p>
                   </div>
@@ -278,6 +481,110 @@ export default function ChannelsPage() {
                     </button>
                   )}
                 </div>
+
+                {/* Pairing Requests (when configured) */}
+                {isConfigured && (
+                  <div className="border-t border-border p-6 bg-background">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <UserPlusIcon className="w-5 h-5 text-foreground-muted" />
+                        <h4 className="font-medium text-foreground">Pairing Requests</h4>
+                      </div>
+                      <button
+                        onClick={() => instance && fetchPairingRequests(instance.id, channel.id)}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    {(pairingRequests[channel.id]?.length ?? 0) === 0 ? (
+                      <div className="text-center py-8 text-foreground-muted">
+                        {(status?.linked || approvedChannels.has(channel.id)) ? (
+                          <>
+                            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-success-light flex items-center justify-center">
+                              <CheckIcon className="w-6 h-6 text-success" />
+                            </div>
+                            <p className="text-sm font-medium text-foreground">Users connected</p>
+                            <p className="text-xs mt-1 text-foreground-subtle">
+                              Your bot is ready to receive messages
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-sm">No pending pairing requests</p>
+                            <p className="text-xs mt-1 text-foreground-subtle">
+                              When someone messages your bot, their request will appear here for approval
+                            </p>
+                            {channel.id === "telegram" && botUsernames.telegram && (
+                              <a
+                                href={`https://t.me/${botUsernames.telegram}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-lg bg-[#0088cc] text-white text-sm font-medium hover:bg-[#0077b5] transition-colors"
+                              >
+                                <TelegramIcon className="w-4 h-4" />
+                                Open @{botUsernames.telegram} in Telegram
+                                <ExternalLinkIcon className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {pairingRequests[channel.id]?.map((request) => (
+                          <div
+                            key={request.code}
+                            className="flex items-center justify-between p-4 rounded-xl bg-background-secondary border border-border"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm font-medium text-primary bg-primary-light px-2 py-0.5 rounded">
+                                  {request.code}
+                                </span>
+                                {request.meta?.username && (
+                                  <span className="text-sm text-foreground">
+                                    @{request.meta.username}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-foreground-subtle">
+                                {request.meta?.firstName && (
+                                  <span>
+                                    {request.meta.firstName}
+                                    {request.meta.lastName ? ` ${request.meta.lastName}` : ""}
+                                  </span>
+                                )}
+                                <span>•</span>
+                                <span>ID: {request.id}</span>
+                                <span>•</span>
+                                <span>{new Date(request.createdAt).toLocaleString()}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => approvePairingRequest(channel.id, request.code)}
+                              disabled={approvingCode === request.code}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-success text-white text-sm font-medium hover:bg-success/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {approvingCode === request.code ? (
+                                <>
+                                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                                  Approving...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckIcon className="w-4 h-4" />
+                                  Approve
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Setup Form (collapsed if configured) */}
                 {!isConfigured && (
@@ -311,7 +618,7 @@ export default function ChannelsPage() {
                         {configuring === channel.id ? (
                           <>
                             <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                            Connecting...
+                            {gatewayRestarting ? "Waiting for gateway..." : "Connecting..."}
                           </>
                         ) : (
                           <>
@@ -432,6 +739,22 @@ function LinkIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+    </svg>
+  );
+}
+
+function UserPlusIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+    </svg>
+  );
+}
+
+function ExternalLinkIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
     </svg>
   );
 }

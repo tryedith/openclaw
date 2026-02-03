@@ -8,6 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const url = new URL(request.url);
+  const probe = url.searchParams.get("probe") === "true";
 
   const supabase = await createClient();
   const {
@@ -44,15 +46,32 @@ export async function GET(
       channels: Record<string, { configured?: boolean; linked?: boolean; enabled?: boolean }>;
       channelLabels: Record<string, string>;
       channelMeta: Record<string, { label: string; blurb?: string; docsUrl?: string }>;
+      channelAccounts?: Record<string, Array<{
+        accountId: string;
+        configured?: boolean;
+        enabled?: boolean;
+        probe?: {
+          ok?: boolean;
+          bot?: { username?: string };
+        };
+      }>>;
     }>({
       gatewayUrl,
       token: instance.gateway_token_encrypted,
       method: "channels.status",
-      rpcParams: { probe: false },
+      rpcParams: { probe },
     });
 
     if (!result.ok) {
       console.error("[channels] Gateway error:", result.error);
+      // Check for service unavailable (503) or gateway timeout (504)
+      const errorStr = String(result.error || "");
+      if (errorStr.includes("503") || errorStr.includes("502") || errorStr.includes("504")) {
+        return NextResponse.json(
+          { error: "Gateway is restarting", details: "Please wait a moment and try again.", retryable: true },
+          { status: 503 }
+        );
+      }
       return NextResponse.json(
         { error: "Failed to fetch channels", details: result.error },
         { status: 500 }

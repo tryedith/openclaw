@@ -123,6 +123,11 @@ import {
   WizardStatusResultSchema,
   WizardStepSchema,
 } from "./wizard.js";
+import {
+  ChannelPairingApproveParamsSchema,
+  ChannelPairingClearParamsSchema,
+  ChannelPairingListParamsSchema,
+} from "./channel-pairing.js";
 
 export const ProtocolSchemas: Record<string, TSchema> = {
   ConnectParams: ConnectParamsSchema,
@@ -226,6 +231,9 @@ export const ProtocolSchemas: Record<string, TSchema> = {
   UpdateRunParams: UpdateRunParamsSchema,
   TickEvent: TickEventSchema,
   ShutdownEvent: ShutdownEventSchema,
+  ChannelPairingListParams: ChannelPairingListParamsSchema,
+  ChannelPairingApproveParams: ChannelPairingApproveParamsSchema,
+  ChannelPairingClearParams: ChannelPairingClearParamsSchema,
 };
 
 export const PROTOCOL_VERSION = 3 as const;

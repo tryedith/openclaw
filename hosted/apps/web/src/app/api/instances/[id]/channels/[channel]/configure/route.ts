@@ -9,8 +9,7 @@ const CHANNEL_CONFIGS: Record<string, (body: Record<string, unknown>) => Record<
       telegram: {
         enabled: true,
         botToken: body.botToken,
-        dmPolicy: body.dmPolicy || "open", // Open by default for hosted - no pairing needed
-        allowFrom: ["*"], // Required for dmPolicy: "open" - allows anyone to message
+        dmPolicy: "pairing", // Secure by default - requires pairing approval
       },
     },
   }),
@@ -96,6 +95,14 @@ export async function POST(
 
     if (!configResult.ok) {
       console.error("[channels/configure] Failed to get config:", configResult.error);
+      // Check for service unavailable (503) or gateway timeout (504)
+      const errorStr = String(configResult.error || "");
+      if (errorStr.includes("503") || errorStr.includes("502") || errorStr.includes("504")) {
+        return NextResponse.json(
+          { error: "Gateway is restarting", details: "Please wait a moment and try again.", retryable: true },
+          { status: 503 }
+        );
+      }
       return NextResponse.json(
         { error: "Failed to get config", details: configResult.error },
         { status: 500 }
@@ -195,7 +202,22 @@ export async function DELETE(
     : `https://${instance.public_url}`;
 
   try {
-    // Step 1: Get current config
+    // Step 1: Clear pairing data (approved users) for this channel
+    console.log("[channels/configure] Clearing pairing data for channel:", channel);
+    const clearResult = await gatewayRpc<{ ok: boolean; cleared?: boolean; previousCount?: number }>({
+      gatewayUrl,
+      token: instance.gateway_token_encrypted,
+      method: "channel.pairing.clear",
+      rpcParams: { channel },
+    });
+
+    if (!clearResult.ok) {
+      console.log("[channels/configure] Clear pairing failed:", clearResult.error);
+    } else {
+      console.log("[channels/configure] Clear pairing result:", clearResult.payload);
+    }
+
+    // Step 2: Get current config
     const configResult = await gatewayRpc<{
       hash?: string;
     }>({
@@ -220,7 +242,7 @@ export async function DELETE(
       );
     }
 
-    // Step 2: Remove channel config entirely (set to null to delete)
+    // Step 3: Remove channel config entirely (set to null to delete)
     const patchResult = await gatewayRpc<{ ok: boolean }>({
       gatewayUrl,
       token: instance.gateway_token_encrypted,

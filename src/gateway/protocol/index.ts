@@ -320,6 +320,26 @@ export const validateWebLoginStartParams =
   ajv.compile<WebLoginStartParams>(WebLoginStartParamsSchema);
 export const validateWebLoginWaitParams = ajv.compile<WebLoginWaitParams>(WebLoginWaitParamsSchema);
 
+// Channel pairing validators
+import {
+  type ChannelPairingApproveParams,
+  ChannelPairingApproveParamsSchema,
+  type ChannelPairingClearParams,
+  ChannelPairingClearParamsSchema,
+  type ChannelPairingListParams,
+  ChannelPairingListParamsSchema,
+} from "./schema.js";
+
+export const validateChannelPairingListParams = ajv.compile<ChannelPairingListParams>(
+  ChannelPairingListParamsSchema,
+);
+export const validateChannelPairingApproveParams = ajv.compile<ChannelPairingApproveParams>(
+  ChannelPairingApproveParamsSchema,
+);
+export const validateChannelPairingClearParams = ajv.compile<ChannelPairingClearParams>(
+  ChannelPairingClearParamsSchema,
+);
+
 export function formatValidationErrors(errors: ErrorObject[] | null | undefined) {
   if (!errors?.length) return "unknown validation error";
 
@@ -355,6 +375,8 @@ export function formatValidationErrors(errors: ErrorObject[] | null | undefined)
 }
 
 export {
+  ChannelPairingApproveParamsSchema,
+  ChannelPairingListParamsSchema,
   ConnectParamsSchema,
   HelloOkSchema,
   RequestFrameSchema,
@@ -435,6 +457,8 @@ export {
 };
 
 export type {
+  ChannelPairingApproveParams,
+  ChannelPairingListParams,
   GatewayFrame,
   ConnectParams,
   HelloOk,

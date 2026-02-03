@@ -276,6 +276,34 @@ export async function removeChannelAllowFromStoreEntry(params: {
   );
 }
 
+export async function clearChannelAllowFromStore(params: {
+  channel: PairingChannel;
+  env?: NodeJS.ProcessEnv;
+}): Promise<{ cleared: boolean; previousCount: number }> {
+  const env = params.env ?? process.env;
+  const filePath = resolveAllowFromPath(params.channel, env);
+  return await withFileLock(
+    filePath,
+    { version: 1, allowFrom: [] } satisfies AllowFromStore,
+    async () => {
+      const { value } = await readJsonFile<AllowFromStore>(filePath, {
+        version: 1,
+        allowFrom: [],
+      });
+      const current = Array.isArray(value.allowFrom) ? value.allowFrom : [];
+      const previousCount = current.length;
+      if (previousCount === 0) {
+        return { cleared: false, previousCount: 0 };
+      }
+      await writeJsonFile(filePath, {
+        version: 1,
+        allowFrom: [],
+      } satisfies AllowFromStore);
+      return { cleared: true, previousCount };
+    },
+  );
+}
+
 export async function listChannelPairingRequests(
   channel: PairingChannel,
   env: NodeJS.ProcessEnv = process.env,
