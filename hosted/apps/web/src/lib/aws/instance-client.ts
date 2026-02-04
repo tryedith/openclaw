@@ -11,12 +11,8 @@ import {
   DeleteRuleCommand,
   DescribeRulesCommand,
 } from "@aws-sdk/client-elastic-load-balancing-v2";
-import {
-  SecretsManagerClient,
-  CreateSecretCommand,
-  DeleteSecretCommand,
-} from "@aws-sdk/client-secrets-manager";
-import { EC2PoolManager, getEC2PoolManager } from "./ec2-pool";
+import { getEC2PoolManager } from "./ec2-pool";
+import type { EC2PoolManager } from "./ec2-pool";
 
 // Configuration from environment
 const AWS_REGION = process.env.AWS_REGION || "us-west-2";
@@ -31,8 +27,6 @@ const USE_PATH_ROUTING = !DOMAIN_NAME;
 interface CreateInstanceParams {
   userId: string;
   instanceId: string;
-  gatewayToken: string;
-  anthropicApiKey: string;
 }
 
 interface CreateInstanceResult {
@@ -40,6 +34,7 @@ interface CreateInstanceResult {
   targetGroupArn: string;
   ruleArn: string;
   url: string;
+  gatewayToken: string;
 }
 
 interface InstanceStatus {
@@ -51,18 +46,17 @@ interface InstanceStatus {
 
 export class InstanceClient {
   private elb: ElasticLoadBalancingV2Client;
-  private secrets: SecretsManagerClient;
   private pool: EC2PoolManager;
 
   constructor() {
     const config = { region: AWS_REGION };
     this.elb = new ElasticLoadBalancingV2Client(config);
-    this.secrets = new SecretsManagerClient(config);
     this.pool = getEC2PoolManager();
   }
 
   /**
    * Create a new user's OpenClaw instance
+   * Container is already running on the EC2 instance (pre-warmed in user_data)
    */
   async createInstance(params: CreateInstanceParams): Promise<CreateInstanceResult> {
     const serviceName = this.getServiceName(params.instanceId);
@@ -75,30 +69,21 @@ export class InstanceClient {
 
     console.log(`[Instance] Creating instance ${params.instanceId} for user ${params.userId}`);
 
-    // 1. Create secret for user's credentials
-    const secretArn = await this.createUserSecret(params.instanceId, {
-      OPENCLAW_GATEWAY_TOKEN: params.gatewayToken,
-      ANTHROPIC_API_KEY: params.anthropicApiKey,
-    });
-    console.log(`[Instance] Created secret: ${secretArn}`);
-
-    // 2. Assign EC2 instance from pool and start container
-    const { ec2InstanceId, privateIp } = await this.pool.assignToUser({
+    // 1. Assign EC2 instance from pool (container already running, get gateway token)
+    const { ec2InstanceId, privateIp, gatewayToken } = await this.pool.assignToUser({
       userId: params.userId,
       instanceId: params.instanceId,
-      secretArn,
     });
     console.log(`[Instance] Assigned EC2 instance: ${ec2InstanceId}`);
 
-    // 3. Create target group for this user
+    // 2. Create target group for this user
     const targetGroupArn = await this.createTargetGroup(serviceName);
     console.log(`[Instance] Created target group: ${targetGroupArn}`);
 
-    // 4. Register instance with target group
+    // 3. Register instance with target group
     await this.pool.registerWithTargetGroup(targetGroupArn, ec2InstanceId);
-    console.log(`[Instance] Registered with target group`);
 
-    // 5. Create ALB listener rule for routing
+    // 4. Create ALB listener rule for routing
     const ruleArn = await this.createListenerRule(serviceName, subdomain, targetGroupArn);
     console.log(`[Instance] Created listener rule: ${ruleArn}`);
 
@@ -107,6 +92,7 @@ export class InstanceClient {
       targetGroupArn,
       ruleArn,
       url,
+      gatewayToken,
     };
   }
 
@@ -174,47 +160,7 @@ export class InstanceClient {
     // 5. Release EC2 instance (terminates it and replenishes pool)
     await this.pool.releaseInstance(params.userId);
 
-    // 6. Delete secret
-    await this.deleteUserSecret(params.instanceId);
-
     console.log(`[Instance] Instance ${params.instanceId} fully deleted`);
-  }
-
-  /**
-   * Create a secret in Secrets Manager for user credentials
-   */
-  private async createUserSecret(
-    instanceId: string,
-    secrets: Record<string, string>
-  ): Promise<string> {
-    const secretName = `openclaw/${instanceId}`;
-
-    const cmd = new CreateSecretCommand({
-      Name: secretName,
-      SecretString: JSON.stringify(secrets),
-      Description: `Credentials for OpenClaw instance ${instanceId}`,
-    });
-
-    const result = await this.secrets.send(cmd);
-    return result.ARN || "";
-  }
-
-  /**
-   * Delete a user's secret
-   */
-  private async deleteUserSecret(instanceId: string): Promise<void> {
-    try {
-      await this.secrets.send(
-        new DeleteSecretCommand({
-          SecretId: `openclaw/${instanceId}`,
-          ForceDeleteWithoutRecovery: true,
-        })
-      );
-      console.log(`[Instance] Deleted secret for ${instanceId}`);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.log(`[Instance] Secret delete error: ${errorMessage}`);
-    }
   }
 
   /**

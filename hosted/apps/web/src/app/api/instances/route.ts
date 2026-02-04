@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getInstanceClient } from "@/lib/aws/instance-client";
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 
 // GET /api/instances - List user's instances
 export async function GET() {
@@ -114,11 +113,8 @@ export async function POST() {
     );
   }
 
-  // Generate a secure gateway token
-  const gatewayToken = crypto.randomBytes(32).toString("hex");
-  console.log("[instances] POST - Generated gateway token");
-
   // Create instance record first (status: provisioning)
+  // gateway_token_encrypted will be updated after we get it from the EC2 instance
   console.log("[instances] POST - Creating Supabase record...");
   const { data: instance, error: insertError } = await supabase
     .from("instances")
@@ -127,7 +123,7 @@ export async function POST() {
       name: "default",
       status: "provisioning",
       provider: "aws",
-      gateway_token_encrypted: gatewayToken, // TODO: encrypt in production
+      gateway_token_encrypted: "pending", // Placeholder, will be updated
     })
     .select()
     .single();
@@ -141,44 +137,38 @@ export async function POST() {
   }
   console.log("[instances] POST - Supabase record created:", instance.id);
 
-  // Provision EC2 instance from pool
+  // Provision EC2 instance from pool (container already running, get gateway token)
   try {
-    const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
-    if (!anthropicApiKey) {
-      throw new Error("ANTHROPIC_API_KEY not configured");
-    }
-    console.log("[instances] POST - Anthropic key found");
-
-    console.log("[instances] POST - Provisioning EC2 instance from pool...");
+    console.log("[instances] POST - Assigning EC2 instance from pool...");
     const instanceClient = getInstanceClient();
 
-    const { ec2InstanceId, targetGroupArn, ruleArn, url } = await instanceClient.createInstance({
+    const { ec2InstanceId, targetGroupArn, ruleArn, url, gatewayToken } = await instanceClient.createInstance({
       userId: user.id,
       instanceId: instance.id,
-      gatewayToken,
-      anthropicApiKey,
     });
     console.log("[instances] POST - EC2 instance assigned:", { ec2InstanceId, url });
 
-    // Update instance with AWS details (aws_service_arn now stores EC2 instance ID)
+    // Update instance with AWS details and gateway token
     console.log("[instances] POST - Updating Supabase with AWS details...");
     await supabase
       .from("instances")
       .update({
         provider_resource_id: ec2InstanceId,
-        aws_service_arn: ec2InstanceId, // Stores EC2 instance ID instead of ECS service ARN
+        aws_service_arn: ec2InstanceId, // Stores EC2 instance ID
         aws_target_group_arn: targetGroupArn,
         aws_rule_arn: ruleArn,
         public_url: url,
-        status: "provisioning",
+        gateway_token_encrypted: gatewayToken, // Token from pre-warmed instance
+        status: "running", // Container is already running
       })
       .eq("id", instance.id);
 
-    console.log("[instances] POST - Success! Instance provisioning started.");
+    console.log("[instances] POST - Success! Instance is ready.");
     return NextResponse.json({
       id: instance.id,
-      status: "provisioning",
-      message: "Instance is being created. This typically takes 10-30 seconds.",
+      status: "running",
+      url,
+      message: "Instance is ready.",
     });
   } catch (error) {
     console.error("[instances] POST - Provisioning error:", error);

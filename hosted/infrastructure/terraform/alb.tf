@@ -1,4 +1,4 @@
-# Application Load Balancer for routing to ECS tasks
+# Application Load Balancer for routing to user EC2 instances
 
 resource "aws_lb" "openclaw" {
   name               = "openclaw-alb"
@@ -64,4 +64,4 @@ resource "aws_lb_listener" "https" {
 }
 
 # Note: Target groups and listener rules are created dynamically
-# by the ECS client when provisioning user instances
+# by the instance client when provisioning user EC2 instances

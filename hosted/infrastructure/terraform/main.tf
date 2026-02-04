@@ -1,5 +1,5 @@
-# AWS ECS Infrastructure for OpenClaw Hosted Platform
-# Provisions ECS cluster with Spot instances for cost-effective container hosting
+# AWS Infrastructure for OpenClaw Hosted Platform
+# Provisions EC2 instances per user for dedicated container hosting
 
 terraform {
   required_version = ">= 1.0"
@@ -30,15 +30,4 @@ data "aws_caller_identity" "current" {}
 # Get available AZs
 data "aws_availability_zones" "available" {
   state = "available"
-}
-
-# Get ECS-optimized AMI
-data "aws_ami" "ecs_optimized" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-ecs-hvm-*-x86_64-ebs"]
-  }
 }

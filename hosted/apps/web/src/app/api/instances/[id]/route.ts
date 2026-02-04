@@ -32,22 +32,19 @@ export async function DELETE(
     return NextResponse.json({ error: "Instance not found" }, { status: 404 });
   }
 
-  // Delete AWS EC2 resources (aws_service_arn stores EC2 instance ID)
-  if (instance.aws_service_arn) {
-    try {
-      console.log("[instances] DELETE - Deleting EC2 instance:", instance.aws_service_arn);
-      const instanceClient = getInstanceClient();
-      await instanceClient.deleteInstance({
-        instanceId: id,
-        userId: user.id,
-        targetGroupArn: instance.aws_target_group_arn,
-        ruleArn: instance.aws_rule_arn,
-      });
-      console.log("[instances] DELETE - EC2 instance deleted");
-    } catch (error) {
-      console.error("[instances] DELETE - Error deleting EC2 instance:", error);
-      // Continue anyway - we still want to delete the DB record
-    }
+  // Delete AWS EC2 resources
+  try {
+    const instanceClient = getInstanceClient();
+    await instanceClient.deleteInstance({
+      instanceId: id,
+      userId: user.id,
+      targetGroupArn: instance.aws_target_group_arn,
+      ruleArn: instance.aws_rule_arn,
+    });
+    console.log("[instances] DELETE - EC2 resources deleted");
+  } catch (error) {
+    console.error("[instances] DELETE - Error deleting EC2 resources:", error);
+    // Continue anyway - we still want to delete the DB record
   }
 
   // Delete from database

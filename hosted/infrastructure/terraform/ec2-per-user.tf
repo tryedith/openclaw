@@ -1,6 +1,20 @@
 # EC2 Per User Infrastructure
 # Each user gets their own dedicated EC2 Spot instance
 
+# Platform secret for shared credentials (API key)
+resource "aws_secretsmanager_secret" "platform_credentials" {
+  name        = "openclaw/platform-credentials"
+  description = "Shared platform credentials for OpenClaw instances"
+
+  tags = {
+    Name = "openclaw-platform-credentials"
+  }
+}
+
+# NOTE: You must manually set the secret value after deploy:
+# aws secretsmanager put-secret-value --secret-id openclaw/platform-credentials \
+#   --secret-string '{"ANTHROPIC_API_KEY":"sk-ant-xxx"}'
+
 # Get latest Amazon Linux 2023 AMI
 data "aws_ami" "amazon_linux_2023" {
   most_recent = true
@@ -149,42 +163,74 @@ resource "aws_launch_template" "user_instance" {
   }
 
   network_interfaces {
-    associate_public_ip_address = true  # Public IP, no NAT needed
+    associate_public_ip_address = true
     security_groups             = [aws_security_group.user_instances.id]
+    subnet_id                   = aws_subnet.public[0].id
   }
 
-  # Install Docker and signal ready
+  # Install Docker, start container, and signal ready
   user_data = base64encode(<<-EOF
     #!/bin/bash
     set -e
 
-    # Get instance ID
+    # Get instance metadata
     INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
     REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
 
-    # Install Docker
+    # Install Docker and tools
     yum update -y
     yum install -y docker jq
     systemctl enable docker
     systemctl start docker
-
-    # Add ec2-user to docker group
     usermod -aG docker ec2-user
 
     # Install SSM agent (should be pre-installed, but ensure it's running)
     systemctl enable amazon-ssm-agent
     systemctl start amazon-ssm-agent
 
-    # Login to ECR (so image is cached for faster startup)
+    # Login to ECR
     aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.$REGION.amazonaws.com
 
-    # Pre-pull the image for faster container startup
-    docker pull ${aws_ecr_repository.openclaw.repository_url}:latest || true
+    # Pull the image
+    docker pull ${aws_ecr_repository.openclaw.repository_url}:latest
 
-    # Signal instance is ready for assignment
-    aws ec2 create-tags --region $REGION --resources $INSTANCE_ID --tags Key=Status,Value=available Key=Name,Value=openclaw-user-instance
+    # Generate unique gateway token for this instance
+    GATEWAY_TOKEN=$(openssl rand -hex 32)
 
-    echo "Instance initialization complete"
+    # Store token as instance tag (so we can read it at assignment time)
+    aws ec2 create-tags --region $REGION --resources $INSTANCE_ID \
+      --tags Key=GatewayToken,Value=$GATEWAY_TOKEN
+
+    # Fetch platform credentials
+    SECRETS=$(aws secretsmanager get-secret-value --region $REGION \
+      --secret-id openclaw/platform-credentials \
+      --query SecretString --output text)
+    ANTHROPIC_API_KEY=$(echo $SECRETS | jq -r .ANTHROPIC_API_KEY)
+
+    # Start the container (pre-warmed and ready)
+    docker run -d --name openclaw-gateway --restart=always -p 8080:8080 \
+      -e OPENCLAW_GATEWAY_TOKEN="$GATEWAY_TOKEN" \
+      -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+      -e PORT=8080 \
+      -e NODE_ENV=production \
+      ${aws_ecr_repository.openclaw.repository_url}:latest
+
+    # Wait for container to be healthy before marking available
+    for i in {1..60}; do
+      if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
+        # Container is healthy - mark instance as available
+        aws ec2 create-tags --region $REGION --resources $INSTANCE_ID \
+          --tags Key=Status,Value=available Key=Name,Value=openclaw-user-instance
+        echo "Instance ready and available for assignment"
+        exit 0
+      fi
+      sleep 1
+    done
+
+    # If we get here, container failed to start
+    echo "Container health check failed"
+    docker logs openclaw-gateway --tail 30
+    exit 1
   EOF
   )
 
