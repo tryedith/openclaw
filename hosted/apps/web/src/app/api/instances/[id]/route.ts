@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getECSClient } from "@/lib/aws/ecs-client";
+import { getInstanceClient } from "@/lib/aws/instance-client";
 import { NextResponse } from "next/server";
 
 // DELETE /api/instances/[id] - Delete an instance
@@ -32,20 +32,20 @@ export async function DELETE(
     return NextResponse.json({ error: "Instance not found" }, { status: 404 });
   }
 
-  // Delete AWS ECS resources
+  // Delete AWS EC2 resources (aws_service_arn stores EC2 instance ID)
   if (instance.aws_service_arn) {
     try {
-      console.log("[instances] DELETE - Deleting ECS service:", instance.aws_service_arn);
-      const ecsClient = getECSClient();
-      await ecsClient.deleteInstance({
+      console.log("[instances] DELETE - Deleting EC2 instance:", instance.aws_service_arn);
+      const instanceClient = getInstanceClient();
+      await instanceClient.deleteInstance({
         instanceId: id,
-        serviceArn: instance.aws_service_arn,
+        userId: user.id,
         targetGroupArn: instance.aws_target_group_arn,
         ruleArn: instance.aws_rule_arn,
       });
-      console.log("[instances] DELETE - ECS service deleted");
+      console.log("[instances] DELETE - EC2 instance deleted");
     } catch (error) {
-      console.error("[instances] DELETE - Error deleting ECS service:", error);
+      console.error("[instances] DELETE - Error deleting EC2 instance:", error);
       // Continue anyway - we still want to delete the DB record
     }
   }

@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { getECSClient } from "@/lib/aws/ecs-client";
+import { getInstanceClient } from "@/lib/aws/instance-client";
 import { NextResponse } from "next/server";
 
-// GET /api/instances/[id]/deploy-status - Get live deployment status from ECS
+// GET /api/instances/[id]/deploy-status - Get live deployment status from EC2
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -33,50 +33,58 @@ export async function GET(
   if (!instance.aws_service_arn) {
     return NextResponse.json({
       phase: "PENDING",
-      logs: ["Waiting for ECS service creation..."],
+      logs: ["Waiting for EC2 instance assignment..."],
     });
   }
 
   try {
-    const ecsClient = getECSClient();
-    const status = await ecsClient.getInstanceStatus(instance.aws_service_arn);
+    const instanceClient = getInstanceClient();
+    const status = await instanceClient.getInstanceStatus(user.id);
 
     const logs: string[] = [];
     const timestamp = () => new Date().toLocaleTimeString("en-US", { hour12: false });
 
-    logs.push(`$ ECS Service Status`);
-    logs.push(`Service: ${instance.aws_service_arn.split("/").pop()}`);
+    logs.push(`$ EC2 Instance Status`);
+    logs.push(`Instance: ${instance.aws_service_arn}`);
     logs.push("");
 
-    // Map ECS status to phase
+    // Map EC2 status to phase
     let phase = "PENDING";
 
     switch (status.status) {
       case "running":
         phase = "ACTIVE";
-        logs.push(`[${timestamp()}] ✓ Service is running`);
-        logs.push(`[${timestamp()}] ✓ Tasks: ${status.runningCount}/${status.desiredCount}`);
+        logs.push(`[${timestamp()}] ✓ Instance is running`);
+        if (status.privateIp) {
+          logs.push(`[${timestamp()}] ✓ Private IP: ${status.privateIp}`);
+        }
         logs.push("");
         logs.push("✓ Deployment successful!");
         break;
 
       case "provisioning":
         phase = "DEPLOYING";
-        logs.push(`[${timestamp()}] → Provisioning tasks...`);
-        logs.push(`[${timestamp()}] → Running: ${status.runningCount}, Pending: ${status.pendingCount}`);
-        logs.push(`[${timestamp()}] → Desired: ${status.desiredCount}`);
+        logs.push(`[${timestamp()}] → Starting container on instance...`);
+        logs.push(`[${timestamp()}] → EC2 Instance: ${status.ec2InstanceId || "assigning"}`);
         logs.push("");
         logs.push("Status: Deploying...");
         break;
 
+      case "pending":
+        phase = "DEPLOYING";
+        logs.push(`[${timestamp()}] → Assigning instance from pool...`);
+        logs.push("");
+        logs.push("Status: Pending...");
+        break;
+
       case "stopped":
         phase = "INACTIVE";
-        logs.push(`[${timestamp()}] Service is stopped`);
+        logs.push(`[${timestamp()}] Instance is stopped`);
         break;
 
       case "error":
         phase = "ERROR";
-        logs.push(`[${timestamp()}] ✗ Service encountered an error`);
+        logs.push(`[${timestamp()}] ✗ Instance encountered an error`);
         logs.push("");
         logs.push("✗ Deployment failed");
         break;
@@ -100,7 +108,7 @@ export async function GET(
         .from("instances")
         .update({
           status: "error",
-          error_message: "ECS service failed to start",
+          error_message: "EC2 instance failed to start",
           updated_at: new Date().toISOString(),
         })
         .eq("id", id);
@@ -108,10 +116,10 @@ export async function GET(
 
     return NextResponse.json({ phase, logs });
   } catch (error) {
-    console.error("[deploy-status] ECS Error:", error);
+    console.error("[deploy-status] EC2 Error:", error);
     return NextResponse.json({
       phase: "UNKNOWN",
-      logs: [`Error: ${error instanceof Error ? error.message : "Failed to fetch ECS status"}`],
+      logs: [`Error: ${error instanceof Error ? error.message : "Failed to fetch EC2 status"}`],
     });
   }
 }

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getECSClient } from "@/lib/aws/ecs-client";
+import { getInstanceClient } from "@/lib/aws/instance-client";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
@@ -46,15 +46,15 @@ export async function GET() {
 
   // Sync status for provisioning instances
   if (instances && instances.length > 0) {
-    const ecsClient = getECSClient();
+    const instanceClient = getInstanceClient();
 
     for (const instance of instances) {
       if (instance.status === "provisioning" && instance.aws_service_arn) {
         try {
-          // Check ECS service status
-          const ecsStatus = await ecsClient.getServiceStatus(instance.aws_service_arn);
+          // Check EC2 instance status (aws_service_arn now stores EC2 instance ID)
+          const ec2Status = await instanceClient.getInstanceStatus(user.id);
 
-          if (ecsStatus.runningCount > 0 && ecsStatus.healthy) {
+          if (ec2Status.status === "running") {
             // Update to running
             await supabase
               .from("instances")
@@ -64,19 +64,19 @@ export async function GET() {
               })
               .eq("id", instance.id);
             instance.status = "running";
-          } else if (ecsStatus.failedCount > 0) {
+          } else if (ec2Status.status === "error") {
             // Update to error
             await supabase
               .from("instances")
               .update({
                 status: "error",
-                error_message: "ECS task failed to start",
+                error_message: "EC2 instance failed to start",
               })
               .eq("id", instance.id);
             instance.status = "error";
           }
         } catch (err) {
-          console.error("[instances] Error checking ECS status:", err);
+          console.error("[instances] Error checking EC2 status:", err);
         }
       }
     }
@@ -141,7 +141,7 @@ export async function POST() {
   }
   console.log("[instances] POST - Supabase record created:", instance.id);
 
-  // Provision container on AWS ECS
+  // Provision EC2 instance from pool
   try {
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
     if (!anthropicApiKey) {
@@ -149,24 +149,24 @@ export async function POST() {
     }
     console.log("[instances] POST - Anthropic key found");
 
-    console.log("[instances] POST - Provisioning on AWS ECS...");
-    const ecsClient = getECSClient();
+    console.log("[instances] POST - Provisioning EC2 instance from pool...");
+    const instanceClient = getInstanceClient();
 
-    const { serviceArn, targetGroupArn, ruleArn, url } = await ecsClient.createInstance({
+    const { ec2InstanceId, targetGroupArn, ruleArn, url } = await instanceClient.createInstance({
       userId: user.id,
       instanceId: instance.id,
       gatewayToken,
       anthropicApiKey,
     });
-    console.log("[instances] POST - ECS Service created:", { serviceArn, url });
+    console.log("[instances] POST - EC2 instance assigned:", { ec2InstanceId, url });
 
-    // Update instance with AWS details
+    // Update instance with AWS details (aws_service_arn now stores EC2 instance ID)
     console.log("[instances] POST - Updating Supabase with AWS details...");
     await supabase
       .from("instances")
       .update({
-        provider_resource_id: serviceArn,
-        aws_service_arn: serviceArn,
+        provider_resource_id: ec2InstanceId,
+        aws_service_arn: ec2InstanceId, // Stores EC2 instance ID instead of ECS service ARN
         aws_target_group_arn: targetGroupArn,
         aws_rule_arn: ruleArn,
         public_url: url,
@@ -178,7 +178,7 @@ export async function POST() {
     return NextResponse.json({
       id: instance.id,
       status: "provisioning",
-      message: "Instance is being created. This may take 2-3 minutes.",
+      message: "Instance is being created. This typically takes 10-30 seconds.",
     });
   } catch (error) {
     console.error("[instances] POST - Provisioning error:", error);
@@ -193,7 +193,7 @@ export async function POST() {
       .eq("id", instance.id);
 
     return NextResponse.json(
-      { error: "Failed to provision container: " + errorMsg },
+      { error: "Failed to provision instance: " + errorMsg },
       { status: 500 }
     );
   }

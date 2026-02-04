@@ -81,3 +81,22 @@ variable "use_nat_gateway" {
   type        = bool
   default     = false
 }
+
+# EC2 Per User Configuration
+variable "user_instance_type" {
+  description = "EC2 instance type for dedicated user instances"
+  type        = string
+  default     = "t3.small"  # 2GB RAM, 2 vCPU
+}
+
+variable "user_instance_spot_price" {
+  description = "Maximum spot price per hour for user instances (USD)"
+  type        = string
+  default     = "0.01"  # t3.small spot is typically ~$0.006/hr
+}
+
+variable "pool_spare_count" {
+  description = "Number of spare instances to keep ready in the pool"
+  type        = number
+  default     = 2
+}
