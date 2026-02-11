@@ -35,6 +35,22 @@ describe("normalizeUsage", () => {
     });
   });
 
+  it("normalizes alternate cache token aliases", () => {
+    const usage = normalizeUsage({
+      input_tokens: 10,
+      output_tokens: 190,
+      cached_input_tokens: 4200,
+      cache_write_input_tokens: 350,
+    });
+    expect(usage).toEqual({
+      input: 10,
+      output: 190,
+      cacheRead: 4200,
+      cacheWrite: 350,
+      total: undefined,
+    });
+  });
+
   it("returns undefined for empty usage objects", () => {
     expect(normalizeUsage({})).toBeUndefined();
   });

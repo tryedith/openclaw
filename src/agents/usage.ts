@@ -15,6 +15,8 @@ export type UsageLike = {
   completion_tokens?: number;
   cache_read_input_tokens?: number;
   cache_creation_input_tokens?: number;
+  cached_input_tokens?: number;
+  cache_write_input_tokens?: number;
   // Some agents/logs emit alternate naming.
   totalTokens?: number;
   total_tokens?: number;
@@ -56,9 +58,17 @@ export function normalizeUsage(raw?: UsageLike | null): NormalizedUsage | undefi
       raw.completionTokens ??
       raw.completion_tokens,
   );
-  const cacheRead = asFiniteNumber(raw.cacheRead ?? raw.cache_read ?? raw.cache_read_input_tokens);
+  const cacheRead = asFiniteNumber(
+    raw.cacheRead ??
+      raw.cache_read ??
+      raw.cache_read_input_tokens ??
+      raw.cached_input_tokens,
+  );
   const cacheWrite = asFiniteNumber(
-    raw.cacheWrite ?? raw.cache_write ?? raw.cache_creation_input_tokens,
+    raw.cacheWrite ??
+      raw.cache_write ??
+      raw.cache_creation_input_tokens ??
+      raw.cache_write_input_tokens,
   );
   const total = asFiniteNumber(raw.total ?? raw.totalTokens ?? raw.total_tokens);
 

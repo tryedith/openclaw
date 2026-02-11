@@ -22,6 +22,7 @@ import { isSubagentSessionKey } from "../../../routing/session-key.js";
 import { resolveUserPath } from "../../../utils.js";
 import { createCacheTrace } from "../../cache-trace.js";
 import { createAnthropicPayloadLogger } from "../../anthropic-payload-log.js";
+import { createHostedUsageLogger } from "../../hosted-usage-logger.js";
 import { resolveOpenClawAgentDir } from "../../agent-paths.js";
 import { resolveSessionAgentIds } from "../../agent-scope.js";
 import { makeBootstrapWarn, resolveBootstrapContextForRun } from "../../bootstrap-files.js";
@@ -488,6 +489,7 @@ export async function runEmbeddedAttempt(
         modelApi: params.model.api,
         workspaceDir: params.workspaceDir,
       });
+      const hostedUsageLogger = createHostedUsageLogger({ env: process.env });
 
       // Force a stable streamFn reference so vitest can reliably mock @mariozechner/pi-ai.
       activeSession.agent.streamFn = streamSimple;
@@ -808,6 +810,25 @@ export async function runEmbeddedAttempt(
           note: promptError ? "prompt error" : undefined,
         });
         anthropicPayloadLogger?.recordUsage(messagesSnapshot, promptError);
+        hostedUsageLogger?.recordUsage({
+          messages: messagesSnapshot,
+          modelId: params.modelId,
+          provider: params.provider,
+          modelCost:
+            params.model &&
+            typeof params.model === "object" &&
+            "cost" in params.model &&
+            params.model.cost &&
+            typeof params.model.cost === "object"
+              ? (params.model.cost as {
+                  input?: number;
+                  output?: number;
+                  cacheRead?: number;
+                  cacheWrite?: number;
+                })
+              : undefined,
+          error: promptError,
+        });
 
         // Run agent_end hooks to allow plugins to analyze the conversation
         // This is fire-and-forget, so we don't await
