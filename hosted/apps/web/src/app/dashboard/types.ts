@@ -1,0 +1,55 @@
+export interface Instance {
+  id: string;
+  status: "pending" | "provisioning" | "running" | "stopped" | "error";
+  public_url: string | null;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface HistoryMessageRaw {
+  role: string;
+  content: unknown;
+  timestamp?: number;
+}
+
+export type ProviderId = "anthropic" | "openai" | "google";
+
+export interface ProviderModel {
+  id: string;
+  name: string;
+  modelRef: string;
+  contextWindow?: number;
+  reasoning?: boolean;
+  input?: Array<"text" | "image">;
+}
+
+export interface ProviderModelGroup {
+  provider: ProviderId;
+  label: string;
+  models: ProviderModel[];
+}
+
+export type GatewayFrame =
+  | {
+      type: "event";
+      event: string;
+      payload?: unknown;
+    }
+  | {
+      type: "res";
+      id: string;
+      ok: boolean;
+      payload?: unknown;
+      error?: { message?: string };
+    };
+
+export type ChatEventPayload = {
+  runId?: string;
+  sessionKey?: string;
+  state?: "delta" | "final" | "aborted" | "error";
+  message?: unknown;
+  errorMessage?: string;
+};

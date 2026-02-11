@@ -202,7 +202,7 @@ export const chatHandlers: GatewayRequestHandlers = {
     const rawMessages =
       sessionId && storePath ? readSessionMessages(sessionId, storePath, entry?.sessionFile) : [];
     const hardMax = 1000;
-    const defaultLimit = 200;
+    const defaultLimit = hardMax;
     const requested = typeof limit === "number" ? limit : defaultLimit;
     const max = Math.min(hardMax, requested);
     const sliced = rawMessages.length > max ? rawMessages.slice(-max) : rawMessages;

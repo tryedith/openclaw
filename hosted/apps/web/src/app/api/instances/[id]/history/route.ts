@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { getChatHistory, buildSessionKey } from "@/lib/gateway/ws-client";
+import { resolveGatewayTarget } from "@/lib/gateway/target";
+
+const MAX_HISTORY_LIMIT = 1000;
+const DEFAULT_HISTORY_LIMIT = MAX_HISTORY_LIMIT;
 
 // GET /api/instances/[id]/history - Get chat history from gateway
 export async function GET(
@@ -34,23 +38,28 @@ export async function GET(
     return NextResponse.json({ error: "Instance not ready" }, { status: 400 });
   }
 
-  // Build gateway URL
-  const gatewayUrl = instance.public_url.startsWith("http")
-    ? instance.public_url
-    : `https://${instance.public_url}`;
+  const { gatewayUrl, token } = resolveGatewayTarget({
+    instancePublicUrl: instance.public_url,
+    instanceToken: instance.gateway_token_encrypted,
+    instanceId: id,
+  });
 
   // Build session key matching what the chat endpoint uses
   const sessionKey = buildSessionKey(user.id);
 
-  // Get optional limit from query params
+  // Get optional limit from query params (default to max so chat opens with full thread)
   const url = new URL(request.url);
   const limitParam = url.searchParams.get("limit");
-  const limit = limitParam ? parseInt(limitParam, 10) : 100;
+  const parsedLimit = limitParam ? parseInt(limitParam, 10) : DEFAULT_HISTORY_LIMIT;
+  const limit =
+    Number.isFinite(parsedLimit) && parsedLimit > 0
+      ? Math.min(MAX_HISTORY_LIMIT, parsedLimit)
+      : DEFAULT_HISTORY_LIMIT;
 
   try {
     const result = await getChatHistory({
       gatewayUrl,
-      token: instance.gateway_token_encrypted,
+      token,
       sessionKey,
       limit,
     });

@@ -191,7 +191,7 @@ export async function getChatHistory(params: {
     method: "chat.history",
     rpcParams: {
       sessionKey: params.sessionKey,
-      limit: params.limit ?? 100,
+      limit: params.limit ?? 1000,
     },
   });
 

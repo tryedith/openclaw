@@ -1,0 +1,665 @@
+import { useEffect, useRef, useState } from "react";
+
+import {
+  GATEWAY_PROTOCOL_VERSION,
+  HISTORY_FALLBACK_POLL_INTERVAL_MS,
+  LIVE_RECONNECT_MS,
+} from "./constants";
+import type {
+  ChatEventPayload,
+  ChatMessage,
+  GatewayFrame,
+  HistoryMessageRaw,
+  Instance,
+  ProviderId,
+  ProviderModelGroup,
+} from "./types";
+
+function generateRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function isSameChatHistory(a: ChatMessage[], b: ChatMessage[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i]?.role !== b[i]?.role || a[i]?.content !== b[i]?.content) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function extractTextContent(content: unknown): string {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .filter(
+        (block): block is { type: string; text: string } =>
+          block &&
+          typeof block === "object" &&
+          block.type === "text" &&
+          typeof block.text === "string"
+      )
+      .map((block) => block.text)
+      .join("\n");
+  }
+
+  if (content && typeof content === "object" && "type" in content && "text" in content) {
+    const block = content as { type: string; text: string };
+    if (block.type === "text") {
+      return block.text;
+    }
+  }
+
+  return "";
+}
+
+function parseProviderFromModelRef(modelRef: string): ProviderId | null {
+  const slash = modelRef.indexOf("/");
+  if (slash <= 0) return null;
+  const provider = modelRef.slice(0, slash) as ProviderId;
+  return provider === "anthropic" || provider === "openai" || provider === "google"
+    ? provider
+    : null;
+}
+
+function updateModelSelectionFromCurrent(
+  groups: ProviderModelGroup[],
+  modelRef: string
+): { provider: ProviderId; modelRef: string } | null {
+  const fromRef = parseProviderFromModelRef(modelRef);
+  if (fromRef) {
+    const group = groups.find((entry) => entry.provider === fromRef);
+    if (group) {
+      const exact = group.models.find((model) => model.modelRef === modelRef);
+      if (exact) return { provider: fromRef, modelRef: exact.modelRef };
+      if (group.models[0]) return { provider: fromRef, modelRef: group.models[0].modelRef };
+    }
+  }
+
+  const firstGroup = groups[0];
+  if (!firstGroup || !firstGroup.models[0]) return null;
+  return { provider: firstGroup.provider, modelRef: firstGroup.models[0].modelRef };
+}
+
+export function useDashboardChat() {
+  const [instance, setInstance] = useState<Instance | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const [message, setMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [sending, setSending] = useState(false);
+  const [streamingAssistant, setStreamingAssistant] = useState("");
+  const [activeRunId, setActiveRunId] = useState<string | null>(null);
+
+  const [liveConnected, setLiveConnected] = useState(false);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+  const [modelSaving, setModelSaving] = useState(false);
+  const [modelMessage, setModelMessage] = useState<string | null>(null);
+  const [providerGroups, setProviderGroups] = useState<ProviderModelGroup[]>([]);
+  const [currentModelRef, setCurrentModelRef] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState<ProviderId>("anthropic");
+  const [selectedModelRef, setSelectedModelRef] = useState("");
+
+  const liveSocketRef = useRef<WebSocket | null>(null);
+  const historySyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeRunIdRef = useRef<string | null>(null);
+  const activeRunStartedAtRef = useRef<number | null>(null);
+  const assistantCountAtRunStartRef = useRef<number | null>(null);
+
+  function clearPendingRunState() {
+    setSending(false);
+    setStreamingAssistant("");
+    setActiveRunId(null);
+    activeRunIdRef.current = null;
+    activeRunStartedAtRef.current = null;
+    assistantCountAtRunStartRef.current = null;
+  }
+
+  function clearConversationState() {
+    setHistoryLoaded(false);
+    setChatHistory([]);
+    setMessage("");
+    clearPendingRunState();
+  }
+
+  function clearModelState() {
+    setProviderGroups([]);
+    setCurrentModelRef("");
+    setSelectedProvider("anthropic");
+    setSelectedModelRef("");
+    setModelsError(null);
+    setModelMessage(null);
+  }
+
+  async function fetchInstance() {
+    try {
+      const response = await fetch("/api/instances");
+      const data = await response.json();
+      if (data.instances && data.instances.length > 0) {
+        setInstance(data.instances[0] as Instance);
+      }
+    } catch (error) {
+      console.error("Error fetching instance:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchHistory(instanceId: string, opts?: { showLoader?: boolean }) {
+    const showLoader = opts?.showLoader === true;
+    if (showLoader) {
+      setHistoryLoading(true);
+    }
+
+    try {
+      const response = await fetch(`/api/instances/${instanceId}/history`, { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json();
+        const rawMessages: HistoryMessageRaw[] = Array.isArray(data.messages)
+          ? (data.messages as HistoryMessageRaw[])
+          : [];
+
+        const messages: ChatMessage[] = rawMessages
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .map((m) => ({
+            role: m.role as "user" | "assistant",
+            content: extractTextContent(m.content),
+          }))
+          .filter((m) => m.content.length > 0);
+
+        setChatHistory((prev) => (isSameChatHistory(prev, messages) ? prev : messages));
+
+        const runStartedAt = activeRunStartedAtRef.current;
+        if (runStartedAt != null) {
+          const hasTimestampedAssistantAfterRunStart = rawMessages.some(
+            (msg) =>
+              msg.role === "assistant" &&
+              typeof msg.timestamp === "number" &&
+              msg.timestamp >= runStartedAt
+          );
+          const assistantCount = messages.reduce(
+            (count, msg) => count + (msg.role === "assistant" ? 1 : 0),
+            0
+          );
+          const baselineAssistantCount = assistantCountAtRunStartRef.current;
+          const hasNewAssistantSinceRunStart =
+            typeof baselineAssistantCount === "number" && assistantCount > baselineAssistantCount;
+
+          if (hasTimestampedAssistantAfterRunStart || hasNewAssistantSinceRunStart) {
+            clearPendingRunState();
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+    } finally {
+      if (showLoader) {
+        setHistoryLoading(false);
+      }
+      setHistoryLoaded(true);
+    }
+  }
+
+  async function fetchModels(instanceId: string) {
+    setModelsLoading(true);
+    setModelsError(null);
+
+    try {
+      const response = await fetch(`/api/instances/${instanceId}/models`, {
+        cache: "no-store",
+      });
+      const data = (await response.json()) as {
+        error?: string;
+        currentModelRef?: string;
+        providers?: ProviderModelGroup[];
+      };
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || `HTTP ${response.status}`);
+      }
+
+      const groups = Array.isArray(data.providers) ? data.providers : [];
+      const current = typeof data.currentModelRef === "string" ? data.currentModelRef : "";
+      setProviderGroups(groups);
+      setCurrentModelRef(current);
+      setModelMessage(null);
+
+      const nextSelection = updateModelSelectionFromCurrent(groups, current);
+      if (nextSelection) {
+        setSelectedProvider(nextSelection.provider);
+        setSelectedModelRef(nextSelection.modelRef);
+      }
+    } catch (error) {
+      setModelsError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setModelsLoading(false);
+    }
+  }
+
+  async function createInstance() {
+    setCreating(true);
+    try {
+      const response = await fetch("/api/instances", { method: "POST" });
+      const data = await response.json();
+      if (data.id) {
+        setInstance({ id: data.id as string, status: "provisioning", public_url: null });
+      } else if (data.error) {
+        alert("Error: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error creating instance:", error);
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function deleteInstance() {
+    if (!instance) return;
+    if (!confirm("Are you sure you want to cancel? This will delete the bot.")) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/instances/${instance.id}`, { method: "DELETE" });
+      if (response.ok) {
+        setInstance(null);
+        clearConversationState();
+        clearModelState();
+      }
+    } catch (error) {
+      console.error("Error deleting instance:", error);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function sendMessage() {
+    if (!message.trim() || !instance?.id || instance.status !== "running" || sending) return;
+
+    const userMessage = message.trim();
+    setMessage("");
+    setSending(true);
+    setStreamingAssistant("");
+    setChatHistory((prev) => [...prev, { role: "user", content: userMessage }]);
+    activeRunStartedAtRef.current = Date.now();
+    assistantCountAtRunStartRef.current = chatHistory.reduce(
+      (count, msg) => count + (msg.role === "assistant" ? 1 : 0),
+      0
+    );
+
+    try {
+      const response = await fetch(`/api/instances/${instance.id}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage }),
+      });
+
+      const data = (await response.json()) as {
+        error?: string;
+        details?: string;
+        runId?: string;
+        status?: string;
+      };
+      if (!response.ok || data.error) {
+        throw new Error(data.error || data.details || `HTTP ${response.status}`);
+      }
+
+      if (typeof data.runId === "string" && data.runId) {
+        setActiveRunId(data.runId);
+        activeRunIdRef.current = data.runId;
+        // Reconcile quickly in case the run finalized before the POST response arrived.
+        setTimeout(() => {
+          void fetchHistory(instance.id);
+        }, 600);
+      } else {
+        clearPendingRunState();
+        void fetchHistory(instance.id);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      clearPendingRunState();
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Error: ${error instanceof Error ? error.message : "Could not reach the bot"}`,
+        },
+      ]);
+    }
+  }
+
+  async function saveSelectedModel() {
+    if (!instance?.id || !selectedModelRef || modelSaving) return;
+
+    setModelSaving(true);
+    setModelsError(null);
+    setModelMessage(null);
+
+    try {
+      const response = await fetch(`/api/instances/${instance.id}/models`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelRef: selectedModelRef }),
+      });
+      const data = (await response.json()) as {
+        error?: string;
+        modelRef?: string;
+        restart?: { scheduled?: boolean };
+      };
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || `HTTP ${response.status}`);
+      }
+
+      const appliedRef = typeof data.modelRef === "string" ? data.modelRef : selectedModelRef;
+      setCurrentModelRef(appliedRef);
+      setModelMessage(
+        data.restart?.scheduled
+          ? "Model updated. Gateway is restarting briefly."
+          : "Model updated."
+      );
+      setTimeout(() => {
+        void fetchModels(instance.id);
+      }, 2000);
+    } catch (error) {
+      setModelsError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setModelSaving(false);
+    }
+  }
+
+  useEffect(() => {
+    void fetchInstance();
+  }, []);
+
+  useEffect(() => {
+    if (instance?.status !== "provisioning") return;
+
+    const interval = setInterval(() => {
+      void fetchInstance();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [instance?.status, instance?.id]);
+
+  useEffect(() => {
+    clearConversationState();
+    clearModelState();
+  }, [instance?.id]);
+
+  useEffect(() => {
+    if (instance?.status === "running" && instance?.id && !historyLoaded) {
+      void fetchHistory(instance.id, { showLoader: true });
+    }
+  }, [instance?.status, instance?.id, historyLoaded]);
+
+  useEffect(() => {
+    if (instance?.status === "running" && instance?.id) {
+      void fetchModels(instance.id);
+    }
+  }, [instance?.status, instance?.id]);
+
+  useEffect(() => {
+    const group = providerGroups.find((entry) => entry.provider === selectedProvider);
+    if (!group || group.models.length === 0) return;
+    if (!group.models.some((model) => model.modelRef === selectedModelRef)) {
+      setSelectedModelRef(group.models[0].modelRef);
+    }
+  }, [providerGroups, selectedProvider, selectedModelRef]);
+
+  useEffect(() => {
+    if (instance?.status !== "running" || !instance?.id || !historyLoaded || liveConnected) return;
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      void fetchHistory(instance.id);
+    }, HISTORY_FALLBACK_POLL_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [instance?.status, instance?.id, historyLoaded, liveConnected]);
+
+  // Keep history synchronized while a run is in-flight in case live events are delayed/missed.
+  useEffect(() => {
+    if (instance?.status !== "running" || !instance?.id || !sending) return;
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      void fetchHistory(instance.id);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [instance?.status, instance?.id, sending]);
+
+  useEffect(() => {
+    if (instance?.status !== "running" || !instance?.id) return;
+
+    let cancelled = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let connectRequestId: string | null = null;
+    const instanceId = instance.id;
+
+    const closeSocket = () => {
+      const ws = liveSocketRef.current;
+      liveSocketRef.current = null;
+      if (ws && ws.readyState !== WebSocket.CLOSED && ws.readyState !== WebSocket.CLOSING) {
+        ws.close();
+      }
+    };
+
+    const scheduleHistoryRefresh = () => {
+      if (historySyncTimerRef.current) return;
+      historySyncTimerRef.current = setTimeout(() => {
+        historySyncTimerRef.current = null;
+        if (!cancelled) {
+          void fetchHistory(instanceId);
+        }
+      }, 150);
+    };
+
+    const scheduleReconnect = () => {
+      if (cancelled || reconnectTimer) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        void connectLiveSocket();
+      }, LIVE_RECONNECT_MS);
+    };
+
+    const connectLiveSocket = async () => {
+      closeSocket();
+      setLiveConnected(false);
+
+      try {
+        const controlUrlResponse = await fetch(`/api/instances/${instanceId}/control-url`, {
+          cache: "no-store",
+        });
+        if (!controlUrlResponse.ok) {
+          setLiveError(`Control URL request failed (${controlUrlResponse.status})`);
+          scheduleReconnect();
+          return;
+        }
+
+        const controlData = await controlUrlResponse.json();
+        if (!controlData.url || cancelled) {
+          setLiveError("Missing gateway control URL");
+          scheduleReconnect();
+          return;
+        }
+
+        const parsedUrl = new URL(controlData.url as string);
+        const token = parsedUrl.searchParams.get("token");
+        parsedUrl.search = "";
+        if (!token) {
+          setLiveError("Missing gateway auth token");
+          scheduleReconnect();
+          return;
+        }
+
+        const wsUrl = parsedUrl
+          .toString()
+          .replace(/^http:/, "ws:")
+          .replace(/^https:/, "wss:")
+          .replace(/\/$/, "");
+
+        const ws = new WebSocket(wsUrl);
+        liveSocketRef.current = ws;
+
+        ws.onopen = () => {
+          if (cancelled) return;
+          connectRequestId = generateRequestId();
+          ws.send(
+            JSON.stringify({
+              type: "req",
+              id: connectRequestId,
+              method: "connect",
+              params: {
+                minProtocol: GATEWAY_PROTOCOL_VERSION,
+                maxProtocol: GATEWAY_PROTOCOL_VERSION,
+                client: {
+                  id: "webchat-ui",
+                  version: "hosted-web-1.0.0",
+                  platform: "browser",
+                  mode: "webchat",
+                },
+                auth: { token },
+              },
+            })
+          );
+        };
+
+        ws.onmessage = (event) => {
+          let frame: GatewayFrame;
+          try {
+            frame = JSON.parse(event.data as string) as GatewayFrame;
+          } catch {
+            return;
+          }
+
+          if (frame.type === "res") {
+            if (connectRequestId && frame.id === connectRequestId) {
+              if (!frame.ok) {
+                setLiveConnected(false);
+                setLiveError(frame.error?.message || "Gateway connect failed");
+                ws.close();
+                return;
+              }
+              setLiveConnected(true);
+              setLiveError(null);
+              scheduleHistoryRefresh();
+            }
+            return;
+          }
+
+          if (frame.type === "event" && frame.event === "chat") {
+            const payload =
+              frame.payload && typeof frame.payload === "object"
+                ? (frame.payload as ChatEventPayload)
+                : undefined;
+            const state = payload?.state;
+            const runId = typeof payload?.runId === "string" ? payload.runId : null;
+
+            if (state === "delta" && runId && activeRunIdRef.current === runId) {
+              const text = extractTextContent(payload?.message);
+              if (text) setStreamingAssistant(text);
+              setSending(true);
+              return;
+            }
+
+            if (state === "final" || state === "error" || state === "aborted") {
+              if (runId && activeRunIdRef.current === runId) {
+                clearPendingRunState();
+              }
+              scheduleHistoryRefresh();
+            }
+          }
+        };
+
+        ws.onerror = () => {
+          // Handled by onclose.
+        };
+
+        ws.onclose = (closeEvent) => {
+          if (liveSocketRef.current === ws) {
+            liveSocketRef.current = null;
+          }
+          setLiveConnected(false);
+          if (!cancelled) {
+            const reason = closeEvent.reason || "no reason";
+            setLiveError(`disconnected (${closeEvent.code}): ${reason}`);
+            scheduleReconnect();
+          }
+        };
+      } catch (error) {
+        setLiveConnected(false);
+        setLiveError(`Error connecting live chat updates: ${String(error)}`);
+        scheduleReconnect();
+      }
+    };
+
+    void connectLiveSocket();
+
+    return () => {
+      cancelled = true;
+      setLiveConnected(false);
+      setLiveError(null);
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (historySyncTimerRef.current) {
+        clearTimeout(historySyncTimerRef.current);
+        historySyncTimerRef.current = null;
+      }
+      closeSocket();
+    };
+  }, [instance?.status, instance?.id]);
+
+  const selectedProviderModels =
+    providerGroups.find((entry) => entry.provider === selectedProvider)?.models ?? [];
+  const canSaveModel =
+    selectedModelRef.length > 0 &&
+    !modelSaving &&
+    !modelsLoading &&
+    selectedModelRef !== currentModelRef;
+
+  return {
+    instance,
+    loading,
+    creating,
+    deleting,
+    message,
+    setMessage,
+    chatHistory,
+    sending,
+    streamingAssistant,
+    activeRunId,
+    liveConnected,
+    liveError,
+    historyLoading,
+    modelsLoading,
+    modelsError,
+    modelSaving,
+    modelMessage,
+    providerGroups,
+    currentModelRef,
+    selectedProvider,
+    setSelectedProvider,
+    selectedModelRef,
+    setSelectedModelRef,
+    selectedProviderModels,
+    canSaveModel,
+    createInstance,
+    deleteInstance,
+    sendMessage,
+    saveSelectedModel,
+  };
+}
