@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { gatewayRpc } from "@/lib/gateway/ws-client";
+import { resolveGatewayTarget } from "@/lib/gateway/target";
 
 // Supported channels and their config structure
 const CHANNEL_CONFIGS: Record<string, (body: Record<string, unknown>) => Record<string, unknown>> = {
@@ -72,9 +73,11 @@ export async function POST(
     return NextResponse.json({ error: "Instance not ready" }, { status: 400 });
   }
 
-  const gatewayUrl = instance.public_url.startsWith("http")
-    ? instance.public_url
-    : `https://${instance.public_url}`;
+  const { gatewayUrl, token } = resolveGatewayTarget({
+    instancePublicUrl: instance.public_url,
+    instanceToken: instance.gateway_token_encrypted,
+    instanceId: id,
+  });
 
   const body = await request.json();
 
@@ -86,7 +89,7 @@ export async function POST(
       config?: Record<string, unknown>;
     }>({
       gatewayUrl,
-      token: instance.gateway_token_encrypted,
+      token,
       method: "config.get",
       rpcParams: {},
     });
@@ -130,7 +133,7 @@ export async function POST(
       restart?: { scheduled: boolean };
     }>({
       gatewayUrl,
-      token: instance.gateway_token_encrypted,
+      token,
       method: "config.patch",
       rpcParams: {
         baseHash,
@@ -197,16 +200,18 @@ export async function DELETE(
     return NextResponse.json({ error: "Instance not ready" }, { status: 400 });
   }
 
-  const gatewayUrl = instance.public_url.startsWith("http")
-    ? instance.public_url
-    : `https://${instance.public_url}`;
+  const { gatewayUrl, token } = resolveGatewayTarget({
+    instancePublicUrl: instance.public_url,
+    instanceToken: instance.gateway_token_encrypted,
+    instanceId: id,
+  });
 
   try {
     // Step 1: Clear pairing data (approved users) for this channel
     console.log("[channels/configure] Clearing pairing data for channel:", channel);
     const clearResult = await gatewayRpc<{ ok: boolean; cleared?: boolean; previousCount?: number }>({
       gatewayUrl,
-      token: instance.gateway_token_encrypted,
+      token,
       method: "channel.pairing.clear",
       rpcParams: { channel },
     });
@@ -222,7 +227,7 @@ export async function DELETE(
       hash?: string;
     }>({
       gatewayUrl,
-      token: instance.gateway_token_encrypted,
+      token,
       method: "config.get",
       rpcParams: {},
     });
@@ -245,7 +250,7 @@ export async function DELETE(
     // Step 3: Remove channel config entirely (set to null to delete)
     const patchResult = await gatewayRpc<{ ok: boolean }>({
       gatewayUrl,
-      token: instance.gateway_token_encrypted,
+      token,
       method: "config.patch",
       rpcParams: {
         baseHash,

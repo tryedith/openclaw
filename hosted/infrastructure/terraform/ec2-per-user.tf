@@ -13,7 +13,7 @@ resource "aws_secretsmanager_secret" "platform_credentials" {
 
 # NOTE: You must manually set the secret value after deploy:
 # aws secretsmanager put-secret-value --secret-id openclaw/platform-credentials \
-#   --secret-string '{"ANTHROPIC_API_KEY":"sk-ant-xxx"}'
+#   --secret-string '{"ANTHROPIC_API_KEY":"sk-ant-xxx","OPENAI_API_KEY":"sk-proj-xxx","GEMINI_API_KEY":"AIza...","HOSTED_USAGE_REPORT_URL":"https://your-hosted-web-domain/api/usage/events","USAGE_SERVICE_KEY":"your-shared-secret"}'
 
 # Get latest Amazon Linux 2023 AMI
 data "aws_ami" "amazon_linux_2023" {
@@ -154,9 +154,10 @@ resource "aws_iam_instance_profile" "user_instance" {
 
 # Launch Template for user instances
 resource "aws_launch_template" "user_instance" {
-  name_prefix   = "openclaw-user-"
-  image_id      = data.aws_ami.amazon_linux_2023.id
-  instance_type = var.user_instance_type
+  name_prefix            = "openclaw-user-"
+  image_id               = data.aws_ami.amazon_linux_2023.id
+  instance_type          = var.user_instance_type
+  update_default_version = true
 
   iam_instance_profile {
     arn = aws_iam_instance_profile.user_instance.arn
@@ -206,11 +207,21 @@ resource "aws_launch_template" "user_instance" {
       --secret-id openclaw/platform-credentials \
       --query SecretString --output text)
     ANTHROPIC_API_KEY=$(echo $SECRETS | jq -r .ANTHROPIC_API_KEY)
+    OPENAI_API_KEY=$(echo $SECRETS | jq -r '.OPENAI_API_KEY // empty')
+    GEMINI_API_KEY=$(echo $SECRETS | jq -r '.GEMINI_API_KEY // empty')
+    HOSTED_USAGE_REPORT_URL=$(echo $SECRETS | jq -r '.HOSTED_USAGE_REPORT_URL // empty')
+    USAGE_SERVICE_KEY=$(echo $SECRETS | jq -r '.USAGE_SERVICE_KEY // empty')
 
     # Start the container (pre-warmed and ready)
     docker run -d --name openclaw-gateway --restart=always -p 8080:8080 \
       -e OPENCLAW_GATEWAY_TOKEN="$GATEWAY_TOKEN" \
       -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+      -e OPENAI_API_KEY="$OPENAI_API_KEY" \
+      -e GEMINI_API_KEY="$GEMINI_API_KEY" \
+      -e HOSTED_USAGE_REPORT_URL="$HOSTED_USAGE_REPORT_URL" \
+      -e USAGE_SERVICE_KEY="$USAGE_SERVICE_KEY" \
+      -e OPENCLAW_CONFIG_PATH=/app/hosted-config.json \
+      -e OPENCLAW_STATE_DIR=/tmp/.openclaw \
       -e PORT=8080 \
       -e NODE_ENV=production \
       ${aws_ecr_repository.openclaw.repository_url}:latest
@@ -242,18 +253,10 @@ resource "aws_launch_template" "user_instance" {
     }
   }
 
-  # Request Spot instances
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price                      = var.user_instance_spot_price
-      instance_interruption_behavior = "terminate"
-    }
-  }
-
   metadata_options {
     http_endpoint               = "enabled"
-    http_tokens                 = "optional"  # IMDSv1 for simpler scripting
+    instance_metadata_tags      = "enabled"
+    http_tokens                 = "optional" # IMDSv1 for simpler scripting
     http_put_response_hop_limit = 1
   }
 

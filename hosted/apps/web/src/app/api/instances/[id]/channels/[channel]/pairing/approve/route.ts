@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { gatewayRpc } from "@/lib/gateway/ws-client";
+import { resolveGatewayTarget } from "@/lib/gateway/target";
 
 interface PairingApproveResult {
   ok: boolean;
@@ -47,9 +48,11 @@ export async function POST(
     return NextResponse.json({ error: "Instance not ready" }, { status: 400 });
   }
 
-  const gatewayUrl = instance.public_url.startsWith("http")
-    ? instance.public_url
-    : `https://${instance.public_url}`;
+  const { gatewayUrl, token } = resolveGatewayTarget({
+    instancePublicUrl: instance.public_url,
+    instanceToken: instance.gateway_token_encrypted,
+    instanceId: id,
+  });
 
   const body = await request.json();
   const { code, notify } = body as { code: string; notify?: boolean };
@@ -61,7 +64,7 @@ export async function POST(
   try {
     const result = await gatewayRpc<PairingApproveResult>({
       gatewayUrl,
-      token: instance.gateway_token_encrypted,
+      token,
       method: "channel.pairing.approve",
       rpcParams: { channel, code, notify: notify ?? true },
     });

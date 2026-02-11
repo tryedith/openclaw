@@ -19,9 +19,18 @@ RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then \
       rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*; \
     fi
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y --no-install-recommends curl && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install curl for health checks and Chromium for browser automation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    chromium \
+    fonts-liberation \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libxkbcommon0 \
+    libgbm1 \
+    libxshmfence1 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY ui/package.json ./ui/package.json
@@ -38,8 +47,15 @@ RUN pnpm ui:build
 
 ENV NODE_ENV=production
 
+# Ensure hosted runtime always reads the baked config and uses writable state in containerized envs.
+ENV OPENCLAW_CONFIG_PATH=/app/hosted-config.json
+ENV OPENCLAW_STATE_DIR=/tmp/.openclaw
+
 # Copy hosted config for cloud deployments (enables chat API, disables device pairing)
 COPY docker/hosted-config.json /app/hosted-config.json
+
+# Ownership fix for non-root runtime writes to /app/hosted-config.json.*
+RUN chown node:node /app
 
 # Security hardening: Run as non-root user
 # The node:22-bookworm image includes a 'node' user (uid 1000)
