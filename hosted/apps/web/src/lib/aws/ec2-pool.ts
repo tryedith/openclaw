@@ -22,6 +22,14 @@ import {
 const AWS_REGION = process.env.AWS_REGION || "us-west-2";
 const LAUNCH_TEMPLATE_ID = process.env.LAUNCH_TEMPLATE_ID!;
 const POOL_SPARE_COUNT = parseInt(process.env.POOL_SPARE_COUNT || "2", 10);
+const SUBNET_IDS = (process.env.SUBNET_IDS || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter((value) => value.length > 0);
+const SECURITY_GROUP_IDS = (process.env.SECURITY_GROUP_ID || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter((value) => value.length > 0);
 
 interface PoolInstance {
   instanceId: string;
@@ -35,6 +43,24 @@ interface PoolInstance {
 interface AssignInstanceParams {
   userId: string;
   instanceId: string;
+}
+
+function getErrorCode(error: unknown): string {
+  if (!error || typeof error !== "object") return "UnknownError";
+  const code = (error as { Code?: unknown; code?: unknown }).Code;
+  if (typeof code === "string" && code.length > 0) return code;
+  const lowerCode = (error as { code?: unknown }).code;
+  if (typeof lowerCode === "string" && lowerCode.length > 0) return lowerCode;
+  return "UnknownError";
+}
+
+function getErrorMessage(error: unknown): string {
+  if (!error || typeof error !== "object") return String(error);
+  const message = (error as { message?: unknown; Message?: unknown }).message;
+  if (typeof message === "string" && message.length > 0) return message;
+  const upperMessage = (error as { Message?: unknown }).Message;
+  if (typeof upperMessage === "string" && upperMessage.length > 0) return upperMessage;
+  return String(error);
 }
 
 export class EC2PoolManager {
@@ -81,15 +107,78 @@ export class EC2PoolManager {
     return instances.filter((i) => i.status === "available");
   }
 
-  async launchInstances(count: number): Promise<string[]> {
-    const response = await this.ec2.send(
-      new RunInstancesCommand({
-        LaunchTemplate: { LaunchTemplateId: LAUNCH_TEMPLATE_ID },
-        MinCount: count,
-        MaxCount: count,
-      })
+  private async launchSingleInstance(
+    candidateSubnets: string[],
+    offset: number
+  ): Promise<string> {
+    if (candidateSubnets.length === 0) {
+      const response = await this.ec2.send(
+        new RunInstancesCommand({
+          LaunchTemplate: { LaunchTemplateId: LAUNCH_TEMPLATE_ID },
+          MinCount: 1,
+          MaxCount: 1,
+        })
+      );
+      const instanceId = response.Instances?.[0]?.InstanceId;
+      if (!instanceId) {
+        throw new Error("EC2 RunInstances returned no instance ID");
+      }
+      return instanceId;
+    }
+
+    if (SECURITY_GROUP_IDS.length === 0) {
+      throw new Error(
+        "SECURITY_GROUP_ID must be set when SUBNET_IDS is configured (required for multi-AZ launches)"
+      );
+    }
+
+    const attempts: string[] = [];
+    for (let i = 0; i < candidateSubnets.length; i++) {
+      const subnet = candidateSubnets[(offset + i) % candidateSubnets.length]!;
+      try {
+        const response = await this.ec2.send(
+          new RunInstancesCommand({
+            LaunchTemplate: { LaunchTemplateId: LAUNCH_TEMPLATE_ID },
+            MinCount: 1,
+            MaxCount: 1,
+            // The launch template uses NetworkInterfaces, so we must override that block rather than
+            // passing SubnetId (otherwise the API rejects the request).
+            NetworkInterfaces: [
+              {
+                DeviceIndex: 0,
+                SubnetId: subnet,
+                Groups: SECURITY_GROUP_IDS,
+                AssociatePublicIpAddress: true,
+              },
+            ],
+          })
+        );
+        const instanceId = response.Instances?.[0]?.InstanceId;
+        if (!instanceId) {
+          throw new Error(`EC2 RunInstances returned no instance ID for subnet ${subnet}`);
+        }
+        return instanceId;
+      } catch (error) {
+        const code = getErrorCode(error);
+        const message = getErrorMessage(error);
+        attempts.push(`${subnet}:${code}:${message}`);
+      }
+    }
+
+    throw new Error(
+      `Failed to launch instance in all configured subnets (${candidateSubnets.join(",")}): ${attempts.join(
+        " | "
+      )}`
     );
-    return response.Instances?.map((i: Instance) => i.InstanceId!) || [];
+  }
+
+  async launchInstances(count: number): Promise<string[]> {
+    const launchedInstanceIds: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const instanceId = await this.launchSingleInstance(SUBNET_IDS, i);
+      launchedInstanceIds.push(instanceId);
+    }
+    return launchedInstanceIds;
   }
 
   async waitForInstanceReady(instanceId: string, timeoutMs: number = 180000): Promise<void> {

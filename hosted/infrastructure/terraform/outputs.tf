@@ -38,6 +38,8 @@ output "env_vars" {
     ALB_LISTENER_ARN   = var.enable_https ? aws_lb_listener.https[0].arn : aws_lb_listener.http.arn
     ALB_DNS_NAME       = aws_lb.openclaw.dns_name
     VPC_ID             = aws_vpc.main.id
+    SUBNET_IDS         = join(",", aws_subnet.public[*].id)
+    SECURITY_GROUP_ID  = aws_security_group.user_instances.id
     LAUNCH_TEMPLATE_ID = aws_launch_template.user_instance.id
     ECR_REPOSITORY_URL = aws_ecr_repository.openclaw.repository_url
   }
