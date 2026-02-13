@@ -201,7 +201,19 @@ export class EC2PoolManager {
     const available = await this.getAvailableInstances();
     const needed = POOL_SPARE_COUNT - available.length;
     if (needed > 0) {
-      await this.launchInstances(needed);
+      try {
+        await this.launchInstances(needed);
+      } catch (error) {
+        console.error("[ec2-pool] maintainPool failed", {
+          code: getErrorCode(error),
+          message: getErrorMessage(error),
+          needed,
+          available: available.length,
+          poolSpareCount: POOL_SPARE_COUNT,
+          subnetsConfigured: SUBNET_IDS.length,
+        });
+        throw error;
+      }
     }
   }
 
@@ -240,7 +252,15 @@ export class EC2PoolManager {
     );
 
     // Replenish pool in background
-    this.maintainPool().catch(() => {});
+    this.maintainPool().catch((error) => {
+      // Don't crash the request; the pool is a best-effort background replenishment. But do log.
+      console.error("[ec2-pool] maintainPool failed (background)", {
+        code: getErrorCode(error),
+        message: getErrorMessage(error),
+        userId,
+        instanceId,
+      });
+    });
 
     return {
       ec2InstanceId: instance.instanceId,

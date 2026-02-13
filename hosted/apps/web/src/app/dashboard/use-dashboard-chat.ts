@@ -513,7 +513,14 @@ export function useDashboardChat() {
           .replace(/^https:/, "wss:")
           .replace(/\/$/, "");
 
-        const ws = new WebSocket(wsUrl);
+        // If the dashboard is served over HTTPS, the browser will block insecure `ws://`.
+        // Prefer `wss://` to avoid mixed-content errors.
+        const safeWsUrl =
+          typeof window !== "undefined" && window.location.protocol === "https:"
+            ? wsUrl.replace(/^ws:/, "wss:")
+            : wsUrl;
+
+        const ws = new WebSocket(safeWsUrl);
         liveSocketRef.current = ws;
 
         ws.onopen = () => {

@@ -173,7 +173,11 @@ export async function POST() {
   } catch (error) {
     console.error("[instances] POST - Provisioning error:", error);
 
-    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    const rawMsg = error instanceof Error ? error.message : "Unknown error";
+    const errorMsg =
+      rawMsg === "Could not load credentials from any providers"
+        ? "Could not load AWS credentials. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY (and AWS_REGION) in the Vercel environment for the hosted web app."
+        : rawMsg;
     await supabase
       .from("instances")
       .update({
