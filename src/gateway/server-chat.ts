@@ -23,6 +23,11 @@ function shouldSuppressHeartbeatBroadcast(runId: string): boolean {
   }
 }
 
+function isInternalMemoryFlushRun(runId: string): boolean {
+  const runContext = getAgentRunContext(runId);
+  return runContext?.internalRunType === "memory_flush";
+}
+
 export type ChatRunEntry = {
   sessionKey: string;
   clientRunId: string;
@@ -199,6 +204,23 @@ export function createAgentEventHandler({
     nodeSendToSession(sessionKey, "chat", payload);
   };
 
+  const emitChatNotice = (sessionKey: string, clientRunId: string, seq: number, text: string) => {
+    const payload = {
+      runId: clientRunId,
+      sessionKey,
+      seq,
+      state: "notice" as const,
+      noticeType: "memory_flush" as const,
+      message: {
+        role: "system",
+        content: [{ type: "text", text }],
+        timestamp: Date.now(),
+      },
+    };
+    broadcast("chat", payload);
+    nodeSendToSession(sessionKey, "chat", payload);
+  };
+
   const shouldEmitToolEvents = (runId: string, sessionKey?: string) => {
     const runContext = getAgentRunContext(runId);
     const runVerbose = normalizeVerboseLevel(runContext?.verboseLevel);
@@ -221,6 +243,7 @@ export function createAgentEventHandler({
     const clientRunId = chatLink?.clientRunId ?? evt.runId;
     const isAborted =
       chatRunState.abortedRuns.has(clientRunId) || chatRunState.abortedRuns.has(evt.runId);
+    const isInternalMemoryFlush = isInternalMemoryFlushRun(evt.runId);
     // Include sessionKey so Control UI can filter tool streams per session.
     const agentPayload = sessionKey ? { ...evt, sessionKey } : evt;
     const last = agentRunSeq.get(evt.runId) ?? 0;
@@ -249,7 +272,11 @@ export function createAgentEventHandler({
 
     if (sessionKey) {
       nodeSendToSession(sessionKey, "agent", agentPayload);
-      if (!isAborted && evt.stream === "assistant" && typeof evt.data?.text === "string") {
+      if (isInternalMemoryFlush) {
+        if (lifecyclePhase === "end") {
+          emitChatNotice(sessionKey, clientRunId, evt.seq, "Memory maintenance run completed.");
+        }
+      } else if (!isAborted && evt.stream === "assistant" && typeof evt.data?.text === "string") {
         emitChatDelta(sessionKey, clientRunId, evt.seq, evt.data.text);
       } else if (!isAborted && (lifecyclePhase === "end" || lifecyclePhase === "error")) {
         if (chatLink) {

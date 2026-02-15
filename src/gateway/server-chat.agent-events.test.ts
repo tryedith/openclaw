@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createAgentEventHandler, createChatRunState } from "./server-chat.js";
+import { clearAgentRunContext, registerAgentRunContext } from "../infra/agent-events.js";
 
 describe("agent event handler", () => {
   it("emits chat delta for assistant text-only events", () => {
@@ -38,6 +39,47 @@ describe("agent event handler", () => {
     expect(payload.message?.content?.[0]?.text).toBe("Hello world");
     const sessionChatCalls = nodeSendToSession.mock.calls.filter(([, event]) => event === "chat");
     expect(sessionChatCalls).toHaveLength(1);
+    nowSpy.mockRestore();
+  });
+
+  it("emits a system notice for internal memory flush runs", () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(2_000);
+    const broadcast = vi.fn();
+    const nodeSendToSession = vi.fn();
+    const agentRunSeq = new Map<string, number>();
+    const chatRunState = createChatRunState();
+    const runId = "run-memory-flush";
+    registerAgentRunContext(runId, { internalRunType: "memory_flush" });
+
+    const handler = createAgentEventHandler({
+      broadcast,
+      nodeSendToSession,
+      agentRunSeq,
+      chatRunState,
+      resolveSessionKeyForRun: (incomingRunId) =>
+        incomingRunId === runId ? "session-1" : undefined,
+      clearAgentRunContext,
+    });
+
+    handler({
+      runId,
+      seq: 1,
+      stream: "lifecycle",
+      ts: Date.now(),
+      data: { phase: "end" },
+    });
+
+    const chatCalls = broadcast.mock.calls.filter(([event]) => event === "chat");
+    expect(chatCalls).toHaveLength(1);
+    const payload = chatCalls[0]?.[1] as {
+      state?: string;
+      noticeType?: string;
+      message?: { role?: string; content?: Array<{ text?: string }> };
+    };
+    expect(payload.state).toBe("notice");
+    expect(payload.noticeType).toBe("memory_flush");
+    expect(payload.message?.role).toBe("system");
+    expect(payload.message?.content?.[0]?.text).toBe("Memory maintenance run completed.");
     nowSpy.mockRestore();
   });
 });

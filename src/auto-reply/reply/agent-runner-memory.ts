@@ -78,6 +78,7 @@ export async function runMemoryFlushIfNeeded(params: {
     registerAgentRunContext(flushRunId, {
       sessionKey: params.sessionKey,
       verboseLevel: params.resolvedVerboseLevel,
+      internalRunType: "memory_flush",
     });
   }
   let memoryCompactionCompleted = false;

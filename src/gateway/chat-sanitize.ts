@@ -16,6 +16,10 @@ const ENVELOPE_CHANNELS = [
 ];
 
 const MESSAGE_ID_LINE = /^\s*\[message_id:\s*[^\]]+\]\s*$/i;
+const SYSTEM_EVENT_LINE = /^\s*System:\s+/;
+const HISTORY_CONTEXT_MARKER = "[Chat messages since your last reply - for context]";
+const CURRENT_MESSAGE_MARKER = "[Current message - respond to this]";
+const THREAD_STARTER_MARKER = "[Thread starter - for context]";
 
 function looksLikeEnvelopeHeader(header: string): boolean {
   if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z\b/.test(header)) return true;
@@ -38,13 +42,53 @@ function stripMessageIdHints(text: string): string {
   return filtered.length === lines.length ? text : filtered.join("\n");
 }
 
+function stripPrependedSystemEventBlock(text: string): string {
+  if (!text.startsWith("System:")) return text;
+  const lines = text.split(/\r?\n/);
+  let idx = 0;
+  while (idx < lines.length && SYSTEM_EVENT_LINE.test(lines[idx] ?? "")) {
+    idx += 1;
+  }
+  if (idx === 0 || idx >= lines.length || (lines[idx] ?? "").trim().length !== 0) {
+    return text;
+  }
+  while (idx < lines.length && (lines[idx] ?? "").trim().length === 0) {
+    idx += 1;
+  }
+  if (idx >= lines.length) return text;
+  return lines.slice(idx).join("\n");
+}
+
+function stripEmbeddedHistoryContext(text: string): string {
+  const currentIdx = text.indexOf(CURRENT_MESSAGE_MARKER);
+  if (currentIdx >= 0) {
+    return text.slice(currentIdx + CURRENT_MESSAGE_MARKER.length).trimStart();
+  }
+  if (text.startsWith(HISTORY_CONTEXT_MARKER)) {
+    const lines = text.split(/\r?\n/);
+    // Marker-only context with no explicit current-message section: keep the tail block.
+    let idx = 1;
+    while (idx < lines.length && (lines[idx] ?? "").trim().length === 0) idx += 1;
+    return idx < lines.length ? lines.slice(idx).join("\n") : text;
+  }
+  if (text.startsWith(THREAD_STARTER_MARKER)) {
+    const lines = text.split(/\r?\n/);
+    let idx = 1;
+    while (idx < lines.length && (lines[idx] ?? "").trim().length === 0) idx += 1;
+    return idx < lines.length ? lines.slice(idx).join("\n") : text;
+  }
+  return text;
+}
+
 function stripEnvelopeFromContent(content: unknown[]): { content: unknown[]; changed: boolean } {
   let changed = false;
   const next = content.map((item) => {
     if (!item || typeof item !== "object") return item;
     const entry = item as Record<string, unknown>;
-    if (entry.type !== "text" || typeof entry.text !== "string") return item;
-    const stripped = stripMessageIdHints(stripEnvelope(entry.text));
+    if (typeof entry.text !== "string") return item;
+    const stripped = stripEmbeddedHistoryContext(
+      stripPrependedSystemEventBlock(stripMessageIdHints(stripEnvelope(entry.text))),
+    );
     if (stripped === entry.text) return item;
     changed = true;
     return {
@@ -65,7 +109,9 @@ export function stripEnvelopeFromMessage(message: unknown): unknown {
   const next: Record<string, unknown> = { ...entry };
 
   if (typeof entry.content === "string") {
-    const stripped = stripMessageIdHints(stripEnvelope(entry.content));
+    const stripped = stripEmbeddedHistoryContext(
+      stripPrependedSystemEventBlock(stripMessageIdHints(stripEnvelope(entry.content))),
+    );
     if (stripped !== entry.content) {
       next.content = stripped;
       changed = true;
@@ -77,7 +123,9 @@ export function stripEnvelopeFromMessage(message: unknown): unknown {
       changed = true;
     }
   } else if (typeof entry.text === "string") {
-    const stripped = stripMessageIdHints(stripEnvelope(entry.text));
+    const stripped = stripEmbeddedHistoryContext(
+      stripPrependedSystemEventBlock(stripMessageIdHints(stripEnvelope(entry.text))),
+    );
     if (stripped !== entry.text) {
       next.text = stripped;
       changed = true;

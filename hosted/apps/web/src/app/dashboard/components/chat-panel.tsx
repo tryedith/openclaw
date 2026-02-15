@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { MessageIcon, SendIcon } from "../icons";
 import type { ChatMessage } from "../types";
+import { ChatMarkdown } from "./chat-markdown";
 
 export function ChatPanel({
   historyLoading,
@@ -21,10 +22,18 @@ export function ChatPanel({
   onSend: () => void;
 }) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, sending, streamingAssistant]);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
+  }, [message]);
 
   return (
     <>
@@ -47,26 +56,40 @@ export function ChatPanel({
         ) : (
           <div className="space-y-4">
             {chatHistory.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                    msg.role === "user"
-                      ? "bg-primary text-white rounded-br-md"
-                      : "bg-background border border-border text-foreground rounded-bl-md"
-                  }`}
-                >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+              msg.role === "system" ? (
+                <div key={index} className="flex justify-center">
+                  <div className="max-w-[85%] rounded-full border border-border bg-background px-4 py-1.5 text-xs text-foreground-muted">
+                    {msg.content}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div
+                  key={index}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                      msg.role === "user"
+                        ? "bg-primary text-white rounded-br-md"
+                        : "bg-background border border-border text-foreground rounded-bl-md"
+                    }`}
+                  >
+                    {msg.role === "user" ? (
+                      <p className="text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">
+                        {msg.content}
+                      </p>
+                    ) : (
+                      <ChatMarkdown content={msg.content} />
+                    )}
+                  </div>
+                </div>
+              )
             ))}
             {sending ? (
               <div className="flex justify-start">
                 <div className="bg-background border border-border rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%]">
                   {streamingAssistant ? (
-                    <p className="text-sm whitespace-pre-wrap">{streamingAssistant}</p>
+                    <ChatMarkdown content={streamingAssistant} />
                   ) : (
                     <div className="flex gap-1">
                       <span
@@ -93,13 +116,18 @@ export function ChatPanel({
 
       <div className="p-4 border-t border-border">
         <div className="flex gap-3">
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={message}
             onChange={(event) => onMessageChange(event.target.value)}
-            onKeyDown={(event) => event.key === "Enter" && !event.shiftKey && onSend()}
-            placeholder="Type a message..."
-            className="flex-1 px-4 py-3 rounded-xl bg-background border border-border text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || event.shiftKey) return;
+              event.preventDefault();
+              onSend();
+            }}
+            placeholder="Type a message... (Shift+Enter for line breaks)"
+            rows={1}
+            className="flex-1 resize-none overflow-y-auto px-4 py-3 rounded-xl bg-background border border-border text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
             disabled={sending}
             autoFocus
           />

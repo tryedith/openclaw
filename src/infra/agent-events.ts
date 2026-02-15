@@ -15,6 +15,7 @@ export type AgentRunContext = {
   sessionKey?: string;
   verboseLevel?: VerboseLevel;
   isHeartbeat?: boolean;
+  internalRunType?: "memory_flush";
 };
 
 // Keep per-run counters so streams stay strictly monotonic per runId.
@@ -37,6 +38,9 @@ export function registerAgentRunContext(runId: string, context: AgentRunContext)
   }
   if (context.isHeartbeat !== undefined && existing.isHeartbeat !== context.isHeartbeat) {
     existing.isHeartbeat = context.isHeartbeat;
+  }
+  if (context.internalRunType && existing.internalRunType !== context.internalRunType) {
+    existing.internalRunType = context.internalRunType;
   }
 }
 

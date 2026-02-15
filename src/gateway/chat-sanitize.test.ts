@@ -39,4 +39,42 @@ describe("stripEnvelopeFromMessage", () => {
     const result = stripEnvelopeFromMessage(input) as { content?: string };
     expect(result.content).toBe("note\n[message_id: 123]");
   });
+
+  test("strips prepended system event block from user content", () => {
+    const input = {
+      role: "user",
+      content:
+        "System: [2026-02-14 19:20:13 UTC] Exec completed (code 0)\nSystem: [2026-02-14 19:20:15 UTC] HTML saved\n\nyeah lets refine image scraping",
+    };
+    const result = stripEnvelopeFromMessage(input) as { content?: string };
+    expect(result.content).toBe("yeah lets refine image scraping");
+  });
+
+  test("does not strip single-line user text that starts with System:", () => {
+    const input = {
+      role: "user",
+      content: "System: we should rename this env var",
+    };
+    const result = stripEnvelopeFromMessage(input) as { content?: string };
+    expect(result.content).toBe("System: we should rename this env var");
+  });
+
+  test("strips embedded history context marker and keeps current message body", () => {
+    const input = {
+      role: "user",
+      content:
+        "[Chat messages since your last reply - for context]\nAlice: prior line\n\n[Current message - respond to this]\nhello\nworld",
+    };
+    const result = stripEnvelopeFromMessage(input) as { content?: string };
+    expect(result.content).toBe("hello\nworld");
+  });
+
+  test("strips thread starter marker from user content", () => {
+    const input = {
+      role: "user",
+      content: "[Thread starter - for context]\ninitial task detail",
+    };
+    const result = stripEnvelopeFromMessage(input) as { content?: string };
+    expect(result.content).toBe("initial task detail");
+  });
 });

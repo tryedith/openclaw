@@ -2,16 +2,15 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { gatewayRpc, buildSessionKey } from "@/lib/gateway/ws-client";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
-import { randomUUID } from "crypto";
 
-interface ChatSendResult {
-  runId?: string;
-  status?: string;
-}
+type SessionsResetResult = {
+  ok?: boolean;
+  key?: string;
+};
 
-// POST /api/instances/[id]/chat - Proxy chat messages to the user's gateway
+// POST /api/instances/[id]/chat/reset - Start a fresh session transcript for this user
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -25,7 +24,6 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get instance from database
   const { data: instance, error } = await supabase
     .from("instances")
     .select("*")
@@ -41,57 +39,39 @@ export async function POST(
     return NextResponse.json({ error: "Instance not ready" }, { status: 400 });
   }
 
-  const body = (await request.json()) as { message?: string };
-  const message = typeof body.message === "string" ? body.message : "";
-
-  if (!message.trim().length) {
-    return NextResponse.json({ error: "Message required" }, { status: 400 });
-  }
-
   const { gatewayUrl, token } = resolveGatewayTarget({
     instancePublicUrl: instance.public_url,
     instanceToken: instance.gateway_token_encrypted,
     instanceId: id,
   });
 
-  // Build session key for this user
   const sessionKey = buildSessionKey(user.id);
 
   try {
-    const result = await gatewayRpc<ChatSendResult>({
+    const result = await gatewayRpc<SessionsResetResult>({
       gatewayUrl,
       token,
-      method: "chat.send",
+      method: "sessions.reset",
       rpcParams: {
-        sessionKey,
-        message,
-        idempotencyKey: randomUUID(),
+        key: sessionKey,
       },
-      timeoutMs: 60000, // Chat can take a while
+      timeoutMs: 30000,
     });
 
     if (!result.ok) {
-      console.error("[chat] Gateway error:", result.error);
+      console.error("[chat.reset] Gateway error:", result.error);
       return NextResponse.json(
-        { error: "Gateway error", details: result.error },
+        { error: "Failed to reset chat", details: result.error },
         { status: 500 }
       );
     }
 
-    const runId = result.payload?.runId;
-    if (!runId) {
-      return NextResponse.json(
-        { error: "Gateway did not return a run ID" },
-        { status: 502 }
-      );
-    }
-
     return NextResponse.json({
-      runId,
-      status: result.payload?.status ?? "started",
+      ok: true,
+      key: result.payload?.key ?? sessionKey,
     });
   } catch (error) {
-    console.error("[chat] Error:", error);
+    console.error("[chat.reset] Error:", error);
     return NextResponse.json(
       { error: "Failed to reach gateway", details: String(error) },
       { status: 500 }

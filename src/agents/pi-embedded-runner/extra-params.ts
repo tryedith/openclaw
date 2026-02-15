@@ -22,6 +22,52 @@ export function resolveExtraParams(params: {
 }
 
 type CacheControlTtl = "5m" | "1h";
+type CacheRetention = "short" | "long" | "none";
+
+function toCacheRetention(ttl: CacheControlTtl): CacheRetention {
+  return ttl === "1h" ? "long" : "short";
+}
+
+export function applyAnthropicCacheControlTtl(payload: unknown, ttl: CacheControlTtl): void {
+  // Anthropic's explicit "1h" retention must be set on cache breakpoints.
+  // For "5m", ephemeral without ttl is sufficient.
+  if (ttl !== "1h") return;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+
+  const asRecord = payload as Record<string, unknown>;
+  const setCacheControl = (block: Record<string, unknown>) => {
+    block.cache_control = { type: "ephemeral", ttl: "1h" };
+  };
+
+  const system = asRecord.system;
+  if (Array.isArray(system)) {
+    for (const item of system) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+      setCacheControl(item as Record<string, unknown>);
+    }
+  }
+
+  const messages = asRecord.messages;
+  if (!Array.isArray(messages) || messages.length === 0) return;
+  const last = messages[messages.length - 1];
+  if (!last || typeof last !== "object" || Array.isArray(last)) return;
+
+  const lastMessage = last as Record<string, unknown>;
+  if (lastMessage.role !== "user") return;
+
+  const content = lastMessage.content;
+  if (typeof content === "string") {
+    lastMessage.content = [
+      { type: "text", text: content, cache_control: { type: "ephemeral", ttl: "1h" } },
+    ];
+    return;
+  }
+  if (!Array.isArray(content) || content.length === 0) return;
+
+  const lastBlock = content[content.length - 1];
+  if (!lastBlock || typeof lastBlock !== "object" || Array.isArray(lastBlock)) return;
+  setCacheControl(lastBlock as Record<string, unknown>);
+}
 
 function resolveCacheControlTtl(
   extraParams: Record<string, unknown> | undefined,
@@ -35,6 +81,16 @@ function resolveCacheControlTtl(
   return undefined;
 }
 
+export function resolveCacheRetention(
+  extraParams: Record<string, unknown> | undefined,
+  provider: string,
+  modelId: string,
+): CacheRetention | undefined {
+  const ttl = resolveCacheControlTtl(extraParams, provider, modelId);
+  if (!ttl) return undefined;
+  return toCacheRetention(ttl);
+}
+
 function createStreamFnWithExtraParams(
   baseStreamFn: StreamFn | undefined,
   extraParams: Record<string, unknown> | undefined,
@@ -45,7 +101,10 @@ function createStreamFnWithExtraParams(
     return undefined;
   }
 
-  const streamParams: Partial<SimpleStreamOptions> & { cacheControlTtl?: CacheControlTtl } = {};
+  const streamParams: Partial<SimpleStreamOptions> & {
+    cacheControlTtl?: CacheControlTtl;
+    cacheRetention?: CacheRetention;
+  } = {};
   if (typeof extraParams.temperature === "number") {
     streamParams.temperature = extraParams.temperature;
   }
@@ -56,6 +115,10 @@ function createStreamFnWithExtraParams(
   if (cacheControlTtl) {
     streamParams.cacheControlTtl = cacheControlTtl;
   }
+  const cacheRetention = resolveCacheRetention(extraParams, provider, modelId);
+  if (cacheRetention) {
+    streamParams.cacheRetention = cacheRetention;
+  }
 
   if (Object.keys(streamParams).length === 0) {
     return undefined;
@@ -64,11 +127,19 @@ function createStreamFnWithExtraParams(
   log.debug(`creating streamFn wrapper with params: ${JSON.stringify(streamParams)}`);
 
   const underlying = baseStreamFn ?? streamSimple;
-  const wrappedStreamFn: StreamFn = (model, context, options) =>
-    underlying(model as Model<Api>, context, {
+  const wrappedStreamFn: StreamFn = (model, context, options) => {
+    const nextOnPayload = (payload: unknown) => {
+      if (cacheControlTtl) {
+        applyAnthropicCacheControlTtl(payload, cacheControlTtl);
+      }
+      options?.onPayload?.(payload);
+    };
+    return underlying(model as Model<Api>, context, {
       ...streamParams,
       ...options,
+      onPayload: nextOnPayload,
     });
+  };
 
   return wrappedStreamFn;
 }

@@ -5,6 +5,10 @@ interface ModelUsage {
   requests: number;
   inputTokens: number;
   outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  promptTokens: number;
+  totalTokens: number;
   costUsd: number;
 }
 
@@ -16,6 +20,10 @@ interface UsageSummary {
   totalRequests: number;
   totalInputTokens: number;
   totalOutputTokens: number;
+  totalCacheReadTokens: number;
+  totalCacheWriteTokens: number;
+  totalPromptTokens: number;
+  totalTokens: number;
   byModel: Record<string, ModelUsage>;
 }
 
@@ -29,6 +37,9 @@ type UsageSummaryRow = {
   total_requests: number | string | null;
   total_input_tokens: number | string | null;
   total_output_tokens: number | string | null;
+  total_cache_read_tokens: number | string | null;
+  total_cache_write_tokens: number | string | null;
+  total_prompt_tokens: number | string | null;
   by_model: unknown;
 };
 
@@ -66,6 +77,10 @@ function normalizeByModel(raw: unknown): Record<string, ModelUsage> {
       requests: Math.trunc(toNumber(entry.requests)),
       inputTokens: Math.trunc(toNumber(entry.inputTokens)),
       outputTokens: Math.trunc(toNumber(entry.outputTokens)),
+      cacheReadTokens: Math.trunc(toNumber(entry.cacheReadTokens)),
+      cacheWriteTokens: Math.trunc(toNumber(entry.cacheWriteTokens)),
+      promptTokens: Math.trunc(toNumber(entry.promptTokens)),
+      totalTokens: Math.trunc(toNumber(entry.totalTokens)),
       costUsd: Math.round(toNumber(entry.costUsd) * 1_000_000) / 1_000_000,
     };
   }
@@ -123,6 +138,12 @@ export async function GET(request: Request) {
     totalRequests: Math.trunc(toNumber(data?.total_requests)),
     totalInputTokens: Math.trunc(toNumber(data?.total_input_tokens)),
     totalOutputTokens: Math.trunc(toNumber(data?.total_output_tokens)),
+    totalCacheReadTokens: Math.trunc(toNumber(data?.total_cache_read_tokens)),
+    totalCacheWriteTokens: Math.trunc(toNumber(data?.total_cache_write_tokens)),
+    totalPromptTokens: Math.trunc(toNumber(data?.total_prompt_tokens)),
+    totalTokens:
+      Math.trunc(toNumber(data?.total_prompt_tokens)) +
+      Math.trunc(toNumber(data?.total_output_tokens)),
     byModel: normalizeByModel(data?.by_model),
   };
 

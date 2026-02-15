@@ -23,6 +23,7 @@ export default function DashboardPage() {
     sending,
     streamingAssistant,
     activeRunId,
+    startingNewChat,
     liveConnected,
     liveError,
     historyLoading,
@@ -41,6 +42,7 @@ export default function DashboardPage() {
     createInstance,
     deleteInstance,
     sendMessage,
+    startNewChat,
     saveSelectedModel,
   } = useDashboardChat();
 
@@ -84,7 +86,17 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        {liveError ? <p className="text-xs text-error max-w-xs text-right">{liveError}</p> : null}
+        <div className="flex items-center gap-3">
+          {liveError ? <p className="text-xs text-error max-w-xs text-right">{liveError}</p> : null}
+          <button
+            type="button"
+            onClick={startNewChat}
+            disabled={startingNewChat || sending}
+            className="px-3 py-2 rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-background-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {startingNewChat ? "Starting..." : "New Chat"}
+          </button>
+        </div>
       </div>
 
       <ModelControls

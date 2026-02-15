@@ -8,6 +8,10 @@ interface ModelUsage {
   requests: number;
   inputTokens: number;
   outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  promptTokens: number;
+  totalTokens: number;
   costUsd: number;
 }
 
@@ -19,6 +23,10 @@ interface UsageSummary {
   totalRequests: number;
   totalInputTokens: number;
   totalOutputTokens: number;
+  totalCacheReadTokens: number;
+  totalCacheWriteTokens: number;
+  totalPromptTokens: number;
+  totalTokens: number;
   byModel: Record<string, ModelUsage>;
 }
 
@@ -150,13 +158,60 @@ export default function UsagePage() {
             <MetricCard
               label="Input Tokens"
               value={formatInteger(summary.totalInputTokens)}
-              hint="Prompt + cache-related input tokens"
+              hint="Non-cache input tokens"
             />
             <MetricCard
               label="Output Tokens"
               value={formatInteger(summary.totalOutputTokens)}
               hint="Generated completion tokens"
             />
+          </div>
+
+          <div className="bg-background-secondary rounded-2xl border border-border overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">
+                Token Breakdown
+              </h2>
+              <p className="text-sm text-foreground-muted">
+                Prompt = Input + Cache Read + Cache Write
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-background">
+                  <tr className="text-left text-foreground-subtle">
+                    <th className="px-6 py-3 font-medium">Input</th>
+                    <th className="px-6 py-3 font-medium">Cache Read</th>
+                    <th className="px-6 py-3 font-medium">Cache Write</th>
+                    <th className="px-6 py-3 font-medium">Prompt</th>
+                    <th className="px-6 py-3 font-medium">Output</th>
+                    <th className="px-6 py-3 font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-border">
+                    <td className="px-6 py-4 text-foreground-muted">
+                      {formatInteger(summary.totalInputTokens)}
+                    </td>
+                    <td className="px-6 py-4 text-foreground-muted">
+                      {formatInteger(summary.totalCacheReadTokens)}
+                    </td>
+                    <td className="px-6 py-4 text-foreground-muted">
+                      {formatInteger(summary.totalCacheWriteTokens)}
+                    </td>
+                    <td className="px-6 py-4 text-foreground-muted">
+                      {formatInteger(summary.totalPromptTokens)}
+                    </td>
+                    <td className="px-6 py-4 text-foreground-muted">
+                      {formatInteger(summary.totalOutputTokens)}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-foreground">
+                      {formatInteger(summary.totalTokens)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="bg-background-secondary rounded-2xl border border-border overflow-hidden">
@@ -184,7 +239,11 @@ export default function UsagePage() {
                       <th className="px-6 py-3 font-medium">Model</th>
                       <th className="px-6 py-3 font-medium">Requests</th>
                       <th className="px-6 py-3 font-medium">Input</th>
+                      <th className="px-6 py-3 font-medium">Cache Read</th>
+                      <th className="px-6 py-3 font-medium">Cache Write</th>
+                      <th className="px-6 py-3 font-medium">Prompt</th>
                       <th className="px-6 py-3 font-medium">Output</th>
+                      <th className="px-6 py-3 font-medium">Total</th>
                       <th className="px-6 py-3 font-medium text-right">Cost</th>
                     </tr>
                   </thead>
@@ -194,7 +253,11 @@ export default function UsagePage() {
                         <td className="px-6 py-4 font-medium text-foreground">{row.modelId}</td>
                         <td className="px-6 py-4 text-foreground-muted">{formatInteger(row.requests)}</td>
                         <td className="px-6 py-4 text-foreground-muted">{formatInteger(row.inputTokens)}</td>
+                        <td className="px-6 py-4 text-foreground-muted">{formatInteger(row.cacheReadTokens)}</td>
+                        <td className="px-6 py-4 text-foreground-muted">{formatInteger(row.cacheWriteTokens)}</td>
+                        <td className="px-6 py-4 text-foreground-muted">{formatInteger(row.promptTokens)}</td>
                         <td className="px-6 py-4 text-foreground-muted">{formatInteger(row.outputTokens)}</td>
+                        <td className="px-6 py-4 text-foreground-muted">{formatInteger(row.totalTokens)}</td>
                         <td className="px-6 py-4 text-right font-medium text-foreground">
                           {formatUsd(row.costUsd)}
                         </td>

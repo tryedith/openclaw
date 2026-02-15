@@ -24,6 +24,8 @@ LOCAL_GATEWAY_IMAGE      ?= openclaw-hosted-local:dev
 LOCAL_GATEWAY_URL        ?= http://localhost:$(LOCAL_GATEWAY_PORT)
 LOCAL_USAGE_REPORT_URL   ?= http://host.docker.internal:$(LOCAL_WEB_PORT)/api/usage/events
 LOCAL_SMOKE_MODEL_ID     ?= claude-sonnet-4-20250514
+LOCAL_GATEWAY_CACHE_TRACE_FILE ?= /tmp/.openclaw/logs/cache-trace.jsonl
+LOCAL_GATEWAY_ANTHROPIC_PAYLOAD_LOG_FILE ?= /tmp/.openclaw/logs/anthropic-payload.jsonl
 
 # ── Docker / ECR ─────────────────────────────────────────────
 
@@ -161,6 +163,7 @@ session-logs: ## Dump agent session logs from the assigned instance
 
 .PHONY: local-check-env local-web-up local-web-down local-web-logs \
 	local-image-build local-gateway-up local-gateway-down local-gateway-logs \
+	local-gateway-debug-logs local-debug \
 	local-up local-down local-usage-smoke local-usage-smoke-from-container \
 	local-supabase-tail local-verify
 
@@ -244,6 +247,13 @@ local-gateway-up: local-check-env ## Run local gateway container with billing en
 			-e USAGE_SERVICE_KEY="$${USAGE_SERVICE_KEY}" \
 			-e OPENCLAW_CONFIG_PATH=/app/hosted-config.json \
 			-e OPENCLAW_STATE_DIR=/tmp/.openclaw \
+			-e OPENCLAW_CACHE_TRACE="$${OPENCLAW_CACHE_TRACE:-}" \
+			-e OPENCLAW_CACHE_TRACE_FILE="$(LOCAL_GATEWAY_CACHE_TRACE_FILE)" \
+			-e OPENCLAW_CACHE_TRACE_MESSAGES="$${OPENCLAW_CACHE_TRACE_MESSAGES:-}" \
+			-e OPENCLAW_CACHE_TRACE_PROMPT="$${OPENCLAW_CACHE_TRACE_PROMPT:-}" \
+			-e OPENCLAW_CACHE_TRACE_SYSTEM="$${OPENCLAW_CACHE_TRACE_SYSTEM:-}" \
+			-e OPENCLAW_ANTHROPIC_PAYLOAD_LOG="$${OPENCLAW_ANTHROPIC_PAYLOAD_LOG:-}" \
+			-e OPENCLAW_ANTHROPIC_PAYLOAD_LOG_FILE="$(LOCAL_GATEWAY_ANTHROPIC_PAYLOAD_LOG_FILE)" \
 			-e PORT=8080 \
 			-e NODE_ENV=production \
 			"$(LOCAL_GATEWAY_IMAGE)"); \
@@ -259,14 +269,15 @@ local-gateway-up: local-check-env ## Run local gateway container with billing en
 		fi; \
 		HEALTH_OK=0; \
 		for i in $$(seq 1 15); do \
-			if curl -fsS "$(LOCAL_GATEWAY_URL)/health" >/dev/null 2>&1; then \
+			if curl -fsS "$(LOCAL_GATEWAY_URL)/health" >/dev/null 2>&1 || \
+			   curl -fsS "$(LOCAL_GATEWAY_URL)/" >/dev/null 2>&1; then \
 				HEALTH_OK=1; \
 				break; \
 			fi; \
 			sleep 1; \
 		done; \
 		if [ $$HEALTH_OK -ne 1 ]; then \
-			echo "Gateway health check failed at $(LOCAL_GATEWAY_URL)/health. Logs:"; \
+			echo "Gateway health check failed at $(LOCAL_GATEWAY_URL). Logs:"; \
 			docker logs --tail 120 "$(LOCAL_GATEWAY_CONTAINER)" || true; \
 			exit 1; \
 		fi; \
@@ -279,6 +290,21 @@ local-gateway-down: ## Stop and remove local gateway container
 
 local-gateway-logs: ## Tail local gateway logs
 	@docker logs -f "$(LOCAL_GATEWAY_CONTAINER)"
+
+local-gateway-debug-logs: ## Tail cache trace + anthropic payload logs from inside gateway container
+	@docker exec -it "$(LOCAL_GATEWAY_CONTAINER)" sh -lc '\
+		mkdir -p /tmp/.openclaw/logs; \
+		touch /tmp/.openclaw/logs/cache-trace.jsonl /tmp/.openclaw/logs/anthropic-payload.jsonl; \
+		tail -n 40 -f /tmp/.openclaw/logs/cache-trace.jsonl /tmp/.openclaw/logs/anthropic-payload.jsonl \
+	'
+
+local-debug: ## Bring stack up with cache debug env and tail gateway/web/cache logs
+	@OPENCLAW_CACHE_TRACE=1 \
+	OPENCLAW_CACHE_TRACE_MESSAGES=1 \
+	OPENCLAW_CACHE_TRACE_PROMPT=1 \
+	OPENCLAW_CACHE_TRACE_SYSTEM=1 \
+	OPENCLAW_ANTHROPIC_PAYLOAD_LOG=1 \
+	"$(CURDIR)/scripts/local-debug.sh" "$(LOCAL_INSTANCE_ID)"
 
 local-up: local-check-env local-web-up local-image-build local-gateway-up ## Bring up local web + gateway stack
 	@echo "Local stack is up."

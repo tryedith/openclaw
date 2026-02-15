@@ -216,6 +216,8 @@ export async function POST(request: Request) {
           model_id: normalizedModel.modelRef,
           input_tokens: promptSideTokens,
           output_tokens: outputTokens,
+          cache_read_tokens: cacheReadTokens,
+          cache_write_tokens: cacheWriteTokens,
           input_price_per_million: effectiveInputPricePerMillion,
           output_price_per_million: outputPricePerMillion,
           ...(createdAt ? { created_at: createdAt } : {}),

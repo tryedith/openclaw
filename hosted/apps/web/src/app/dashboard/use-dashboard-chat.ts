@@ -32,31 +32,45 @@ function isSameChatHistory(a: ChatMessage[], b: ChatMessage[]): boolean {
   return true;
 }
 
-function extractTextContent(content: unknown): string {
-  if (typeof content === "string") {
-    return content;
-  }
+function extractTextContent(
+  content: unknown,
+  role?: "user" | "assistant" | "system"
+): string {
+  const allowedTypes: ReadonlySet<string> =
+    role === "user"
+      ? new Set(["text", "input_text"])
+      : role === "assistant"
+      ? new Set(["text", "output_text"])
+      : role === "system"
+      ? new Set(["text"])
+      : new Set(["text", "input_text", "output_text"]);
+
+  const isTextBlock = (value: unknown): value is { type: string; text: string } =>
+    Boolean(
+      value &&
+        typeof value === "object" &&
+        "type" in value &&
+        "text" in value &&
+        typeof (value as { text?: unknown }).text === "string" &&
+        allowedTypes.has(String((value as { type?: unknown }).type))
+    );
+
+  if (typeof content === "string") return content;
 
   if (Array.isArray(content)) {
-    return content
-      .filter(
-        (block): block is { type: string; text: string } =>
-          block &&
-          typeof block === "object" &&
-          block.type === "text" &&
-          typeof block.text === "string"
-      )
-      .map((block) => block.text)
-      .join("\n");
+    return content.filter(isTextBlock).map((block) => block.text).join("\n");
   }
 
-  if (content && typeof content === "object" && "type" in content && "text" in content) {
-    const block = content as { type: string; text: string };
-    if (block.type === "text") {
-      return block.text;
-    }
+  if (content && typeof content === "object" && "content" in content) {
+    const withContent = content as { role?: unknown; content?: unknown };
+    const nestedRole =
+      withContent.role === "user" || withContent.role === "assistant" || withContent.role === "system"
+        ? (withContent.role as "user" | "assistant" | "system")
+        : role;
+    return extractTextContent(withContent.content, nestedRole);
   }
 
+  if (isTextBlock(content)) return content.text;
   return "";
 }
 
@@ -88,6 +102,17 @@ function updateModelSelectionFromCurrent(
   return { provider: firstGroup.provider, modelRef: firstGroup.models[0].modelRef };
 }
 
+function shouldPreserveInFlightHistory(
+  prev: ChatMessage[],
+  next: ChatMessage[],
+  hasInFlightRun: boolean
+): boolean {
+  if (!hasInFlightRun) return false;
+  // During an active run, avoid replacing optimistic/local stream state with
+  // stale transcript snapshots that can lag behind by a few seconds.
+  return next.length < prev.length;
+}
+
 export function useDashboardChat() {
   const [instance, setInstance] = useState<Instance | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,6 +124,7 @@ export function useDashboardChat() {
   const [sending, setSending] = useState(false);
   const [streamingAssistant, setStreamingAssistant] = useState("");
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  const [startingNewChat, setStartingNewChat] = useState(false);
 
   const [liveConnected, setLiveConnected] = useState(false);
   const [liveError, setLiveError] = useState<string | null>(null);
@@ -174,14 +200,19 @@ export function useDashboardChat() {
           : [];
 
         const messages: ChatMessage[] = rawMessages
-          .filter((m) => m.role === "user" || m.role === "assistant")
+          .filter((m) => m.role === "user" || m.role === "assistant" || m.role === "system")
           .map((m) => ({
-            role: m.role as "user" | "assistant",
-            content: extractTextContent(m.content),
+            role: m.role as "user" | "assistant" | "system",
+            content: extractTextContent(m.content, m.role as "user" | "assistant" | "system"),
           }))
           .filter((m) => m.content.length > 0);
 
-        setChatHistory((prev) => (isSameChatHistory(prev, messages) ? prev : messages));
+        const hasInFlightRun = activeRunIdRef.current != null || activeRunStartedAtRef.current != null;
+        setChatHistory((prev) => {
+          if (isSameChatHistory(prev, messages)) return prev;
+          if (shouldPreserveInFlightHistory(prev, messages, hasInFlightRun)) return prev;
+          return messages;
+        });
 
         const runStartedAt = activeRunStartedAtRef.current;
         if (runStartedAt != null) {
@@ -289,7 +320,7 @@ export function useDashboardChat() {
   async function sendMessage() {
     if (!message.trim() || !instance?.id || instance.status !== "running" || sending) return;
 
-    const userMessage = message.trim();
+    const userMessage = message;
     setMessage("");
     setSending(true);
     setStreamingAssistant("");
@@ -378,6 +409,30 @@ export function useDashboardChat() {
       setModelsError(error instanceof Error ? error.message : String(error));
     } finally {
       setModelSaving(false);
+    }
+  }
+
+  async function startNewChat() {
+    if (!instance?.id || instance.status !== "running" || startingNewChat) return;
+
+    setStartingNewChat(true);
+    try {
+      const response = await fetch(`/api/instances/${instance.id}/chat/reset`, {
+        method: "POST",
+      });
+      const data = (await response.json()) as { error?: string; details?: string };
+      if (!response.ok || data.error) {
+        throw new Error(data.error || data.details || `HTTP ${response.status}`);
+      }
+
+      setMessage("");
+      clearPendingRunState();
+      setChatHistory([]);
+      void fetchHistory(instance.id, { showLoader: true });
+    } catch (error) {
+      console.error("Error starting new chat:", error);
+    } finally {
+      setStartingNewChat(false);
     }
   }
 
@@ -577,15 +632,48 @@ export function useDashboardChat() {
             const state = payload?.state;
             const runId = typeof payload?.runId === "string" ? payload.runId : null;
 
-            if (state === "delta" && runId && activeRunIdRef.current === runId) {
-              const text = extractTextContent(payload?.message);
-              if (text) setStreamingAssistant(text);
-              setSending(true);
+            if (state === "delta") {
+              const currentRunId = activeRunIdRef.current;
+              const canAdoptInFlightRun =
+                !currentRunId && typeof runId === "string" && runId.length > 0;
+              const isCurrentRun =
+                typeof runId === "string" && runId.length > 0 && currentRunId === runId;
+              const canRenderDelta = isCurrentRun || canAdoptInFlightRun;
+
+              if (canAdoptInFlightRun && runId) {
+                // After page refresh/reconnect we may receive deltas for an already-running
+                // turn before POST /chat has set local run state.
+                activeRunIdRef.current = runId;
+                activeRunStartedAtRef.current = Date.now();
+                setActiveRunId(runId);
+              }
+
+              if (canRenderDelta) {
+                const text = extractTextContent(payload?.message);
+                if (text) setStreamingAssistant(text);
+                setSending(true);
+                return;
+              }
+            }
+
+            if (state === "notice") {
+              const text =
+                extractTextContent(payload?.message) ||
+                (typeof payload?.noticeMessage === "string" ? payload.noticeMessage : "");
+              const content = text.trim();
+              if (!content) return;
+              setChatHistory((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "system" && last.content === content) return prev;
+                return [...prev, { role: "system", content }];
+              });
               return;
             }
 
             if (state === "final" || state === "error" || state === "aborted") {
               if (runId && activeRunIdRef.current === runId) {
+                clearPendingRunState();
+              } else if (!runId && activeRunIdRef.current) {
                 clearPendingRunState();
               }
               scheduleHistoryRefresh();
@@ -649,6 +737,7 @@ export function useDashboardChat() {
     sending,
     streamingAssistant,
     activeRunId,
+    startingNewChat,
     liveConnected,
     liveError,
     historyLoading,
@@ -667,6 +756,7 @@ export function useDashboardChat() {
     createInstance,
     deleteInstance,
     sendMessage,
+    startNewChat,
     saveSelectedModel,
   };
 }

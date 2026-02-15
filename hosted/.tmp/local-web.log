@@ -1,0 +1,2834 @@
+Debugger listening on ws://127.0.0.1:52988/d3113956-380d-46e3-83ad-84f9b60feed2
+For help, see: https://nodejs.org/en/docs/inspector
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+
+> @openclaw/hosted-web@0.1.0 dev
+> next dev --hostname 127.0.0.1 --port 3000
+
+Debugger listening on ws://127.0.0.1:52989/93151e63-8655-4b5a-acba-3b9183093358
+For help, see: https://nodejs.org/en/docs/inspector
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:53122/57474705-98ef-4d13-8f73-56f7fabde3c8
+For help, see: https://nodejs.org/en/docs/inspector
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/kushagra/go/src/gihub.com/allin/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/kushagra/go/src/gihub.com/allin/openclaw/hosted/apps/web/package-lock.json
+   * /Users/kushagra/go/src/gihub.com/allin/openclaw/pnpm-lock.yaml
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Debugger port: 53122
+- Environments: .env
+
+✓ Starting...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+✓ Ready in 2.6s
+○ Compiling /dashboard/channels ...
+Debugger listening on ws://127.0.0.1:53256/0d41381e-9bf1-461c-bf95-0fb64bf593f9
+For help, see: https://nodejs.org/en/docs/inspector
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+(node:18020) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard/channels 200 in 14.8s (compile: 12.3s, proxy.ts: 2.4s, render: 192ms)
+ GET /api/instances 200 in 2.4s (compile: 741ms, proxy.ts: 363ms, render: 1315ms)
+Debugger listening on ws://127.0.0.1:53272/15fc8f0a-b88f-460a-94ad-037302f5d036
+For help, see: https://nodejs.org/en/docs/inspector
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/channels 200 in 12.1s (compile: 11.2s, proxy.ts: 269ms, render: 685ms)
+ GET /dashboard 200 in 350ms (compile: 31ms, proxy.ts: 295ms, render: 23ms)
+ GET /api/instances 200 in 847ms (compile: 4ms, proxy.ts: 290ms, render: 552ms)
+ GET /api/instances 200 in 884ms (compile: 2ms, proxy.ts: 274ms, render: 608ms)
+Debugger listening on ws://127.0.0.1:53287/c8453bc7-7e66-448a-a979-3b21af0f5dd3
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:53288/e69a57db-ff29-4e52-999d-f4503995cf5a
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:53289/dbd726af-52ff-4d5f-a395-b90dfba58aee
+For help, see: https://nodejs.org/en/docs/inspector
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 12.2s (compile: 10.8s, proxy.ts: 760ms, render: 634ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 12.2s (compile: 10.8s, proxy.ts: 860ms, render: 620ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 12.3s (compile: 10.8s, proxy.ts: 863ms, render: 634ms)
+Debugger listening on ws://127.0.0.1:53298/d4797a9c-5875-4af6-90c2-512c475613da
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 846ms (compile: 8ms, proxy.ts: 280ms, render: 558ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:53307/23b73a3f-1f18-4417-82af-13d1ba9f2327
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:53319/b6941102-460e-48ae-b19e-f8fec6e8df96
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 910ms (compile: 7ms, proxy.ts: 278ms, render: 625ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 933ms (compile: 9ms, proxy.ts: 312ms, render: 612ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 831ms (compile: 3ms, proxy.ts: 268ms, render: 560ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 11.7s (compile: 10.9s, proxy.ts: 324ms, render: 566ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 816ms (compile: 5ms, proxy.ts: 271ms, render: 540ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 877ms (compile: 5ms, proxy.ts: 312ms, render: 560ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:53330/752ae35b-8d3f-49df-8640-872a4ca02f9b
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 859ms (compile: 5ms, proxy.ts: 300ms, render: 554ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 846ms (compile: 8ms, proxy.ts: 274ms, render: 564ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 912ms (compile: 109ms, proxy.ts: 6ms, render: 798ms)
+ GET /dashboard/usage 200 in 651ms (compile: 115ms, proxy.ts: 499ms, render: 37ms)
+ GET /api/usage/summary?period=month 200 in 1052ms (compile: 106ms, proxy.ts: 352ms, render: 594ms)
+ GET /api/usage/summary?period=month 200 in 846ms (compile: 2ms, proxy.ts: 272ms, render: 571ms)
+ GET /dashboard 200 in 326ms (compile: 7ms, proxy.ts: 306ms, render: 13ms)
+ GET /api/instances 200 in 970ms (compile: 6ms, proxy.ts: 416ms, render: 548ms)
+Debugger listening on ws://127.0.0.1:53376/7df0f937-5afe-4f29-bfbd-3d1b99e68b0d
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:53377/384add4f-a426-43c3-bfd6-dc2fd8758b84
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:53378/518be44b-98cb-4d99-96e9-7d4282810485
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances 200 in 804ms (compile: 2ms, proxy.ts: 268ms, render: 534ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 973ms (compile: 9ms, proxy.ts: 359ms, render: 605ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 983ms (compile: 17ms, proxy.ts: 378ms, render: 587ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1001ms (compile: 8ms, proxy.ts: 379ms, render: 614ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 822ms (compile: 7ms, proxy.ts: 263ms, render: 551ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /dashboard/usage 200 in 841ms (compile: 12ms, proxy.ts: 805ms, render: 25ms)
+ GET /api/usage/summary?period=month 200 in 1331ms (compile: 6ms, proxy.ts: 295ms, render: 1030ms)
+ GET /api/usage/summary?period=month 200 in 848ms (compile: 2ms, proxy.ts: 265ms, render: 581ms)
+ GET /dashboard/debug 200 in 2.6s (compile: 1116ms, proxy.ts: 1390ms, render: 91ms)
+ GET /dashboard 200 in 357ms (compile: 20ms, proxy.ts: 294ms, render: 43ms)
+ GET /api/instances 200 in 1479ms (compile: 5ms, proxy.ts: 280ms, render: 1194ms)
+Debugger listening on ws://127.0.0.1:54078/c4d90662-0827-42b8-8efe-498d5c21182f
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:54079/e4851999-5336-4d68-8ef6-547ada531065
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:54080/e584a924-0fed-4b97-8883-c4d4fe05200e
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances 200 in 1012ms (compile: 2ms, proxy.ts: 277ms, render: 733ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1493ms (compile: 7ms, proxy.ts: 797ms, render: 689ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1608ms (compile: 6ms, proxy.ts: 827ms, render: 776ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 1626ms (compile: 6ms, proxy.ts: 814ms, render: 806ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 892ms (compile: 5ms, proxy.ts: 277ms, render: 610ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:54182/30c8335f-8ee8-4821-9e2f-896ed6ed369a
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 1507ms (compile: 18ms, proxy.ts: 693ms, render: 797ms)
+Debugger listening on ws://127.0.0.1:54185/dfc999e8-8564-46ce-a6af-bd63b1ef5287
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 945ms (compile: 13ms, proxy.ts: 277ms, render: 655ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 896ms (compile: 6ms, proxy.ts: 313ms, render: 578ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:54197/c9664a63-45df-4b8d-afe9-e1f8ce303c48
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 971ms (compile: 10ms, proxy.ts: 357ms, render: 605ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 737ms (compile: 3ms, proxy.ts: 2ms, render: 731ms)
+✓ Compiled in 207ms
+✓ Compiled in 131ms
+Debugger listening on ws://127.0.0.1:55704/8b0afb61-2d99-49f0-8115-6d60d5bcaa64
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 2.5s (compile: 32ms, proxy.ts: 1330ms, render: 1168ms)
+Debugger listening on ws://127.0.0.1:55710/b308e36f-edf3-4435-abfa-792a99080a9d
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 895ms (compile: 12ms, proxy.ts: 267ms, render: 617ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1352ms (compile: 3ms, proxy.ts: 785ms, render: 565ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 819ms (compile: 3ms, proxy.ts: 256ms, render: 560ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 823ms (compile: 16ms, proxy.ts: 250ms, render: 557ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 815ms (compile: 4ms, proxy.ts: 253ms, render: 558ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:55720/13316582-0a57-49bb-a2b8-928fd6583568
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 806ms (compile: 12ms, proxy.ts: 257ms, render: 537ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 851ms (compile: 9ms, proxy.ts: 254ms, render: 588ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 825ms (compile: 8ms, proxy.ts: 306ms, render: 510ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 1108ms (compile: 6ms, proxy.ts: 4ms, render: 1098ms)
+✓ Compiled in 196ms
+Debugger listening on ws://127.0.0.1:55991/6168512d-0832-4106-af9f-8a739e81384d
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 2.2s (compile: 27ms, proxy.ts: 1349ms, render: 856ms)
+Debugger listening on ws://127.0.0.1:56004/e26f008e-663a-44e6-8ab2-06114b634619
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 885ms (compile: 11ms, proxy.ts: 336ms, render: 538ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1243ms (compile: 7ms, proxy.ts: 709ms, render: 528ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 766ms (compile: 3ms, proxy.ts: 253ms, render: 510ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 783ms (compile: 5ms, proxy.ts: 249ms, render: 530ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 774ms (compile: 5ms, proxy.ts: 252ms, render: 516ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:56015/924e92ad-b593-4cd9-9300-ed5f45780268
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 918ms (compile: 17ms, proxy.ts: 254ms, render: 647ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 790ms (compile: 5ms, proxy.ts: 254ms, render: 532ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+✓ Compiled in 131ms
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 856ms (compile: 111ms, proxy.ts: 509ms, render: 236ms)
+ GET /api/instances 200 in 1468ms (compile: 7ms, proxy.ts: 404ms, render: 1057ms)
+Debugger listening on ws://127.0.0.1:56120/2fac3207-59fa-47fb-ad91-464ce30520a4
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56121/dffc90f2-e62e-4ddc-8603-11139e1d1713
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56123/0bb3a8bd-8a72-4383-9598-cc3a5f5a840f
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 879ms (compile: 9ms, proxy.ts: 265ms, render: 605ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1390ms (compile: 7ms, proxy.ts: 733ms, render: 650ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 1440ms (compile: 12ms, proxy.ts: 772ms, render: 656ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 869ms (compile: 6ms, proxy.ts: 263ms, render: 600ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 819ms (compile: 10ms, proxy.ts: 749ms, render: 61ms)
+ GET /api/instances 200 in 1028ms (compile: 4ms, proxy.ts: 264ms, render: 761ms)
+Debugger listening on ws://127.0.0.1:56194/a5bac768-5de9-4d85-b401-78a08ba60774
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56195/b8f3742b-cdee-41ab-ac21-e3ec54844a81
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56196/d63e18bd-7f5b-482d-8090-df41767948a0
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 885ms (compile: 11ms, proxy.ts: 318ms, render: 556ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 910ms (compile: 7ms, proxy.ts: 263ms, render: 640ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 1347ms (compile: 12ms, proxy.ts: 756ms, render: 580ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 837ms (compile: 7ms, proxy.ts: 255ms, render: 574ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 555ms (compile: 17ms, proxy.ts: 431ms, render: 107ms)
+ GET /api/instances 200 in 887ms (compile: 3ms, proxy.ts: 264ms, render: 619ms)
+Debugger listening on ws://127.0.0.1:56259/295cf455-e9ad-4050-96c5-f8e60192c1c4
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56260/8a0c1627-9bbf-40d3-ab36-8008981412bc
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56261/b7418828-b712-4059-b0bc-6bd61fa8ac31
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 866ms (compile: 5ms, proxy.ts: 246ms, render: 614ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 868ms (compile: 11ms, proxy.ts: 297ms, render: 561ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1222ms (compile: 12ms, proxy.ts: 706ms, render: 504ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 870ms (compile: 21ms, proxy.ts: 253ms, render: 596ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 1293ms (compile: 24ms, proxy.ts: 1209ms, render: 60ms)
+ GET /api/instances 200 in 2.1s (compile: 6ms, proxy.ts: 680ms, render: 1385ms)
+Debugger listening on ws://127.0.0.1:56473/6080c2b0-b107-4a38-b1f7-f68860fbaa79
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56474/ceede1f1-d74e-49ad-885b-39560bf126a9
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56475/8e035261-cea0-4be8-89ad-0eee5efc7e57
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 841ms (compile: 6ms, proxy.ts: 323ms, render: 512ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 844ms (compile: 9ms, proxy.ts: 292ms, render: 543ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1231ms (compile: 7ms, proxy.ts: 658ms, render: 566ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1248ms (compile: 7ms, proxy.ts: 250ms, render: 990ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 454ms (compile: 11ms, proxy.ts: 388ms, render: 55ms)
+ GET /api/instances 200 in 855ms (compile: 3ms, proxy.ts: 279ms, render: 574ms)
+Debugger listening on ws://127.0.0.1:56530/bcc9c189-e7a8-44f4-8842-69c6d27b3e9f
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56531/80023e89-1365-496e-b922-859aef1a3525
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56533/e8da5ae9-15ec-4388-8621-07927a15b229
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 895ms (compile: 5ms, proxy.ts: 253ms, render: 636ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 912ms (compile: 9ms, proxy.ts: 303ms, render: 600ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1229ms (compile: 7ms, proxy.ts: 711ms, render: 511ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 842ms (compile: 6ms, proxy.ts: 255ms, render: 582ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 709ms (compile: 12ms, proxy.ts: 637ms, render: 60ms)
+ GET /api/instances 200 in 848ms (compile: 5ms, proxy.ts: 319ms, render: 524ms)
+Debugger listening on ws://127.0.0.1:56572/01425021-5a4e-479e-b9ca-03ddae12b6cd
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56573/d2e97ff1-8726-4dbd-b91d-c6f9db7469c6
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56575/3a69ee48-dd48-493b-acb1-9a29e128ac45
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 858ms (compile: 6ms, proxy.ts: 248ms, render: 604ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 907ms (compile: 6ms, proxy.ts: 299ms, render: 603ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1208ms (compile: 9ms, proxy.ts: 707ms, render: 492ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 831ms (compile: 6ms, proxy.ts: 253ms, render: 573ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 465ms (compile: 8ms, proxy.ts: 391ms, render: 65ms)
+ GET /api/instances 200 in 789ms (compile: 11ms, proxy.ts: 261ms, render: 517ms)
+Debugger listening on ws://127.0.0.1:56614/0aa7f762-4883-4a70-bdf8-43855c6fe988
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56615/e07f736b-f24c-497c-a2c6-8b60c03d0523
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56617/83934503-983f-43d5-96c4-40021a512978
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 884ms (compile: 6ms, proxy.ts: 250ms, render: 628ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 893ms (compile: 4ms, proxy.ts: 295ms, render: 593ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1212ms (compile: 6ms, proxy.ts: 709ms, render: 498ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 888ms (compile: 6ms, proxy.ts: 249ms, render: 633ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 1012ms (compile: 11ms, proxy.ts: 859ms, render: 142ms)
+ GET /api/instances 200 in 1001ms (compile: 11ms, proxy.ts: 261ms, render: 728ms)
+Debugger listening on ws://127.0.0.1:56673/d5320c99-5f0d-43f2-ad26-b5a92017b332
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56674/2b2ce869-a5cf-4e26-996c-b058380a4ea1
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:56675/f3f314fc-2577-41ac-bb77-af04007eb716
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 823ms (compile: 5ms, proxy.ts: 321ms, render: 497ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 931ms (compile: 7ms, proxy.ts: 264ms, render: 661ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 939ms (compile: 13ms, proxy.ts: 297ms, render: 629ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 857ms (compile: 2ms, proxy.ts: 253ms, render: 601ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:56688/843e9e2b-c3e3-4b8f-acca-e70f07d7f2c9
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 836ms (compile: 9ms, proxy.ts: 297ms, render: 530ms)
+Debugger listening on ws://127.0.0.1:56691/505f2cad-dcfb-4b9a-82f4-a735b2a86737
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1048ms (compile: 6ms, proxy.ts: 421ms, render: 622ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 825ms (compile: 5ms, proxy.ts: 251ms, render: 569ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 891ms (compile: 3ms, proxy.ts: 287ms, render: 600ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 809ms (compile: 3ms, proxy.ts: 248ms, render: 559ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 931ms (compile: 5ms, proxy.ts: 248ms, render: 678ms)
+Debugger listening on ws://127.0.0.1:56708/350a4afc-c93e-4f1c-aca9-e8d4e5ed847c
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 816ms (compile: 4ms, proxy.ts: 249ms, render: 563ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 815ms (compile: 4ms, proxy.ts: 250ms, render: 561ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 714ms (compile: 11ms, proxy.ts: 11ms, render: 692ms)
+Debugger listening on ws://127.0.0.1:57030/68ac9e31-cd52-41a1-b6e1-4ceab8f80bf0
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 1767ms (compile: 12ms, proxy.ts: 1181ms, render: 574ms)
+Debugger listening on ws://127.0.0.1:57034/0f37430f-600d-45be-b8da-d947c8fcc62a
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 890ms (compile: 10ms, proxy.ts: 251ms, render: 630ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1286ms (compile: 4ms, proxy.ts: 711ms, render: 571ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 826ms (compile: 5ms, proxy.ts: 252ms, render: 569ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 842ms (compile: 4ms, proxy.ts: 248ms, render: 590ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 814ms (compile: 3ms, proxy.ts: 247ms, render: 564ms)
+Debugger listening on ws://127.0.0.1:57054/2d37d03f-0364-4180-aa8b-b3e4d6d6a728
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 825ms (compile: 6ms, proxy.ts: 247ms, render: 572ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 835ms (compile: 3ms, proxy.ts: 258ms, render: 574ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 836ms (compile: 3ms, proxy.ts: 246ms, render: 587ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+✓ Compiled in 200ms
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 1409ms (compile: 117ms, proxy.ts: 967ms, render: 325ms)
+ GET /api/instances 200 in 1062ms (compile: 4ms, proxy.ts: 300ms, render: 758ms)
+Debugger listening on ws://127.0.0.1:57127/c58b24e6-ed1b-4262-bee3-fb73239b67a5
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:57128/db719105-d77e-4a80-a3cc-f1fcdc829622
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 861ms (compile: 9ms, proxy.ts: 327ms, render: 524ms)
+Debugger listening on ws://127.0.0.1:57131/2971917b-f144-4ff0-bf3f-a0d34c994a14
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1051ms (compile: 8ms, proxy.ts: 280ms, render: 763ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 1364ms (compile: 38ms, proxy.ts: 785ms, render: 541ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1104ms (compile: 4ms, proxy.ts: 274ms, render: 826ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57143/5b4e27d2-4650-429d-8716-437372430e7b
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 928ms (compile: 6ms, proxy.ts: 314ms, render: 608ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 850ms (compile: 5ms, proxy.ts: 259ms, render: 586ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 849ms (compile: 3ms, proxy.ts: 263ms, render: 583ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 841ms (compile: 3ms, proxy.ts: 257ms, render: 580ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57156/2e5ed5d5-da9c-4040-b4e1-8e7189ed8101
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 847ms (compile: 6ms, proxy.ts: 255ms, render: 586ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1005ms (compile: 7ms, proxy.ts: 254ms, render: 744ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57164/502cf9c6-60ce-4586-b2d2-8d9907cb495e
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 921ms (compile: 9ms, proxy.ts: 305ms, render: 608ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 832ms (compile: 5ms, proxy.ts: 248ms, render: 578ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 824ms (compile: 4ms, proxy.ts: 252ms, render: 568ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 833ms (compile: 3ms, proxy.ts: 246ms, render: 584ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57170/211d3a4c-dd17-44a5-99f5-263e1ab524cb
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 838ms (compile: 5ms, proxy.ts: 262ms, render: 571ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 828ms (compile: 3ms, proxy.ts: 258ms, render: 567ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57190/9cb935ec-404c-46f0-a792-fe3051e10109
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 994ms (compile: 8ms, proxy.ts: 390ms, render: 597ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 864ms (compile: 8ms, proxy.ts: 251ms, render: 605ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 877ms (compile: 4ms, proxy.ts: 256ms, render: 617ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 884ms (compile: 4ms, proxy.ts: 250ms, render: 630ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57203/3a942ba9-7183-408d-8339-b011a4222a7c
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 844ms (compile: 7ms, proxy.ts: 261ms, render: 575ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 826ms (compile: 3ms, proxy.ts: 249ms, render: 574ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 871ms (compile: 4ms, proxy.ts: 253ms, render: 614ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 827ms (compile: 8ms, proxy.ts: 254ms, render: 566ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57220/debccfe7-7714-4aa2-a0c8-7d70d834f9fc
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 991ms (compile: 6ms, proxy.ts: 366ms, render: 619ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 946ms (compile: 4ms, proxy.ts: 254ms, render: 687ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 841ms (compile: 4ms, proxy.ts: 253ms, render: 585ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 873ms (compile: 3ms, proxy.ts: 254ms, render: 616ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57230/bf3f6fad-8a64-4d24-947d-58ec98901a5a
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 854ms (compile: 5ms, proxy.ts: 260ms, render: 589ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 816ms (compile: 4ms, proxy.ts: 249ms, render: 563ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 828ms (compile: 9ms, proxy.ts: 252ms, render: 567ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 913ms (compile: 6ms, proxy.ts: 333ms, render: 573ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 640ms (compile: 3ms, proxy.ts: 3ms, render: 634ms)
+Debugger listening on ws://127.0.0.1:57253/1dd7194c-77b4-4f96-b053-9f69644c4e60
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 923ms (compile: 7ms, proxy.ts: 374ms, render: 542ms)
+Debugger listening on ws://127.0.0.1:57256/1f867c06-02fa-4fea-bfe2-b1feaec5e8d7
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 866ms (compile: 11ms, proxy.ts: 258ms, render: 598ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 854ms (compile: 5ms, proxy.ts: 256ms, render: 594ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 841ms (compile: 4ms, proxy.ts: 256ms, render: 581ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 861ms (compile: 3ms, proxy.ts: 268ms, render: 590ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 977ms (compile: 3ms, proxy.ts: 333ms, render: 641ms)
+Debugger listening on ws://127.0.0.1:57265/cccf4bf4-7b5a-493c-8702-14914313c734
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 962ms (compile: 5ms, proxy.ts: 256ms, render: 701ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 897ms (compile: 6ms, proxy.ts: 268ms, render: 623ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 909ms (compile: 3ms, proxy.ts: 256ms, render: 650ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 845ms (compile: 5ms, proxy.ts: 259ms, render: 581ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57275/5ff27862-c7d1-4522-b44e-284ac07cf7f8
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 855ms (compile: 7ms, proxy.ts: 260ms, render: 587ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 853ms (compile: 6ms, proxy.ts: 264ms, render: 584ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 835ms (compile: 4ms, proxy.ts: 259ms, render: 572ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 849ms (compile: 4ms, proxy.ts: 262ms, render: 583ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57280/8c840698-0792-4b1d-bb5e-904073107a6e
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 905ms (compile: 5ms, proxy.ts: 314ms, render: 585ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 845ms (compile: 3ms, proxy.ts: 259ms, render: 584ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 827ms (compile: 4ms, proxy.ts: 256ms, render: 567ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 831ms (compile: 4ms, proxy.ts: 253ms, render: 574ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57285/c28c286c-72cf-4c6f-9d4d-bbe4118a0864
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 847ms (compile: 6ms, proxy.ts: 259ms, render: 582ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 847ms (compile: 5ms, proxy.ts: 255ms, render: 587ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 828ms (compile: 5ms, proxy.ts: 252ms, render: 571ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 833ms (compile: 3ms, proxy.ts: 255ms, render: 574ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57290/ba2aaea6-fe81-45e7-9d92-1a64f9745ca8
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 836ms (compile: 6ms, proxy.ts: 254ms, render: 576ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57314/27abe5d6-1f79-42a9-b21f-830ce3cfdd6c
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1147ms (compile: 14ms, proxy.ts: 469ms, render: 664ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 1135ms (compile: 5ms, proxy.ts: 11ms, render: 1119ms)
+Debugger listening on ws://127.0.0.1:57347/acce926e-d03a-4f39-bb16-624f365c7398
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 1194ms (compile: 9ms, proxy.ts: 434ms, render: 751ms)
+Debugger listening on ws://127.0.0.1:57351/7c6c32ce-c61b-4d23-9934-7c2685269134
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1050ms (compile: 10ms, proxy.ts: 251ms, render: 789ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 867ms (compile: 17ms, proxy.ts: 259ms, render: 592ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 863ms (compile: 3ms, proxy.ts: 247ms, render: 613ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 833ms (compile: 6ms, proxy.ts: 252ms, render: 575ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 946ms (compile: 3ms, proxy.ts: 247ms, render: 696ms)
+Debugger listening on ws://127.0.0.1:57366/4d0e7c70-6293-410a-8cd2-094176b41e4b
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 886ms (compile: 9ms, proxy.ts: 297ms, render: 580ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 850ms (compile: 3ms, proxy.ts: 247ms, render: 599ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 929ms (compile: 3ms, proxy.ts: 246ms, render: 680ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 869ms (compile: 6ms, proxy.ts: 260ms, render: 603ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57375/9b2d4041-c847-4763-bf39-bd7925451d70
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 861ms (compile: 7ms, proxy.ts: 263ms, render: 592ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 901ms (compile: 4ms, proxy.ts: 251ms, render: 646ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 852ms (compile: 3ms, proxy.ts: 254ms, render: 595ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 862ms (compile: 8ms, proxy.ts: 262ms, render: 593ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57383/eb64851d-923a-43f0-9c57-5753926e1e2a
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 840ms (compile: 5ms, proxy.ts: 246ms, render: 589ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57390/293e97df-8623-4f7d-8693-901217cd0af1
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1041ms (compile: 6ms, proxy.ts: 448ms, render: 587ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 834ms (compile: 3ms, proxy.ts: 249ms, render: 582ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 889ms (compile: 4ms, proxy.ts: 286ms, render: 599ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57429/722f3363-07bb-491f-b02f-1a7e4f830ce9
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1299ms (compile: 9ms, proxy.ts: 616ms, render: 674ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 683ms (compile: 6ms, proxy.ts: 16ms, render: 661ms)
+Debugger listening on ws://127.0.0.1:57461/dbabbda2-e9aa-48c0-accc-fd2d08a187c7
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 970ms (compile: 12ms, proxy.ts: 366ms, render: 592ms)
+Debugger listening on ws://127.0.0.1:57464/a440b5a7-743b-499a-acfc-0b72441a3d7a
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 878ms (compile: 7ms, proxy.ts: 258ms, render: 613ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 850ms (compile: 3ms, proxy.ts: 251ms, render: 596ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 893ms (compile: 9ms, proxy.ts: 288ms, render: 596ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 842ms (compile: 5ms, proxy.ts: 253ms, render: 583ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 835ms (compile: 4ms, proxy.ts: 254ms, render: 577ms)
+Debugger listening on ws://127.0.0.1:57475/5c1a28cc-1fde-4387-a62c-b2cbc5db560b
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 849ms (compile: 6ms, proxy.ts: 245ms, render: 597ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 879ms (compile: 4ms, proxy.ts: 250ms, render: 625ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57486/5f8b9475-5439-4231-b351-e8202d2b3b32
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 882ms (compile: 6ms, proxy.ts: 287ms, render: 589ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 1067ms (compile: 7ms, proxy.ts: 9ms, render: 1052ms)
+Debugger listening on ws://127.0.0.1:57686/c0928600-bdde-42ed-b8a4-d3d46b3f94af
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 2.1s (compile: 25ms, proxy.ts: 1292ms, render: 832ms)
+Debugger listening on ws://127.0.0.1:57692/ab004e75-d3c7-4a2c-8fc1-bb3212065076
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 925ms (compile: 4ms, proxy.ts: 251ms, render: 670ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1392ms (compile: 11ms, proxy.ts: 255ms, render: 1126ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 856ms (compile: 3ms, proxy.ts: 250ms, render: 603ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 902ms (compile: 7ms, proxy.ts: 249ms, render: 646ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 864ms (compile: 4ms, proxy.ts: 261ms, render: 598ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57712/2cd6852b-fb27-46ca-b700-f8f23e9d33b9
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 936ms (compile: 9ms, proxy.ts: 310ms, render: 616ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 858ms (compile: 4ms, proxy.ts: 257ms, render: 597ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 884ms (compile: 4ms, proxy.ts: 267ms, render: 613ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57744/46054818-092a-4626-ab6c-afcd0f7c64dd
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1427ms (compile: 12ms, proxy.ts: 736ms, render: 679ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 858ms (compile: 3ms, proxy.ts: 250ms, render: 604ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 895ms (compile: 8ms, proxy.ts: 249ms, render: 638ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 918ms (compile: 3ms, proxy.ts: 252ms, render: 663ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57766/45b841ab-aad9-48f7-9894-e18756dade74
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1011ms (compile: 10ms, proxy.ts: 393ms, render: 608ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 853ms (compile: 3ms, proxy.ts: 258ms, render: 591ms)
+✓ Compiled in 186ms
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 904ms (compile: 4ms, proxy.ts: 249ms, render: 651ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57791/ad551147-a155-431a-8591-413971984b0c
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 928ms (compile: 14ms, proxy.ts: 301ms, render: 614ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 883ms (compile: 4ms, proxy.ts: 251ms, render: 627ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 874ms (compile: 3ms, proxy.ts: 249ms, render: 622ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57812/8b3eff0f-ead5-49c8-8693-fa89f6791abe
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1568ms (compile: 10ms, proxy.ts: 682ms, render: 875ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1448ms (compile: 6ms, proxy.ts: 823ms, render: 619ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 856ms (compile: 3ms, proxy.ts: 255ms, render: 599ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57825/e5abe3e4-c72e-4b44-be7a-6c9a07f6964c
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1015ms (compile: 6ms, proxy.ts: 382ms, render: 628ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 888ms (compile: 4ms, proxy.ts: 253ms, render: 631ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57846/a20de3c1-77e4-4315-8c05-fbb735d92a19
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1035ms (compile: 8ms, proxy.ts: 405ms, render: 622ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 877ms (compile: 4ms, proxy.ts: 260ms, render: 613ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 967ms (compile: 3ms, proxy.ts: 316ms, render: 648ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57859/4fddc426-bf2c-458b-a647-45d410c352b8
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1593ms (compile: 11ms, proxy.ts: 822ms, render: 760ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 930ms (compile: 4ms, proxy.ts: 262ms, render: 665ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 894ms (compile: 4ms, proxy.ts: 259ms, render: 631ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 900ms (compile: 14ms, proxy.ts: 259ms, render: 627ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57870/4181c623-117e-4553-a302-83e3b8d07d8b
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 871ms (compile: 5ms, proxy.ts: 255ms, render: 611ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 863ms (compile: 4ms, proxy.ts: 254ms, render: 606ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 897ms (compile: 7ms, proxy.ts: 255ms, render: 635ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 869ms (compile: 4ms, proxy.ts: 264ms, render: 602ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57890/b537a69e-90dc-46e1-98dc-85a594f840ec
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 874ms (compile: 4ms, proxy.ts: 256ms, render: 613ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 877ms (compile: 3ms, proxy.ts: 255ms, render: 618ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 877ms (compile: 4ms, proxy.ts: 252ms, render: 621ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 870ms (compile: 3ms, proxy.ts: 253ms, render: 614ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57898/9ffb198b-88dd-40a0-8aaa-7b9346b52589
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 861ms (compile: 5ms, proxy.ts: 250ms, render: 607ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 868ms (compile: 8ms, proxy.ts: 253ms, render: 607ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 871ms (compile: 5ms, proxy.ts: 254ms, render: 612ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 882ms (compile: 6ms, proxy.ts: 251ms, render: 626ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57909/fc6e93be-038b-4bef-aacf-3874172efda6
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 895ms (compile: 9ms, proxy.ts: 252ms, render: 634ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 876ms (compile: 5ms, proxy.ts: 257ms, render: 613ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 869ms (compile: 6ms, proxy.ts: 254ms, render: 609ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 874ms (compile: 4ms, proxy.ts: 251ms, render: 619ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57922/1a3ab553-96b7-450c-b116-d0a9840a4ea0
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 933ms (compile: 8ms, proxy.ts: 250ms, render: 675ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 742ms (compile: 122ms, proxy.ts: 252ms, render: 368ms)
+ GET /api/instances 200 in 795ms (compile: 5ms, proxy.ts: 269ms, render: 521ms)
+Debugger listening on ws://127.0.0.1:57939/75058c4a-4377-4db0-a8b3-ad236259b49b
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:57940/c604e0b0-a3b5-4a16-b076-43524ab95241
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 881ms (compile: 3ms, proxy.ts: 251ms, render: 628ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 1376ms (compile: 4ms, proxy.ts: 802ms, render: 570ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1382ms (compile: 6ms, proxy.ts: 786ms, render: 590ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 886ms (compile: 3ms, proxy.ts: 258ms, render: 625ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:57966/d6d88921-7150-48e3-970a-62ddf1c22ece
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 2.1s (compile: 12ms, proxy.ts: 1345ms, render: 702ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 892ms (compile: 5ms, proxy.ts: 256ms, render: 632ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1526ms (compile: 6ms, proxy.ts: 821ms, render: 699ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 598ms (compile: 7ms, proxy.ts: 4ms, render: 587ms)
+ GET /dashboard/usage 200 in 335ms (compile: 12ms, proxy.ts: 298ms, render: 25ms)
+ GET /api/usage/summary?period=month 200 in 862ms (compile: 4ms, proxy.ts: 258ms, render: 600ms)
+ GET /api/usage/summary?period=month 200 in 771ms (compile: 1876µs, proxy.ts: 253ms, render: 516ms)
+ GET /dashboard 200 in 505ms (compile: 5ms, proxy.ts: 490ms, render: 10ms)
+ GET /api/instances 200 in 779ms (compile: 4ms, proxy.ts: 258ms, render: 517ms)
+Debugger listening on ws://127.0.0.1:58017/be9886eb-bc5f-4cf5-b1b3-c35f4dcf6b36
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances 200 in 796ms (compile: 2ms, proxy.ts: 254ms, render: 540ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 840ms (compile: 7ms, proxy.ts: 289ms, render: 544ms)
+Debugger listening on ws://127.0.0.1:58020/c0c2df87-8562-40ea-bd60-282aae6b1390
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:58021/de9c29ae-4734-4772-ba75-f4fc2d602d1b
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1264ms (compile: 23ms, proxy.ts: 721ms, render: 520ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1403ms (compile: 6ms, proxy.ts: 712ms, render: 685ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 894ms (compile: 4ms, proxy.ts: 253ms, render: 637ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard/channels 200 in 2.2s (compile: 41ms, proxy.ts: 2.1s, render: 104ms)
+ GET /api/instances 200 in 1222ms (compile: 3ms, proxy.ts: 258ms, render: 961ms)
+Debugger listening on ws://127.0.0.1:58818/333bb6c5-1084-4cab-b2b6-01f14ceabecd
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/channels 200 in 818ms (compile: 9ms, proxy.ts: 252ms, render: 556ms)
+ GET /dashboard/usage 200 in 276ms (compile: 11ms, proxy.ts: 253ms, render: 12ms)
+ GET /api/usage/summary?period=month 200 in 781ms (compile: 3ms, proxy.ts: 252ms, render: 527ms)
+ GET /api/usage/summary?period=month 200 in 741ms (compile: 2ms, proxy.ts: 247ms, render: 492ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /dashboard/usage/events 404 in 1414ms (compile: 1023ms, proxy.ts: 298ms, render: 93ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard/usage 200 in 358ms (compile: 6ms, proxy.ts: 252ms, render: 99ms)
+Debugger listening on ws://127.0.0.1:59150/8f98fc46-4fb5-4ce9-9e56-71ce7a572e6d
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 2.6s (compile: 202ms, proxy.ts: 1430ms, render: 963ms)
+Debugger listening on ws://127.0.0.1:59160/c8e8cd41-8a06-4fe1-9732-02dafa9883cd
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1023ms (compile: 7ms, proxy.ts: 304ms, render: 712ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1458ms (compile: 6ms, proxy.ts: 261ms, render: 1191ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 925ms (compile: 4ms, proxy.ts: 255ms, render: 667ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 955ms (compile: 3ms, proxy.ts: 280ms, render: 673ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 930ms (compile: 7ms, proxy.ts: 248ms, render: 675ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+[usage/events] Processed 2 events, 0 errors
+ POST /api/usage/events 200 in 1724ms (compile: 3ms, proxy.ts: 3ms, render: 1717ms)
+✓ Compiled in 158ms
+✓ Compiled in 55ms
+ GET / 200 in 3.1s (compile: 254ms, proxy.ts: 2.5s, render: 287ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 976ms (compile: 456ms, proxy.ts: 256ms, render: 263ms)
+ GET /api/instances 200 in 1467ms (compile: 8ms, proxy.ts: 263ms, render: 1195ms)
+ GET /api/instances 200 in 844ms (compile: 5ms, proxy.ts: 250ms, render: 590ms)
+Debugger listening on ws://127.0.0.1:59642/c7c2f067-48e5-414b-ac1a-e9b883331f9e
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:59643/4f0f44f6-d01a-47dc-aaeb-6d5b60e494c4
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:59644/7ef2d5a7-1922-4280-9036-6fdde1e56bce
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1356ms (compile: 10ms, proxy.ts: 787ms, render: 558ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 1428ms (compile: 15ms, proxy.ts: 746ms, render: 667ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1807ms (compile: 21ms, proxy.ts: 791ms, render: 994ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1365ms (compile: 3ms, proxy.ts: 252ms, render: 1109ms)
+Debugger listening on ws://127.0.0.1:59650/2800d24e-e721-4354-83f3-db1b39a006db
+For help, see: https://nodejs.org/en/docs/inspector
+timeout
+
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat/reset 200 in 11.7s (compile: 10.8s, proxy.ts: 254ms, render: 633ms)
+Debugger listening on ws://127.0.0.1:59655/fe63ac52-847b-442b-969a-c047dee6f764
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 765ms (compile: 7ms, proxy.ts: 254ms, render: 504ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:59787/6a8f71f3-3698-4b19-923e-561676d50196
+For help, see: https://nodejs.org/en/docs/inspector
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 1408ms (compile: 24ms, proxy.ts: 785ms, render: 599ms)
+Debugger listening on ws://127.0.0.1:59791/723f3571-c154-4a16-85dd-429d8e1d399c
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 775ms (compile: 6ms, proxy.ts: 250ms, render: 519ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 772ms (compile: 4ms, proxy.ts: 248ms, render: 520ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 777ms (compile: 5ms, proxy.ts: 259ms, render: 514ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 781ms (compile: 5ms, proxy.ts: 249ms, render: 528ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:59809/8cb004f6-41b6-4a8d-8f71-6b7dd4260bd7
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 790ms (compile: 13ms, proxy.ts: 259ms, render: 519ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 765ms (compile: 5ms, proxy.ts: 246ms, render: 515ms)
+timeout
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:59835/6ab4e77b-07e5-464c-bbe2-df8f172d93bc
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 839ms (compile: 7ms, proxy.ts: 308ms, render: 524ms)
+Debugger listening on ws://127.0.0.1:59840/f24911b1-f656-442c-81fc-4362cdf38f83
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 842ms (compile: 11ms, proxy.ts: 259ms, render: 572ms)
+Debugger listening on ws://127.0.0.1:59846/df7ea23b-a428-424e-befb-da3b44c578a2
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1248ms (compile: 72ms, proxy.ts: 453ms, render: 723ms)
+Debugger listening on ws://127.0.0.1:59857/cdf7df32-e88c-477f-8fda-d1c525843c3f
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 869ms (compile: 9ms, proxy.ts: 260ms, render: 600ms)
+Debugger listening on ws://127.0.0.1:59864/9a3f26d5-be95-4e58-ad9b-46cb6ff924e5
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 875ms (compile: 6ms, proxy.ts: 286ms, render: 583ms)
+Debugger listening on ws://127.0.0.1:59878/28a525f6-8c64-46c1-8525-46f03a6a289a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1564ms (compile: 18ms, proxy.ts: 543ms, render: 1002ms)
+Debugger listening on ws://127.0.0.1:59880/64b07ca6-8b04-444b-a811-cb36d99e129f
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 975ms (compile: 18ms, proxy.ts: 385ms, render: 572ms)
+Debugger listening on ws://127.0.0.1:59885/b3a29b6a-e392-4227-9f4c-153fe4c8d4ce
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 861ms (compile: 12ms, proxy.ts: 263ms, render: 585ms)
+Debugger listening on ws://127.0.0.1:59908/427e8f8b-1374-4f13-9eac-3f4c588fdfe4
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1043ms (compile: 16ms, proxy.ts: 421ms, render: 606ms)
+Debugger listening on ws://127.0.0.1:59924/0f93c21a-a99e-48a5-b40b-990335720453
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1267ms (compile: 10ms, proxy.ts: 654ms, render: 603ms)
+Debugger listening on ws://127.0.0.1:59928/14611f95-16b0-401b-897c-571582f983d5
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 833ms (compile: 9ms, proxy.ts: 260ms, render: 564ms)
+Debugger listening on ws://127.0.0.1:59937/69d04af2-06c6-4f2e-aafe-7d9ac87c7a60
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 957ms (compile: 11ms, proxy.ts: 257ms, render: 689ms)
+Debugger listening on ws://127.0.0.1:59940/926dc556-7cc6-4e43-b7f9-b9bf0e6a9f3e
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 827ms (compile: 6ms, proxy.ts: 254ms, render: 567ms)
+Debugger listening on ws://127.0.0.1:59945/54a76ff6-72aa-46e2-b77f-8429a21fb19e
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 823ms (compile: 6ms, proxy.ts: 246ms, render: 572ms)
+Debugger listening on ws://127.0.0.1:59948/03f4209c-14f9-45ad-93b9-4c4984c17bd7
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 836ms (compile: 10ms, proxy.ts: 278ms, render: 547ms)
+Debugger listening on ws://127.0.0.1:59953/b768c3e1-fab4-47df-abfe-79209f35296b
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 811ms (compile: 9ms, proxy.ts: 248ms, render: 554ms)
+✓ Compiled in 250ms
+✓ Compiled in 66ms
+Debugger listening on ws://127.0.0.1:59979/3348832c-db1d-4164-bf10-b7c150e0c203
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 899ms (compile: 17ms, proxy.ts: 325ms, render: 558ms)
+Debugger listening on ws://127.0.0.1:59985/39c8d32b-3df9-4c40-9474-d74d60f768ef
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 810ms (compile: 6ms, proxy.ts: 261ms, render: 543ms)
+Debugger listening on ws://127.0.0.1:59992/302bb05f-6089-4a95-b1d6-5737d3d4f553
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 873ms (compile: 13ms, proxy.ts: 311ms, render: 549ms)
+Debugger listening on ws://127.0.0.1:59997/6321925c-509d-484e-9578-fab46ca6b800
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 817ms (compile: 7ms, proxy.ts: 250ms, render: 560ms)
+Debugger listening on ws://127.0.0.1:60004/c9bf809c-1d25-4630-892c-e48d34178555
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 918ms (compile: 11ms, proxy.ts: 368ms, render: 540ms)
+Debugger listening on ws://127.0.0.1:60006/236e0ba3-e473-42f1-8dcb-b54ed891668e
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 805ms (compile: 6ms, proxy.ts: 254ms, render: 545ms)
+Debugger listening on ws://127.0.0.1:60014/b7b5b4e5-fcd9-43f7-bba1-9c9f5acd23bf
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 801ms (compile: 6ms, proxy.ts: 260ms, render: 534ms)
+Debugger listening on ws://127.0.0.1:60019/74c3945a-bc50-4a35-8969-7f3ce6f7acda
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1403ms (compile: 8ms, proxy.ts: 806ms, render: 589ms)
+Debugger listening on ws://127.0.0.1:60022/a5db81d2-5b69-4fd6-8ab4-07540a10514e
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 828ms (compile: 5ms, proxy.ts: 274ms, render: 550ms)
+Debugger listening on ws://127.0.0.1:60026/0b67499f-26dd-427b-8538-078ad88a21ed
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 830ms (compile: 5ms, proxy.ts: 256ms, render: 570ms)
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 773ms (compile: 8ms, proxy.ts: 8ms, render: 758ms)
+Debugger listening on ws://127.0.0.1:60046/ca0bda12-8128-408c-a402-5d605e490fa0
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 1073ms (compile: 8ms, proxy.ts: 412ms, render: 653ms)
+Debugger listening on ws://127.0.0.1:60049/493965b6-3c67-47a2-b836-656bf47ed95a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 798ms (compile: 6ms, proxy.ts: 255ms, render: 537ms)
+Debugger listening on ws://127.0.0.1:60051/085dc6d6-0985-47ba-afcb-1f4a2fe73880
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 774ms (compile: 5ms, proxy.ts: 244ms, render: 525ms)
+Debugger listening on ws://127.0.0.1:60059/d75021e7-549b-43a9-8f32-c0648d824b3f
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 786ms (compile: 8ms, proxy.ts: 247ms, render: 531ms)
+Debugger listening on ws://127.0.0.1:60061/59b64816-aee0-4a3a-9339-19eab3d2d075
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 777ms (compile: 5ms, proxy.ts: 245ms, render: 527ms)
+Debugger listening on ws://127.0.0.1:60064/02098001-102d-4632-be79-174265c0f218
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 790ms (compile: 6ms, proxy.ts: 247ms, render: 536ms)
+Debugger listening on ws://127.0.0.1:60068/aed27e6f-a583-4a14-9c7d-73a71fab699c
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 785ms (compile: 8ms, proxy.ts: 246ms, render: 531ms)
+Debugger listening on ws://127.0.0.1:60070/57bd0741-5030-48a7-b776-b59117c4452e
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 806ms (compile: 8ms, proxy.ts: 249ms, render: 549ms)
+Debugger listening on ws://127.0.0.1:60074/cb281fbf-2eda-4df6-bcec-dcd412d34228
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 785ms (compile: 6ms, proxy.ts: 247ms, render: 532ms)
+Debugger listening on ws://127.0.0.1:60076/75ee753e-7118-4cc4-ab7f-5ede2bff2e29
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 789ms (compile: 5ms, proxy.ts: 252ms, render: 532ms)
+Debugger listening on ws://127.0.0.1:60078/e7b707f6-2970-41ca-96dd-557fd3c5492c
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 784ms (compile: 6ms, proxy.ts: 247ms, render: 532ms)
+Debugger listening on ws://127.0.0.1:60082/0ac9a233-d7c9-4c31-9905-2684d92caf21
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 790ms (compile: 5ms, proxy.ts: 252ms, render: 532ms)
+Debugger listening on ws://127.0.0.1:60084/bcedc4fe-2698-4dce-aefd-200e40a12bd2
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 993ms (compile: 9ms, proxy.ts: 310ms, render: 675ms)
+Debugger listening on ws://127.0.0.1:60090/cae56073-0bfc-43fa-b8f4-8eb2b9ab4c4b
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 840ms (compile: 5ms, proxy.ts: 298ms, render: 537ms)
+Debugger listening on ws://127.0.0.1:60121/353adf16-9ba6-4e23-9c4b-8a10367e0f40
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 921ms (compile: 10ms, proxy.ts: 304ms, render: 608ms)
+Debugger listening on ws://127.0.0.1:60130/14f0bb64-1848-47aa-973b-a16043a97e42
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 907ms (compile: 14ms, proxy.ts: 325ms, render: 568ms)
+Debugger listening on ws://127.0.0.1:60144/f64517ab-2b7c-4e55-870f-45a5c81c6181
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 992ms (compile: 9ms, proxy.ts: 400ms, render: 584ms)
+Debugger listening on ws://127.0.0.1:60155/7705852b-30e4-4dd6-a1bb-b51fd5634715
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 887ms (compile: 7ms, proxy.ts: 322ms, render: 558ms)
+Debugger listening on ws://127.0.0.1:60159/180e8e1b-200a-40b6-8fa0-8681cbfc17f5
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 804ms (compile: 6ms, proxy.ts: 252ms, render: 545ms)
+Debugger listening on ws://127.0.0.1:60164/3c2a8e67-3221-4cff-a86b-bfa33af2bd9e
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 852ms (compile: 6ms, proxy.ts: 308ms, render: 539ms)
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 542ms (compile: 4ms, proxy.ts: 2ms, render: 536ms)
+Debugger listening on ws://127.0.0.1:60184/361079dd-535c-4a84-b77e-82a270e14f35
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 989ms (compile: 17ms, proxy.ts: 402ms, render: 569ms)
+Debugger listening on ws://127.0.0.1:60187/940fbd4a-4bdc-4833-8f4a-99ba19d53535
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 825ms (compile: 7ms, proxy.ts: 259ms, render: 559ms)
+Debugger listening on ws://127.0.0.1:60189/c2ef1444-9766-471d-a3e6-ea421428a8af
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 779ms (compile: 5ms, proxy.ts: 245ms, render: 530ms)
+Debugger listening on ws://127.0.0.1:60191/622fec29-e415-4f28-be4f-07abc56ffda6
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 786ms (compile: 6ms, proxy.ts: 248ms, render: 533ms)
+Debugger listening on ws://127.0.0.1:60195/267acaa5-a713-437f-9738-5506d4846e98
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 786ms (compile: 6ms, proxy.ts: 245ms, render: 534ms)
+Debugger listening on ws://127.0.0.1:60199/b5b99d6c-5f98-4684-aa78-a857ab24eb05
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 850ms (compile: 8ms, proxy.ts: 257ms, render: 584ms)
+Debugger listening on ws://127.0.0.1:60203/1f686590-7f9f-4bf3-9c77-30323fdfd9a4
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 947ms (compile: 30ms, proxy.ts: 313ms, render: 604ms)
+Debugger listening on ws://127.0.0.1:60210/2896a6a1-2216-4401-94b0-7e7306323115
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 865ms (compile: 16ms, proxy.ts: 273ms, render: 575ms)
+Debugger listening on ws://127.0.0.1:60212/43f44b55-6d5f-4ecf-a530-e07926adcfcd
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 790ms (compile: 7ms, proxy.ts: 244ms, render: 538ms)
+Debugger listening on ws://127.0.0.1:60217/c268888b-9f4a-47a4-a198-da566cf1fab4
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 803ms (compile: 6ms, proxy.ts: 252ms, render: 546ms)
+Debugger listening on ws://127.0.0.1:60219/5d9834b4-c170-495f-bc85-7f5dd4906b22
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 775ms (compile: 6ms, proxy.ts: 251ms, render: 518ms)
+Debugger listening on ws://127.0.0.1:60221/8cfebb61-6084-402a-979b-1de053abcb70
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 781ms (compile: 5ms, proxy.ts: 249ms, render: 527ms)
+Debugger listening on ws://127.0.0.1:60225/863935f8-7cdd-4c3e-994b-d0cf1182b650
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 781ms (compile: 5ms, proxy.ts: 258ms, render: 519ms)
+Debugger listening on ws://127.0.0.1:60230/2f307c52-4450-42ad-988c-6fdf23a3d988
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 776ms (compile: 6ms, proxy.ts: 253ms, render: 517ms)
+Debugger listening on ws://127.0.0.1:60234/d1c7080b-6741-47af-859e-f2b843d4ef62
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 775ms (compile: 5ms, proxy.ts: 249ms, render: 522ms)
+Debugger listening on ws://127.0.0.1:60237/231693e6-6b33-49dc-bc8d-34c5e330bdc5
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 782ms (compile: 5ms, proxy.ts: 252ms, render: 525ms)
+Debugger listening on ws://127.0.0.1:60239/448e28b7-4195-4ac4-a2ca-f2da6c5f7392
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 2.1s (compile: 10ms, proxy.ts: 756ms, render: 1295ms)
+Debugger listening on ws://127.0.0.1:60249/5f6c9ac1-d5aa-4531-a197-d568f5da3997
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1336ms (compile: 8ms, proxy.ts: 496ms, render: 832ms)
+Debugger listening on ws://127.0.0.1:60255/519aa604-a453-4bcd-870e-bd6346624797
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 782ms (compile: 5ms, proxy.ts: 260ms, render: 518ms)
+Debugger listening on ws://127.0.0.1:60259/de7664f1-180a-4884-84fa-2821dd2255f1
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 803ms (compile: 7ms, proxy.ts: 254ms, render: 543ms)
+Debugger listening on ws://127.0.0.1:60261/7036b705-6282-4b19-bfb4-de48c78a235d
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 809ms (compile: 8ms, proxy.ts: 249ms, render: 552ms)
+Debugger listening on ws://127.0.0.1:60264/3004b4fc-7ae1-4c6f-9ea5-f089ecf2a111
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 858ms (compile: 8ms, proxy.ts: 265ms, render: 585ms)
+Debugger listening on ws://127.0.0.1:60269/efce044b-6d2f-4385-9f57-3b6bace46fcd
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1074ms (compile: 16ms, proxy.ts: 254ms, render: 804ms)
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:60272/10440123-58ab-4705-8481-1d785de5256c
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 901ms (compile: 8ms, proxy.ts: 252ms, render: 641ms)
+Debugger listening on ws://127.0.0.1:60277/d5815e71-f217-4647-ad62-22571cb094f0
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 829ms (compile: 6ms, proxy.ts: 250ms, render: 573ms)
+Debugger listening on ws://127.0.0.1:60280/ad341675-c343-470b-b966-c7eb665303bf
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 879ms (compile: 6ms, proxy.ts: 250ms, render: 623ms)
+Debugger listening on ws://127.0.0.1:60285/af5c75fc-af5a-4132-acf8-c452d085ba49
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1279ms (compile: 5ms, proxy.ts: 698ms, render: 576ms)
+Debugger listening on ws://127.0.0.1:60289/12068ca8-c1a7-4e4c-8362-a5afb0461ec2
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 823ms (compile: 6ms, proxy.ts: 258ms, render: 559ms)
+Debugger listening on ws://127.0.0.1:60292/1a9c6be0-b371-4386-bc7e-036fa9301975
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 841ms (compile: 5ms, proxy.ts: 249ms, render: 587ms)
+Debugger listening on ws://127.0.0.1:60296/bded99a8-0b2e-4a0f-85d4-6cb0b7c3fb74
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 830ms (compile: 7ms, proxy.ts: 254ms, render: 569ms)
+Debugger listening on ws://127.0.0.1:60298/f50ccfc4-e103-414a-a835-4499d437bd93
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 804ms (compile: 5ms, proxy.ts: 248ms, render: 551ms)
+Debugger listening on ws://127.0.0.1:60300/83cddeb3-6bd6-41cc-94fc-3df8eb70c20a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 817ms (compile: 10ms, proxy.ts: 250ms, render: 557ms)
+Debugger listening on ws://127.0.0.1:60305/5a27a169-fb1f-475c-a492-168aaf2ab56b
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 817ms (compile: 4ms, proxy.ts: 252ms, render: 561ms)
+Debugger listening on ws://127.0.0.1:60310/63886cfa-1218-407f-b1b6-368698a8a30e
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 859ms (compile: 13ms, proxy.ts: 260ms, render: 585ms)
+Debugger listening on ws://127.0.0.1:60312/7c02c766-293b-467b-a1da-9ddd4540a86c
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 901ms (compile: 6ms, proxy.ts: 258ms, render: 637ms)
+Debugger listening on ws://127.0.0.1:60318/0951a0b2-b297-4916-bc0c-5d59c2f65235
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 821ms (compile: 8ms, proxy.ts: 248ms, render: 565ms)
+Debugger listening on ws://127.0.0.1:60329/84e6bc49-f1ab-4acb-8854-163f474c43fb
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 810ms (compile: 7ms, proxy.ts: 247ms, render: 557ms)
+Debugger listening on ws://127.0.0.1:60339/788d2bba-37fa-4d31-98ae-c793e5effaa4
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1068ms (compile: 12ms, proxy.ts: 479ms, render: 577ms)
+Debugger listening on ws://127.0.0.1:60343/cc021399-4cce-4473-b298-562e07d268db
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 796ms (compile: 8ms, proxy.ts: 259ms, render: 529ms)
+Debugger listening on ws://127.0.0.1:60353/d428214d-b5fd-4d14-ba63-15fef006fe04
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1417ms (compile: 40ms, proxy.ts: 773ms, render: 604ms)
+Debugger listening on ws://127.0.0.1:60357/dd68a195-1c03-4d66-9916-8aea8060a20f
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 939ms (compile: 15ms, proxy.ts: 250ms, render: 674ms)
+Debugger listening on ws://127.0.0.1:60362/b968ec80-1ea8-4158-96eb-76742a3bf650
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 805ms (compile: 5ms, proxy.ts: 260ms, render: 540ms)
+Debugger listening on ws://127.0.0.1:60367/e912b996-2e40-4f4b-93a5-cbd0ba5042e9
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 871ms (compile: 11ms, proxy.ts: 256ms, render: 605ms)
+Debugger listening on ws://127.0.0.1:60377/ccd43496-4c1a-4d3b-a61e-a8142cd20113
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 873ms (compile: 10ms, proxy.ts: 296ms, render: 566ms)
+Debugger listening on ws://127.0.0.1:60379/d377dd24-58b7-4230-b7a7-848ceb371b45
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 809ms (compile: 6ms, proxy.ts: 262ms, render: 540ms)
+Debugger listening on ws://127.0.0.1:60382/6b4094d1-1259-4777-82f8-f55b6a432d19
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 936ms (compile: 20ms, proxy.ts: 282ms, render: 635ms)
+Debugger listening on ws://127.0.0.1:60387/11318d9b-d509-4350-986e-65c73df5465c
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 823ms (compile: 7ms, proxy.ts: 246ms, render: 571ms)
+Debugger listening on ws://127.0.0.1:60390/b17e01c5-0346-425c-b07f-4c80e82150d0
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 809ms (compile: 10ms, proxy.ts: 247ms, render: 552ms)
+Debugger listening on ws://127.0.0.1:60395/1c33a3d8-029a-41d3-ac5f-cf1723b7c06d
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 801ms (compile: 8ms, proxy.ts: 249ms, render: 544ms)
+Debugger listening on ws://127.0.0.1:60404/d03ee9b6-68d8-48d1-a114-8c3dd5b05a3f
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 810ms (compile: 5ms, proxy.ts: 256ms, render: 549ms)
+Debugger listening on ws://127.0.0.1:60407/67423e01-362b-473b-ba56-4d46e091c6b8
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 836ms (compile: 5ms, proxy.ts: 249ms, render: 581ms)
+Debugger listening on ws://127.0.0.1:60412/1901ff29-cfa7-43b0-8511-9336fee1c41b
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 947ms (compile: 8ms, proxy.ts: 276ms, render: 663ms)
+Debugger listening on ws://127.0.0.1:60422/1922a661-48cb-4411-898b-6a799e8682b3
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1395ms (compile: 22ms, proxy.ts: 740ms, render: 633ms)
+Debugger listening on ws://127.0.0.1:60427/3bb2d639-aca8-4933-91ee-e935fb16d759
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 863ms (compile: 9ms, proxy.ts: 252ms, render: 602ms)
+Debugger listening on ws://127.0.0.1:60431/c2e888f4-56b9-4dd6-aad2-4fefd7cb5589
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 942ms (compile: 10ms, proxy.ts: 258ms, render: 673ms)
+Debugger listening on ws://127.0.0.1:60463/fd8e8897-f2b7-47b1-8f7c-80627048edad
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1024ms (compile: 12ms, proxy.ts: 405ms, render: 607ms)
+Debugger listening on ws://127.0.0.1:60475/205e6379-fe6e-4e97-9c58-daae4512f35a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 913ms (compile: 7ms, proxy.ts: 253ms, render: 653ms)
+Debugger listening on ws://127.0.0.1:60484/306c70cd-9d0d-4e16-a5c4-7307b0f5b83f
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 900ms (compile: 5ms, proxy.ts: 258ms, render: 637ms)
+Debugger listening on ws://127.0.0.1:60489/20d03426-c6e1-4931-ad43-fd4fa336bbe8
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 860ms (compile: 8ms, proxy.ts: 265ms, render: 587ms)
+Debugger listening on ws://127.0.0.1:60492/843e2811-6e84-4c06-9554-8d33901675e1
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1124ms (compile: 10ms, proxy.ts: 301ms, render: 813ms)
+Debugger listening on ws://127.0.0.1:60495/58ac32b1-5b96-4e03-b708-1000a8503c61
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 848ms (compile: 8ms, proxy.ts: 254ms, render: 586ms)
+Debugger listening on ws://127.0.0.1:60503/e5dfec2f-2211-4f56-b6e1-ae98d9b4e532
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 940ms (compile: 7ms, proxy.ts: 316ms, render: 617ms)
+Debugger listening on ws://127.0.0.1:60508/9c28fd89-2e8b-454a-bdef-a32bcc3c3ee7
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 822ms (compile: 10ms, proxy.ts: 259ms, render: 552ms)
+Debugger listening on ws://127.0.0.1:60518/673c8715-fbb7-4b6d-bc6b-b8cf21a21f19
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1305ms (compile: 7ms, proxy.ts: 735ms, render: 563ms)
+Debugger listening on ws://127.0.0.1:60525/df2e511f-f0f0-4729-b2df-5be459e95641
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 811ms (compile: 7ms, proxy.ts: 252ms, render: 552ms)
+Debugger listening on ws://127.0.0.1:60527/dc4cfbef-745c-4ae8-9bee-5af420e4fb04
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 965ms (compile: 16ms, proxy.ts: 251ms, render: 697ms)
+Debugger listening on ws://127.0.0.1:60535/5950239f-8627-473f-a6cf-05d9cf51d018
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 962ms (compile: 12ms, proxy.ts: 359ms, render: 590ms)
+Debugger listening on ws://127.0.0.1:60546/936705aa-6cfa-45d2-a265-2e43c082d093
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 1863ms (compile: 16ms, proxy.ts: 759ms, render: 1088ms)
+Debugger listening on ws://127.0.0.1:60551/188d898c-558d-4ff3-a88a-718c50400c0a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 942ms (compile: 6ms, proxy.ts: 333ms, render: 604ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 881ms (compile: 3ms, proxy.ts: 323ms, render: 555ms)
+✓ Compiled in 108ms
+Debugger listening on ws://127.0.0.1:60558/a64d16c6-123e-413e-b3dc-27f1f9190a4a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 899ms (compile: 8ms, proxy.ts: 251ms, render: 640ms)
+Debugger listening on ws://127.0.0.1:60563/059e1ab2-0f48-40d2-9605-d3c415980a05
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1176ms (compile: 16ms, proxy.ts: 290ms, render: 870ms)
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 1046ms (compile: 4ms, proxy.ts: 8ms, render: 1034ms)
+Debugger listening on ws://127.0.0.1:60574/bdb9b7b2-4396-41db-ae28-4a1b3fc9660c
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1307ms (compile: 17ms, proxy.ts: 606ms, render: 684ms)
+Debugger listening on ws://127.0.0.1:60577/4c7602f3-805d-415a-b692-7ef3bbc96889
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 824ms (compile: 6ms, proxy.ts: 249ms, render: 569ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 1442ms (compile: 106ms, proxy.ts: 852ms, render: 485ms)
+ GET /api/instances 200 in 1056ms (compile: 4ms, proxy.ts: 322ms, render: 730ms)
+Debugger listening on ws://127.0.0.1:60635/db2d8341-2117-4862-ab75-e2ca3925b8eb
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:60636/9ced2c14-7c31-49fa-a051-8c5c6d9d574a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Debugger listening on ws://127.0.0.1:60640/5f7c82de-949f-4ae5-b6de-cce38d6a8e8c
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1095ms (compile: 6ms, proxy.ts: 392ms, render: 697ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 1097ms (compile: 5ms, proxy.ts: 475ms, render: 617ms)
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1493ms (compile: 6ms, proxy.ts: 938ms, render: 549ms)
+Debugger listening on ws://127.0.0.1:60642/b3c4ef1b-ffb5-4917-9d63-7ad5ebd9719a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 884ms (compile: 6ms, proxy.ts: 250ms, render: 628ms)
+Debugger listening on ws://127.0.0.1:60663/080d4b70-dd60-4c3e-a483-e4d2c6c1dc1a
+For help, see: https://nodejs.org/en/docs/inspector
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1504ms (compile: 28ms, proxy.ts: 482ms, render: 993ms)
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1413ms (compile: 36ms, proxy.ts: 360ms, render: 1017ms)
+Debugger listening on ws://127.0.0.1:60669/d4fba346-7302-447d-9e0d-ce91ec5ed0cc
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 853ms (compile: 8ms, proxy.ts: 258ms, render: 587ms)
+Debugger listening on ws://127.0.0.1:60690/060be83a-5bb0-4f85-a4f5-5902f8baa66c
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 904ms (compile: 14ms, proxy.ts: 335ms, render: 555ms)
+Debugger listening on ws://127.0.0.1:60695/8254315c-c081-49a1-9dc8-cfed45c370fc
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 801ms (compile: 6ms, proxy.ts: 248ms, render: 546ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 851ms (compile: 3ms, proxy.ts: 300ms, render: 548ms)
+Debugger listening on ws://127.0.0.1:60711/7303191d-2802-416b-944e-5cc47cdd505f
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1369ms (compile: 9ms, proxy.ts: 792ms, render: 568ms)
+Debugger listening on ws://127.0.0.1:60713/fe97e8e6-ea3c-4c31-9e53-3627ea393ce6
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 813ms (compile: 6ms, proxy.ts: 255ms, render: 552ms)
+Debugger listening on ws://127.0.0.1:60717/b57ce76e-d1cb-4abd-972e-83268a3809b4
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 807ms (compile: 5ms, proxy.ts: 253ms, render: 549ms)
+Debugger listening on ws://127.0.0.1:60719/bbbd43d5-af72-4c30-a0ab-5f80681757e0
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 830ms (compile: 6ms, proxy.ts: 267ms, render: 557ms)
+Debugger listening on ws://127.0.0.1:60724/1b035f71-b634-4919-ada4-9f87f6a8b18a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 836ms (compile: 5ms, proxy.ts: 275ms, render: 556ms)
+Debugger listening on ws://127.0.0.1:60726/831e24a7-fb23-473f-92ba-52d74d6256a4
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 782ms (compile: 6ms, proxy.ts: 257ms, render: 519ms)
+Debugger listening on ws://127.0.0.1:60728/19b2483d-1a53-4e7f-9c64-b1b2b52c47d6
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 800ms (compile: 7ms, proxy.ts: 247ms, render: 546ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 831ms (compile: 3ms, proxy.ts: 283ms, render: 546ms)
+Debugger listening on ws://127.0.0.1:60753/b0eba8c9-79a2-494c-af96-be93fcb8f74a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1380ms (compile: 10ms, proxy.ts: 786ms, render: 584ms)
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 554ms (compile: 2ms, proxy.ts: 3ms, render: 548ms)
+Debugger listening on ws://127.0.0.1:60761/0720b788-c32d-4aeb-9c42-602048ba9097
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 827ms (compile: 6ms, proxy.ts: 257ms, render: 564ms)
+Debugger listening on ws://127.0.0.1:60783/25190c7f-8795-4284-a08b-76eb10ab6e5a
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 984ms (compile: 15ms, proxy.ts: 379ms, render: 590ms)
+Debugger listening on ws://127.0.0.1:60796/0bc16636-35be-4ab0-8b74-5ea8411b250c
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1124ms (compile: 7ms, proxy.ts: 560ms, render: 557ms)
+Debugger listening on ws://127.0.0.1:60806/c3fa0b54-b463-4f9b-a93e-e8ecb2f63f22
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 981ms (compile: 15ms, proxy.ts: 420ms, render: 547ms)
+[usage/events] Processed 2 events, 0 errors
+ POST /api/usage/events 200 in 1129ms (compile: 4ms, proxy.ts: 12ms, render: 1113ms)
+Debugger listening on ws://127.0.0.1:61621/41544e5e-996d-495a-a49d-8e7086610efb
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat/reset 200 in 1574ms (compile: 25ms, proxy.ts: 803ms, render: 746ms)
+Debugger listening on ws://127.0.0.1:61623/3b6f94c7-ba8b-4f63-a389-c1dd4da1bf7b
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 824ms (compile: 5ms, proxy.ts: 254ms, render: 565ms)
+Debugger listening on ws://127.0.0.1:61628/207d7267-1c10-4b9b-9af9-30a6bd2f8820
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ POST /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/chat 200 in 1509ms (compile: 18ms, proxy.ts: 840ms, render: 652ms)
+Debugger listening on ws://127.0.0.1:61632/2162721a-4409-4739-a838-519d32ef9a1d
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 940ms (compile: 6ms, proxy.ts: 266ms, render: 668ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 877ms (compile: 9ms, proxy.ts: 259ms, render: 609ms)
+Debugger listening on ws://127.0.0.1:61641/dc75c4d6-78a0-487b-82c7-a6bac941dd44
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1082ms (compile: 156ms, proxy.ts: 318ms, render: 608ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 1008ms (compile: 14ms, proxy.ts: 272ms, render: 722ms)
+Debugger listening on ws://127.0.0.1:61648/b455858f-c694-47ba-ad0a-fd4972339153
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 893ms (compile: 13ms, proxy.ts: 278ms, render: 602ms)
+[usage/events] Processed 1 events, 0 errors
+ POST /api/usage/events 200 in 781ms (compile: 4ms, proxy.ts: 2ms, render: 774ms)
+✓ Compiled in 137ms
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /dashboard 200 in 3.0s (compile: 412ms, proxy.ts: 1687ms, render: 944ms)
+ GET /api/instances 200 in 1017ms (compile: 6ms, proxy.ts: 255ms, render: 755ms)
+Debugger listening on ws://127.0.0.1:62949/e373c390-0291-4c2d-b4fb-7fc6bbe848b5
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 826ms (compile: 6ms, proxy.ts: 246ms, render: 574ms)
+Debugger listening on ws://127.0.0.1:62956/05709387-5165-4194-af12-e85ba2cb3803
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:62957/64439156-7947-4034-8d10-4bae863a59ba
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 1235ms (compile: 13ms, proxy.ts: 716ms, render: 506ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/models 200 in 1306ms (compile: 5ms, proxy.ts: 741ms, render: 560ms)
+Debugger listening on ws://127.0.0.1:62962/3a98cbf4-5336-4b67-8bbc-a3c226a55bba
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 764ms (compile: 6ms, proxy.ts: 251ms, render: 507ms)
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 4.0s (compile: 504ms, proxy.ts: 2.1s, render: 1371ms)
+Debugger listening on ws://127.0.0.1:51471/f9fc1639-3441-4861-98e5-425ef6f82678
+For help, see: https://nodejs.org/en/docs/inspector
+Debugger listening on ws://127.0.0.1:51472/75cecd5b-0296-45f7-a99b-fe35d4c8b4c5
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 3.8s (compile: 100ms, proxy.ts: 703ms, render: 3.0s)
+Debugger listening on ws://127.0.0.1:56559/72e710be-4c60-4d38-bbab-66e624505100
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/control-url 200 in 2.7s (compile: 72ms, proxy.ts: 1759ms, render: 904ms)
+Debugger listening on ws://127.0.0.1:56561/c49e0339-eba0-47c1-89e2-f25fbc1ebcc3
+For help, see: https://nodejs.org/en/docs/inspector
+Error: connect ECONNREFUSED /var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '/var/folders/kz/7b_80kmj78q_w_p_zznsdys80000gn/T/node-cdp.931-324e578c-0.sock.deferred'
+}
+
+Error activating auto attach, please report to https://aka.ms/js-dbg-issue
+ GET /api/instances/e85b7de8-b64a-4b54-ad6b-692227ab9602/history 200 in 893ms (compile: 12ms, proxy.ts: 253ms, render: 628ms)

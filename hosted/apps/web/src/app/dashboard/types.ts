@@ -5,7 +5,7 @@ export interface Instance {
 }
 
 export interface ChatMessage {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
@@ -49,7 +49,9 @@ export type GatewayFrame =
 export type ChatEventPayload = {
   runId?: string;
   sessionKey?: string;
-  state?: "delta" | "final" | "aborted" | "error";
+  state?: "delta" | "final" | "aborted" | "error" | "notice";
+  noticeType?: string;
   message?: unknown;
+  noticeMessage?: string;
   errorMessage?: string;
 };

@@ -8,12 +8,14 @@ import { resolveEffectiveMessagesConfig, resolveIdentityName } from "../../agent
 import { resolveThinkingDefault } from "../../agents/model-selection.js";
 import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
 import { dispatchInboundMessage } from "../../auto-reply/dispatch.js";
+import { resolveMemoryFlushSettings } from "../../auto-reply/reply/memory-flush.js";
 import { createReplyDispatcher } from "../../auto-reply/reply/reply-dispatcher.js";
 import {
   extractShortModelName,
   type ResponsePrefixContext,
 } from "../../auto-reply/reply/response-prefix-template.js";
 import type { MsgContext } from "../../auto-reply/templating.js";
+import { SILENT_REPLY_TOKEN, isSilentReplyText } from "../../auto-reply/tokens.js";
 import { resolveSendPolicy } from "../../sessions/send-policy.js";
 import { INTERNAL_MESSAGE_CHANNEL } from "../../utils/message-channel.js";
 import {
@@ -49,6 +51,65 @@ type TranscriptAppendResult = {
   message?: Record<string, unknown>;
   error?: string;
 };
+
+function extractTextFromMessageContent(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (!part || typeof part !== "object") return "";
+        const block = part as { text?: unknown };
+        return typeof block.text === "string" ? block.text : "";
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+  if (content && typeof content === "object") {
+    const block = content as { text?: unknown };
+    return typeof block.text === "string" ? block.text : "";
+  }
+  return "";
+}
+
+export function replaceMemoryFlushTurnsWithNotice(
+  messages: Record<string, unknown>[],
+  memoryFlushPrompt?: string,
+): Record<string, unknown>[] {
+  if (!memoryFlushPrompt?.trim()) return messages;
+  const prompt = memoryFlushPrompt.trim();
+  const notice = "Memory maintenance run completed.";
+  const out: Record<string, unknown>[] = [];
+
+  for (let i = 0; i < messages.length; i++) {
+    const current = messages[i];
+    const next = messages[i + 1];
+    const currentRole = typeof current?.role === "string" ? current.role.toLowerCase() : "";
+    const nextRole = typeof next?.role === "string" ? next.role.toLowerCase() : "";
+    if (currentRole !== "user" || nextRole !== "assistant") {
+      out.push(current);
+      continue;
+    }
+
+    const currentText = extractTextFromMessageContent(current.content).trim();
+    const nextText = extractTextFromMessageContent(next.content).trim();
+    const isFlushPromptTurn = currentText.includes(prompt);
+    const isSilentFlushReply = isSilentReplyText(nextText, SILENT_REPLY_TOKEN);
+    if (!isFlushPromptTurn || !isSilentFlushReply) {
+      out.push(current);
+      continue;
+    }
+
+    const timestamp = typeof next.timestamp === "number" ? next.timestamp : current.timestamp;
+    out.push({
+      role: "system",
+      content: [{ type: "text", text: notice }],
+      ...(typeof timestamp === "number" ? { timestamp } : {}),
+    });
+    i += 1;
+  }
+
+  return out;
+}
 
 function resolveTranscriptPath(params: {
   sessionId: string;
@@ -207,7 +268,9 @@ export const chatHandlers: GatewayRequestHandlers = {
     const max = Math.min(hardMax, requested);
     const sliced = rawMessages.length > max ? rawMessages.slice(-max) : rawMessages;
     const sanitized = stripEnvelopeFromMessages(sliced);
-    const capped = capArrayByJsonBytes(sanitized, getMaxChatHistoryMessagesBytes()).items;
+    const memoryFlushPrompt = resolveMemoryFlushSettings(cfg)?.prompt;
+    const normalized = replaceMemoryFlushTurnsWithNotice(sanitized, memoryFlushPrompt);
+    const capped = capArrayByJsonBytes(normalized, getMaxChatHistoryMessagesBytes()).items;
     let thinkingLevel = entry?.thinkingLevel;
     if (!thinkingLevel) {
       const configured = cfg.agents?.defaults?.thinkingDefault;
