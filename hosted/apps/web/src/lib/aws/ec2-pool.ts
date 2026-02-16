@@ -203,8 +203,13 @@ export class EC2PoolManager {
   }
 
   async maintainPool(): Promise<void> {
-    const available = await this.getAvailableInstances();
-    const needed = POOL_SPARE_COUNT - available.length;
+    const instances = await this.getPoolInstances();
+    // Count both available and initializing instances towards the spare pool
+    // to avoid launching duplicates while instances are still booting
+    const spareCount = instances.filter(
+      (i) => i.status === "available" || i.status === "initializing"
+    ).length;
+    const needed = POOL_SPARE_COUNT - spareCount;
     if (needed > 0) {
       try {
         await this.launchInstances(needed);
@@ -213,7 +218,7 @@ export class EC2PoolManager {
           code: getErrorCode(error),
           message: getErrorMessage(error),
           needed,
-          available: available.length,
+          spareCount,
           poolSpareCount: POOL_SPARE_COUNT,
           subnetsConfigured: SUBNET_IDS.length,
         });
@@ -282,9 +287,8 @@ export class EC2PoolManager {
     };
   }
 
-  async releaseInstance(userId: string): Promise<void> {
-    const instances = await this.getPoolInstances();
-    const instance = instances.find((i) => i.userId === userId);
+  async releaseInstance(ec2InstanceId: string): Promise<void> {
+    const instance = await this.getInstanceByEC2Id(ec2InstanceId);
     if (!instance) return;
 
     // Clean up gateway token from Secrets Manager
@@ -305,9 +309,9 @@ export class EC2PoolManager {
     await this.maintainPool();
   }
 
-  async getInstanceForUser(userId: string): Promise<PoolInstance | null> {
+  async getInstanceByEC2Id(ec2InstanceId: string): Promise<PoolInstance | null> {
     const instances = await this.getPoolInstances();
-    return instances.find((i) => i.userId === userId) || null;
+    return instances.find((i) => i.instanceId === ec2InstanceId) || null;
   }
 
   async registerWithTargetGroup(targetGroupArn: string, ec2InstanceId: string): Promise<void> {

@@ -60,8 +60,10 @@ let didLogEnabled = false;
 const DEFAULT_BATCH_SIZE = 10;
 const DEFAULT_FLUSH_INTERVAL_MS = 30_000;
 const MAX_PENDING_EVENTS = 1_000;
+const IMDS_TOKEN_URL = "http://169.254.169.254/latest/api/token";
 const IMDS_TAG_URL = "http://169.254.169.254/latest/meta-data/tags/instance/OpenClawInstanceId";
 const IMDS_TIMEOUT_MS = 1_500;
+const IMDS_TOKEN_TTL_SECONDS = 60;
 
 function parsePositiveInteger(raw: string | undefined, fallback: number): number {
   if (!raw) return fallback;
@@ -99,16 +101,12 @@ function resolveConfig(env: NodeJS.ProcessEnv): HostedUsageConfig {
   };
 }
 
-function extractUsageFromMessages(
-  messages: AgentMessage[],
-):
-  | {
-      inputTokens: number;
-      outputTokens: number;
-      cacheReadTokens: number;
-      cacheWriteTokens: number;
-    }
-  | null {
+function extractUsageFromMessages(messages: AgentMessage[]): {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+} | null {
   if (messages.length === 0) return null;
 
   // Only consider the newest message to avoid replaying stale usage from previous turns.
@@ -176,8 +174,20 @@ function pushWithCap(event: PendingUsageEvent): void {
 
 async function fetchInstanceIdFromImds(): Promise<string | null> {
   try {
+    // IMDSv2: acquire session token first (required when http_tokens = "required")
+    const tokenResponse = await fetch(IMDS_TOKEN_URL, {
+      method: "PUT",
+      headers: { "X-aws-ec2-metadata-token-ttl-seconds": String(IMDS_TOKEN_TTL_SECONDS) },
+      signal: AbortSignal.timeout(IMDS_TIMEOUT_MS),
+    });
+    if (!tokenResponse.ok) return null;
+    const imdsToken = (await tokenResponse.text()).trim();
+    if (!imdsToken) return null;
+
+    // IMDSv2: fetch tag with session token
     const response = await fetch(IMDS_TAG_URL, {
       method: "GET",
+      headers: { "X-aws-ec2-metadata-token": imdsToken },
       signal: AbortSignal.timeout(IMDS_TIMEOUT_MS),
     });
     if (!response.ok) return null;
@@ -294,7 +304,9 @@ function queueFlush(): Promise<void> {
   return flushInFlight;
 }
 
-export function createHostedUsageLogger(params: { env?: NodeJS.ProcessEnv }): HostedUsageLogger | null {
+export function createHostedUsageLogger(params: {
+  env?: NodeJS.ProcessEnv;
+}): HostedUsageLogger | null {
   const env = params.env ?? process.env;
   if (!config) {
     config = resolveConfig(env);

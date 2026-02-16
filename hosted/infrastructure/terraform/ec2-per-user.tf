@@ -266,7 +266,7 @@ resource "aws_launch_template" "user_instance" {
     http_endpoint               = "enabled"
     instance_metadata_tags      = "enabled"
     http_tokens                 = "required" # IMDSv2 only - prevents SSRF credential theft
-    http_put_response_hop_limit = 1
+    http_put_response_hop_limit = 2          # 2 required for Docker containers to reach IMDS through bridge network
   }
 
   lifecycle {

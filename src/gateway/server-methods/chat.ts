@@ -269,7 +269,10 @@ export const chatHandlers: GatewayRequestHandlers = {
     const sliced = rawMessages.length > max ? rawMessages.slice(-max) : rawMessages;
     const sanitized = stripEnvelopeFromMessages(sliced);
     const memoryFlushPrompt = resolveMemoryFlushSettings(cfg)?.prompt;
-    const normalized = replaceMemoryFlushTurnsWithNotice(sanitized, memoryFlushPrompt);
+    const normalized = replaceMemoryFlushTurnsWithNotice(
+      sanitized as Record<string, unknown>[],
+      memoryFlushPrompt,
+    );
     const capped = capArrayByJsonBytes(normalized, getMaxChatHistoryMessagesBytes()).items;
     let thinkingLevel = entry?.thinkingLevel;
     if (!thinkingLevel) {
