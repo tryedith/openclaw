@@ -18,6 +18,11 @@ import {
   RegisterTargetsCommand,
   DeregisterTargetsCommand,
 } from "@aws-sdk/client-elastic-load-balancing-v2";
+import {
+  SecretsManagerClient,
+  GetSecretValueCommand,
+  DeleteSecretCommand,
+} from "@aws-sdk/client-secrets-manager";
 
 const AWS_REGION = process.env.AWS_REGION || "us-west-2";
 const LAUNCH_TEMPLATE_ID = process.env.LAUNCH_TEMPLATE_ID!;
@@ -66,11 +71,13 @@ function getErrorMessage(error: unknown): string {
 export class EC2PoolManager {
   private ec2: EC2Client;
   private elb: ElasticLoadBalancingV2Client;
+  private secrets: SecretsManagerClient;
 
   constructor() {
     const config = { region: AWS_REGION };
     this.ec2 = new EC2Client(config);
     this.elb = new ElasticLoadBalancingV2Client(config);
+    this.secrets = new SecretsManagerClient(config);
   }
 
   async getPoolInstances(): Promise<PoolInstance[]> {
@@ -88,14 +95,12 @@ export class EC2PoolManager {
       for (const instance of reservation.Instances || []) {
         const statusTag = instance.Tags?.find((t: Tag) => t.Key === "Status");
         const userIdTag = instance.Tags?.find((t: Tag) => t.Key === "UserId");
-        const gatewayTokenTag = instance.Tags?.find((t: Tag) => t.Key === "GatewayToken");
         instances.push({
           instanceId: instance.InstanceId!,
           status: (statusTag?.Value as PoolInstance["status"]) || "initializing",
           privateIp: instance.PrivateIpAddress,
           publicIp: instance.PublicIpAddress,
           userId: userIdTag?.Value,
-          gatewayToken: gatewayTokenTag?.Value,
         });
       }
     }
@@ -235,8 +240,15 @@ export class EC2PoolManager {
 
     const instance = available[0];
 
-    if (!instance.gatewayToken) {
-      throw new Error(`Instance ${instance.instanceId} has no gateway token`);
+    // Read gateway token from Secrets Manager (stored by EC2 user_data at boot)
+    const secretResult = await this.secrets.send(
+      new GetSecretValueCommand({
+        SecretId: `openclaw/instance/${instance.instanceId}/gateway-token`,
+      })
+    );
+    const gatewayToken = secretResult.SecretString;
+    if (!gatewayToken) {
+      throw new Error(`Instance ${instance.instanceId} has no gateway token in Secrets Manager`);
     }
 
     // Tag as assigned (container is already running from user_data)
@@ -266,7 +278,7 @@ export class EC2PoolManager {
       ec2InstanceId: instance.instanceId,
       privateIp: instance.privateIp!,
       publicIp: instance.publicIp!,
-      gatewayToken: instance.gatewayToken,
+      gatewayToken,
     };
   }
 
@@ -274,6 +286,18 @@ export class EC2PoolManager {
     const instances = await this.getPoolInstances();
     const instance = instances.find((i) => i.userId === userId);
     if (!instance) return;
+
+    // Clean up gateway token from Secrets Manager
+    try {
+      await this.secrets.send(
+        new DeleteSecretCommand({
+          SecretId: `openclaw/instance/${instance.instanceId}/gateway-token`,
+          ForceDeleteWithoutRecovery: true,
+        })
+      );
+    } catch (error) {
+      console.log(`[ec2-pool] Secret cleanup for ${instance.instanceId}: ${getErrorMessage(error)}`);
+    }
 
     await this.ec2.send(
       new TerminateInstancesCommand({ InstanceIds: [instance.instanceId] })

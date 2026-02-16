@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { getChatHistory, buildSessionKey } from "@/lib/gateway/ws-client";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
+import { decryptGatewayToken } from "@/lib/crypto";
 
 const MAX_HISTORY_LIMIT = 1000;
 const DEFAULT_HISTORY_LIMIT = MAX_HISTORY_LIMIT;
@@ -40,7 +41,7 @@ export async function GET(
 
   const { gatewayUrl, token } = resolveGatewayTarget({
     instancePublicUrl: instance.public_url,
-    instanceToken: instance.gateway_token_encrypted,
+    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
     instanceId: id,
   });
 

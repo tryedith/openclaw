@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { buildSessionKey, gatewayRpc } from "@/lib/gateway/ws-client";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
+import { decryptGatewayToken } from "@/lib/crypto";
 import { NextResponse } from "next/server";
 
 type SupportedProvider = "anthropic" | "openai" | "google";
@@ -136,7 +137,7 @@ async function resolveInstanceForUser(params: { id: string }) {
 
   const { gatewayUrl, token } = resolveGatewayTarget({
     instancePublicUrl: instance.public_url,
-    instanceToken: instance.gateway_token_encrypted,
+    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
     instanceId: params.id,
   });
 

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { gatewayRpc } from "@/lib/gateway/ws-client";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
+import { decryptGatewayToken } from "@/lib/crypto";
 
 // GET /api/instances/[id]/channels - Get channel status from gateway
 export async function GET(
@@ -39,7 +40,7 @@ export async function GET(
 
   const { gatewayUrl, token } = resolveGatewayTarget({
     instancePublicUrl: instance.public_url,
-    instanceToken: instance.gateway_token_encrypted,
+    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
     instanceId: id,
   });
 

@@ -21,5 +21,10 @@
   },
   "tools": {
     "alsoAllow": ["browser"]
+  },
+  "hooks": {
+    "internal": {
+      "enabled": true
+    }
   }
 }

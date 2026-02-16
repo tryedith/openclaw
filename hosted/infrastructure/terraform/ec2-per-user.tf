@@ -102,10 +102,13 @@ resource "aws_iam_role_policy" "user_instance" {
         Resource = "*"
       },
       {
-        # Secrets Manager access for user credentials
+        # Secrets Manager access for user credentials and gateway tokens
         Effect = "Allow"
         Action = [
-          "secretsmanager:GetSecretValue"
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:CreateSecret",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:TagResource"
         ]
         Resource = "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:openclaw/*"
       },
@@ -174,9 +177,10 @@ resource "aws_launch_template" "user_instance" {
     #!/bin/bash
     set -e
 
-    # Get instance metadata
-    INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-    REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+    # Get instance metadata (IMDSv2 - token required to prevent SSRF credential theft)
+    IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+    INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+    REGION=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/placement/region)
 
     # Install Docker and tools
     yum update -y
@@ -198,9 +202,14 @@ resource "aws_launch_template" "user_instance" {
     # Generate unique gateway token for this instance
     GATEWAY_TOKEN=$(openssl rand -hex 32)
 
-    # Store token as instance tag (so we can read it at assignment time)
-    aws ec2 create-tags --region $REGION --resources $INSTANCE_ID \
-      --tags Key=GatewayToken,Value=$GATEWAY_TOKEN
+    # Store token in Secrets Manager (more secure than EC2 tags)
+    aws secretsmanager create-secret --region $REGION \
+      --name "openclaw/instance/$INSTANCE_ID/gateway-token" \
+      --secret-string "$GATEWAY_TOKEN" \
+      --tags Key=ManagedBy,Value=openclaw Key=InstanceId,Value=$INSTANCE_ID \
+      || aws secretsmanager put-secret-value --region $REGION \
+        --secret-id "openclaw/instance/$INSTANCE_ID/gateway-token" \
+        --secret-string "$GATEWAY_TOKEN"
 
     # Fetch platform credentials
     SECRETS=$(aws secretsmanager get-secret-value --region $REGION \
@@ -256,7 +265,7 @@ resource "aws_launch_template" "user_instance" {
   metadata_options {
     http_endpoint               = "enabled"
     instance_metadata_tags      = "enabled"
-    http_tokens                 = "optional" # IMDSv1 for simpler scripting
+    http_tokens                 = "required" # IMDSv2 only - prevents SSRF credential theft
     http_put_response_hop_limit = 1
   }
 

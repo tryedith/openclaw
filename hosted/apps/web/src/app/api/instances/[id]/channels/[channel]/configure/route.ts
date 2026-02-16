@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { gatewayRpc } from "@/lib/gateway/ws-client";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
+import { decryptGatewayToken } from "@/lib/crypto";
 
 // Supported channels and their config structure
 const CHANNEL_CONFIGS: Record<string, (body: Record<string, unknown>) => Record<string, unknown>> = {
@@ -75,7 +76,7 @@ export async function POST(
 
   const { gatewayUrl, token } = resolveGatewayTarget({
     instancePublicUrl: instance.public_url,
-    instanceToken: instance.gateway_token_encrypted,
+    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
     instanceId: id,
   });
 
@@ -202,7 +203,7 @@ export async function DELETE(
 
   const { gatewayUrl, token } = resolveGatewayTarget({
     instancePublicUrl: instance.public_url,
-    instanceToken: instance.gateway_token_encrypted,
+    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
     instanceId: id,
   });
 

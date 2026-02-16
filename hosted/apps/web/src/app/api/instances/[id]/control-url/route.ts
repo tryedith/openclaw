@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
+import { decryptGatewayToken } from "@/lib/crypto";
 
 // GET /api/instances/[id]/control-url - Get tokenized Control UI URL
 export async function GET(
@@ -36,7 +37,7 @@ export async function GET(
 
   const { gatewayUrl, token } = resolveGatewayTarget({
     instancePublicUrl: instance.public_url,
-    instanceToken: instance.gateway_token_encrypted,
+    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
     instanceId: id,
   });
   const tokenizedUrl = `${gatewayUrl}/?token=${encodeURIComponent(token)}`;

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getInstanceClient } from "@/lib/aws/instance-client";
+import { encryptGatewayToken } from "@/lib/crypto";
 import { NextResponse } from "next/server";
 
 // GET /api/instances - List user's instances
@@ -158,7 +159,7 @@ export async function POST() {
         aws_target_group_arn: targetGroupArn,
         aws_rule_arn: ruleArn,
         public_url: url,
-        gateway_token_encrypted: gatewayToken, // Token from pre-warmed instance
+        gateway_token_encrypted: encryptGatewayToken(gatewayToken),
         status: "running", // Container is already running
       })
       .eq("id", instance.id);
