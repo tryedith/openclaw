@@ -97,10 +97,10 @@ export class InstanceClient {
   }
 
   /**
-   * Get instance status
+   * Get instance status by EC2 instance ID
    */
-  async getInstanceStatus(userId: string): Promise<InstanceStatus> {
-    const instance = await this.pool.getInstanceForUser(userId);
+  async getInstanceStatus(ec2InstanceId: string): Promise<InstanceStatus> {
+    const instance = await this.pool.getInstanceByEC2Id(ec2InstanceId);
 
     if (!instance) {
       return { status: "stopped" };
@@ -127,7 +127,7 @@ export class InstanceClient {
    */
   async deleteInstance(params: {
     instanceId: string;
-    userId: string;
+    ec2InstanceId: string;
     targetGroupArn?: string;
     ruleArn?: string;
   }): Promise<void> {
@@ -136,7 +136,7 @@ export class InstanceClient {
     console.log(`[Instance] Deleting instance ${params.instanceId}`);
 
     // 1. Get instance info before deletion
-    const instance = await this.pool.getInstanceForUser(params.userId);
+    const instance = await this.pool.getInstanceByEC2Id(params.ec2InstanceId);
 
     // 2. Delete listener rule
     if (params.ruleArn) {
@@ -158,7 +158,7 @@ export class InstanceClient {
     }
 
     // 5. Release EC2 instance (terminates it and replenishes pool)
-    await this.pool.releaseInstance(params.userId);
+    await this.pool.releaseInstance(params.ec2InstanceId);
 
     console.log(`[Instance] Instance ${params.instanceId} fully deleted`);
   }

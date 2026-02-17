@@ -108,16 +108,12 @@ function shouldPreserveInFlightHistory(
   hasInFlightRun: boolean
 ): boolean {
   if (!hasInFlightRun) return false;
-  // During an active run, avoid replacing optimistic/local stream state with
-  // stale transcript snapshots that can lag behind by a few seconds.
   return next.length < prev.length;
 }
 
-export function useDashboardChat() {
+export function useDashboardChat(instanceId: string) {
   const [instance, setInstance] = useState<Instance | null>(null);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -175,9 +171,9 @@ export function useDashboardChat() {
     try {
       const response = await fetch("/api/instances");
       const data = await response.json();
-      if (data.instances && data.instances.length > 0) {
-        setInstance(data.instances[0] as Instance);
-      }
+      const instances = (data.instances as Instance[]) || [];
+      const found = instances.find((inst) => inst.id === instanceId);
+      setInstance(found || null);
     } catch (error) {
       console.error("Error fetching instance:", error);
     } finally {
@@ -185,14 +181,14 @@ export function useDashboardChat() {
     }
   }
 
-  async function fetchHistory(instanceId: string, opts?: { showLoader?: boolean }) {
+  async function fetchHistory(instId: string, opts?: { showLoader?: boolean }) {
     const showLoader = opts?.showLoader === true;
     if (showLoader) {
       setHistoryLoading(true);
     }
 
     try {
-      const response = await fetch(`/api/instances/${instanceId}/history`, { cache: "no-store" });
+      const response = await fetch(`/api/instances/${instId}/history`, { cache: "no-store" });
       if (response.ok) {
         const data = await response.json();
         const rawMessages: HistoryMessageRaw[] = Array.isArray(data.messages)
@@ -245,12 +241,12 @@ export function useDashboardChat() {
     }
   }
 
-  async function fetchModels(instanceId: string) {
+  async function fetchModels(instId: string) {
     setModelsLoading(true);
     setModelsError(null);
 
     try {
-      const response = await fetch(`/api/instances/${instanceId}/models`, {
+      const response = await fetch(`/api/instances/${instId}/models`, {
         cache: "no-store",
       });
       const data = (await response.json()) as {
@@ -278,42 +274,6 @@ export function useDashboardChat() {
       setModelsError(error instanceof Error ? error.message : String(error));
     } finally {
       setModelsLoading(false);
-    }
-  }
-
-  async function createInstance() {
-    setCreating(true);
-    try {
-      const response = await fetch("/api/instances", { method: "POST" });
-      const data = await response.json();
-      if (data.id) {
-        setInstance({ id: data.id as string, status: "provisioning", public_url: null });
-      } else if (data.error) {
-        alert("Error: " + data.error);
-      }
-    } catch (error) {
-      console.error("Error creating instance:", error);
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  async function deleteInstance() {
-    if (!instance) return;
-    if (!confirm("Are you sure you want to cancel? This will delete the bot.")) return;
-
-    setDeleting(true);
-    try {
-      const response = await fetch(`/api/instances/${instance.id}`, { method: "DELETE" });
-      if (response.ok) {
-        setInstance(null);
-        clearConversationState();
-        clearModelState();
-      }
-    } catch (error) {
-      console.error("Error deleting instance:", error);
-    } finally {
-      setDeleting(false);
     }
   }
 
@@ -351,7 +311,6 @@ export function useDashboardChat() {
       if (typeof data.runId === "string" && data.runId) {
         setActiveRunId(data.runId);
         activeRunIdRef.current = data.runId;
-        // Reconcile quickly in case the run finalized before the POST response arrived.
         setTimeout(() => {
           void fetchHistory(instance.id);
         }, 600);
@@ -436,10 +395,15 @@ export function useDashboardChat() {
     }
   }
 
+  // Fetch instance on mount or when instanceId changes
   useEffect(() => {
+    clearConversationState();
+    clearModelState();
+    setLoading(true);
     void fetchInstance();
-  }, []);
+  }, [instanceId]);
 
+  // Poll for provisioning status
   useEffect(() => {
     if (instance?.status !== "provisioning") return;
 
@@ -450,23 +414,21 @@ export function useDashboardChat() {
     return () => clearInterval(interval);
   }, [instance?.status, instance?.id]);
 
-  useEffect(() => {
-    clearConversationState();
-    clearModelState();
-  }, [instance?.id]);
-
+  // Load history when instance becomes running
   useEffect(() => {
     if (instance?.status === "running" && instance?.id && !historyLoaded) {
       void fetchHistory(instance.id, { showLoader: true });
     }
   }, [instance?.status, instance?.id, historyLoaded]);
 
+  // Load models when instance becomes running
   useEffect(() => {
     if (instance?.status === "running" && instance?.id) {
       void fetchModels(instance.id);
     }
   }, [instance?.status, instance?.id]);
 
+  // Sync selected model when provider changes
   useEffect(() => {
     const group = providerGroups.find((entry) => entry.provider === selectedProvider);
     if (!group || group.models.length === 0) return;
@@ -475,6 +437,7 @@ export function useDashboardChat() {
     }
   }, [providerGroups, selectedProvider, selectedModelRef]);
 
+  // Fallback polling for history
   useEffect(() => {
     if (instance?.status !== "running" || !instance?.id || !historyLoaded || liveConnected) return;
 
@@ -486,7 +449,7 @@ export function useDashboardChat() {
     return () => clearInterval(interval);
   }, [instance?.status, instance?.id, historyLoaded, liveConnected]);
 
-  // Keep history synchronized while a run is in-flight in case live events are delayed/missed.
+  // Keep history synchronized while a run is in-flight
   useEffect(() => {
     if (instance?.status !== "running" || !instance?.id || !sending) return;
 
@@ -498,13 +461,14 @@ export function useDashboardChat() {
     return () => clearInterval(interval);
   }, [instance?.status, instance?.id, sending]);
 
+  // WebSocket live connection
   useEffect(() => {
     if (instance?.status !== "running" || !instance?.id) return;
 
     let cancelled = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let connectRequestId: string | null = null;
-    const instanceId = instance.id;
+    const instId = instance.id;
 
     const closeSocket = () => {
       const ws = liveSocketRef.current;
@@ -519,7 +483,7 @@ export function useDashboardChat() {
       historySyncTimerRef.current = setTimeout(() => {
         historySyncTimerRef.current = null;
         if (!cancelled) {
-          void fetchHistory(instanceId);
+          void fetchHistory(instId);
         }
       }, 150);
     };
@@ -537,7 +501,7 @@ export function useDashboardChat() {
       setLiveConnected(false);
 
       try {
-        const controlUrlResponse = await fetch(`/api/instances/${instanceId}/control-url`, {
+        const controlUrlResponse = await fetch(`/api/instances/${instId}/control-url`, {
           cache: "no-store",
         });
         if (!controlUrlResponse.ok) {
@@ -568,8 +532,6 @@ export function useDashboardChat() {
           .replace(/^https:/, "wss:")
           .replace(/\/$/, "");
 
-        // If the dashboard is served over HTTPS, the browser will block insecure `ws://`.
-        // Prefer `wss://` to avoid mixed-content errors.
         const safeWsUrl =
           typeof window !== "undefined" && window.location.protocol === "https:"
             ? wsUrl.replace(/^ws:/, "wss:")
@@ -641,8 +603,6 @@ export function useDashboardChat() {
               const canRenderDelta = isCurrentRun || canAdoptInFlightRun;
 
               if (canAdoptInFlightRun && runId) {
-                // After page refresh/reconnect we may receive deltas for an already-running
-                // turn before POST /chat has set local run state.
                 activeRunIdRef.current = runId;
                 activeRunStartedAtRef.current = Date.now();
                 setActiveRunId(runId);
@@ -729,8 +689,6 @@ export function useDashboardChat() {
   return {
     instance,
     loading,
-    creating,
-    deleting,
     message,
     setMessage,
     chatHistory,
@@ -753,8 +711,6 @@ export function useDashboardChat() {
     setSelectedModelRef,
     selectedProviderModels,
     canSaveModel,
-    createInstance,
-    deleteInstance,
     sendMessage,
     startNewChat,
     saveSelectedModel,

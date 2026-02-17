@@ -20,6 +20,7 @@ export async function GET() {
       `
       id,
       name,
+      description,
       status,
       public_url,
       created_at,
@@ -52,7 +53,7 @@ export async function GET() {
       if (instance.status === "provisioning" && instance.aws_service_arn) {
         try {
           // Check EC2 instance status (aws_service_arn now stores EC2 instance ID)
-          const ec2Status = await instanceClient.getInstanceStatus(user.id);
+          const ec2Status = await instanceClient.getInstanceStatus(instance.aws_service_arn);
 
           if (ec2Status.status === "running") {
             // Update to running
@@ -86,7 +87,7 @@ export async function GET() {
 }
 
 // POST /api/instances - Create a new instance
-export async function POST() {
+export async function POST(request: Request) {
   console.log("[instances] POST - Starting instance creation...");
 
   const supabase = await createClient();
@@ -100,28 +101,37 @@ export async function POST() {
   }
   console.log("[instances] POST - User:", user.email);
 
-  // Check if user already has an instance (MVP: one per user)
-  const { count } = await supabase
-    .from("instances")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
+  // Parse name and description from request body
+  let name = "default";
+  let description: string | null = null;
+  try {
+    const body = await request.json();
+    if (typeof body.name === "string" && body.name.trim().length > 0) {
+      name = body.name.trim().slice(0, 50);
+    }
+    if (typeof body.description === "string" && body.description.trim().length > 0) {
+      description = body.description.trim().slice(0, 200);
+    }
+  } catch {
+    // No body or invalid JSON — use defaults
+  }
 
-  console.log("[instances] POST - Existing instances:", count);
-  if (count && count >= 1) {
+  if (name.length === 0) {
     return NextResponse.json(
-      { error: "Instance limit reached. Free tier allows 1 instance." },
+      { error: "Instance name is required" },
       { status: 400 }
     );
   }
 
-  // Create instance record first (status: provisioning)
+  // Create instance record (status: provisioning)
   // gateway_token_encrypted will be updated after we get it from the EC2 instance
-  console.log("[instances] POST - Creating Supabase record...");
+  console.log("[instances] POST - Creating Supabase record with name:", name);
   const { data: instance, error: insertError } = await supabase
     .from("instances")
     .insert({
       user_id: user.id,
-      name: "default",
+      name,
+      description,
       status: "provisioning",
       provider: "aws",
       gateway_token_encrypted: "pending", // Placeholder, will be updated

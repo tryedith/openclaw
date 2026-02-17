@@ -37,7 +37,7 @@ export async function DELETE(
     const instanceClient = getInstanceClient();
     await instanceClient.deleteInstance({
       instanceId: id,
-      userId: user.id,
+      ec2InstanceId: instance.aws_service_arn,
       targetGroupArn: instance.aws_target_group_arn,
       ruleArn: instance.aws_rule_arn,
     });

@@ -1,7 +1,16 @@
 export interface Instance {
   id: string;
+  name: string;
+  description?: string | null;
   status: "pending" | "provisioning" | "running" | "stopped" | "error";
   public_url: string | null;
+  created_at?: string;
+  channels?: Array<{
+    id: string;
+    channel_type: string;
+    status: string;
+    linked_identity?: string;
+  }>;
 }
 
 export interface ChatMessage {
