@@ -16,7 +16,7 @@ export function ChatPanel({
   historyLoading: boolean;
   chatHistory: ChatMessage[];
   sending: boolean;
-  streamingAssistant: string;
+  streamingAssistant: string | null;
   message: string;
   onMessageChange: (value: string) => void;
   onSend: () => void;
@@ -30,7 +30,7 @@ export function ChatPanel({
 
   useEffect(() => {
     const el = textareaRef.current;
-    if (!el) return;
+    if (!el) {return;}
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
   }, [message]);
@@ -121,7 +121,7 @@ export function ChatPanel({
             value={message}
             onChange={(event) => onMessageChange(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key !== "Enter" || event.shiftKey) return;
+              if (event.key !== "Enter" || event.shiftKey) {return;}
               event.preventDefault();
               onSend();
             }}

@@ -23,7 +23,7 @@ function generateRequestId(): string {
 }
 
 function isSameChatHistory(a: ChatMessage[], b: ChatMessage[]): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {return false;}
   for (let i = 0; i < a.length; i++) {
     if (a[i]?.role !== b[i]?.role || a[i]?.content !== b[i]?.content) {
       return false;
@@ -55,7 +55,7 @@ function extractTextContent(
         allowedTypes.has(String((value as { type?: unknown }).type))
     );
 
-  if (typeof content === "string") return content;
+  if (typeof content === "string") {return content;}
 
   if (Array.isArray(content)) {
     return content.filter(isTextBlock).map((block) => block.text).join("\n");
@@ -65,18 +65,18 @@ function extractTextContent(
     const withContent = content as { role?: unknown; content?: unknown };
     const nestedRole =
       withContent.role === "user" || withContent.role === "assistant" || withContent.role === "system"
-        ? (withContent.role as "user" | "assistant" | "system")
+        ? (withContent.role)
         : role;
     return extractTextContent(withContent.content, nestedRole);
   }
 
-  if (isTextBlock(content)) return content.text;
+  if (isTextBlock(content)) {return content.text;}
   return "";
 }
 
 function parseProviderFromModelRef(modelRef: string): ProviderId | null {
   const slash = modelRef.indexOf("/");
-  if (slash <= 0) return null;
+  if (slash <= 0) {return null;}
   const provider = modelRef.slice(0, slash) as ProviderId;
   return provider === "anthropic" || provider === "openai" || provider === "google"
     ? provider
@@ -92,13 +92,13 @@ function updateModelSelectionFromCurrent(
     const group = groups.find((entry) => entry.provider === fromRef);
     if (group) {
       const exact = group.models.find((model) => model.modelRef === modelRef);
-      if (exact) return { provider: fromRef, modelRef: exact.modelRef };
-      if (group.models[0]) return { provider: fromRef, modelRef: group.models[0].modelRef };
+      if (exact) {return { provider: fromRef, modelRef: exact.modelRef };}
+      if (group.models[0]) {return { provider: fromRef, modelRef: group.models[0].modelRef };}
     }
   }
 
   const firstGroup = groups[0];
-  if (!firstGroup || !firstGroup.models[0]) return null;
+  if (!firstGroup || !firstGroup.models[0]) {return null;}
   return { provider: firstGroup.provider, modelRef: firstGroup.models[0].modelRef };
 }
 
@@ -107,8 +107,18 @@ function shouldPreserveInFlightHistory(
   next: ChatMessage[],
   hasInFlightRun: boolean
 ): boolean {
-  if (!hasInFlightRun) return false;
+  if (!hasInFlightRun) {return false;}
   return next.length < prev.length;
+}
+
+async function readJsonResponse<T>(response: Response): Promise<T | null> {
+  const raw = await response.text();
+  if (!raw) {return null;}
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
 }
 
 export function useDashboardChat(instanceId: string) {
@@ -118,7 +128,7 @@ export function useDashboardChat(instanceId: string) {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
-  const [streamingAssistant, setStreamingAssistant] = useState("");
+  const [streamingAssistant, setStreamingAssistant] = useState<string | null>(null);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [startingNewChat, setStartingNewChat] = useState(false);
 
@@ -142,9 +152,11 @@ export function useDashboardChat(instanceId: string) {
   const activeRunStartedAtRef = useRef<number | null>(null);
   const assistantCountAtRunStartRef = useRef<number | null>(null);
 
-  function clearPendingRunState() {
+  function clearPendingRunState(opts?: { preserveStream?: boolean }) {
     setSending(false);
-    setStreamingAssistant("");
+    if (!opts?.preserveStream) {
+      setStreamingAssistant(null);
+    }
     setActiveRunId(null);
     activeRunIdRef.current = null;
     activeRunStartedAtRef.current = null;
@@ -205,8 +217,8 @@ export function useDashboardChat(instanceId: string) {
 
         const hasInFlightRun = activeRunIdRef.current != null || activeRunStartedAtRef.current != null;
         setChatHistory((prev) => {
-          if (isSameChatHistory(prev, messages)) return prev;
-          if (shouldPreserveInFlightHistory(prev, messages, hasInFlightRun)) return prev;
+          if (isSameChatHistory(prev, messages)) {return prev;}
+          if (shouldPreserveInFlightHistory(prev, messages, hasInFlightRun)) {return prev;}
           return messages;
         });
 
@@ -249,11 +261,11 @@ export function useDashboardChat(instanceId: string) {
       const response = await fetch(`/api/instances/${instId}/models`, {
         cache: "no-store",
       });
-      const data = (await response.json()) as {
+      const data = (await readJsonResponse<{
         error?: string;
         currentModelRef?: string;
         providers?: ProviderModelGroup[];
-      };
+      }>(response)) ?? { error: response.ok ? "Invalid response payload" : undefined };
 
       if (!response.ok || data.error) {
         throw new Error(data.error || `HTTP ${response.status}`);
@@ -278,12 +290,12 @@ export function useDashboardChat(instanceId: string) {
   }
 
   async function sendMessage() {
-    if (!message.trim() || !instance?.id || instance.status !== "running" || sending) return;
+    if (!message.trim() || !instance?.id || instance.status !== "running" || sending) {return;}
 
     const userMessage = message;
     setMessage("");
     setSending(true);
-    setStreamingAssistant("");
+    setStreamingAssistant(null);
     setChatHistory((prev) => [...prev, { role: "user", content: userMessage }]);
     activeRunStartedAtRef.current = Date.now();
     assistantCountAtRunStartRef.current = chatHistory.reduce(
@@ -332,7 +344,7 @@ export function useDashboardChat(instanceId: string) {
   }
 
   async function saveSelectedModel() {
-    if (!instance?.id || !selectedModelRef || modelSaving) return;
+    if (!instance?.id || !selectedModelRef || modelSaving) {return;}
 
     setModelSaving(true);
     setModelsError(null);
@@ -344,11 +356,11 @@ export function useDashboardChat(instanceId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ modelRef: selectedModelRef }),
       });
-      const data = (await response.json()) as {
+      const data = (await readJsonResponse<{
         error?: string;
         modelRef?: string;
         restart?: { scheduled?: boolean };
-      };
+      }>(response)) ?? { error: response.ok ? "Invalid response payload" : undefined };
 
       if (!response.ok || data.error) {
         throw new Error(data.error || `HTTP ${response.status}`);
@@ -372,7 +384,7 @@ export function useDashboardChat(instanceId: string) {
   }
 
   async function startNewChat() {
-    if (!instance?.id || instance.status !== "running" || startingNewChat) return;
+    if (!instance?.id || instance.status !== "running" || startingNewChat) {return;}
 
     setStartingNewChat(true);
     try {
@@ -405,7 +417,7 @@ export function useDashboardChat(instanceId: string) {
 
   // Poll for provisioning status
   useEffect(() => {
-    if (instance?.status !== "provisioning") return;
+    if (instance?.status !== "provisioning") {return;}
 
     const interval = setInterval(() => {
       void fetchInstance();
@@ -431,7 +443,7 @@ export function useDashboardChat(instanceId: string) {
   // Sync selected model when provider changes
   useEffect(() => {
     const group = providerGroups.find((entry) => entry.provider === selectedProvider);
-    if (!group || group.models.length === 0) return;
+    if (!group || group.models.length === 0) {return;}
     if (!group.models.some((model) => model.modelRef === selectedModelRef)) {
       setSelectedModelRef(group.models[0].modelRef);
     }
@@ -439,10 +451,10 @@ export function useDashboardChat(instanceId: string) {
 
   // Fallback polling for history
   useEffect(() => {
-    if (instance?.status !== "running" || !instance?.id || !historyLoaded || liveConnected) return;
+    if (instance?.status !== "running" || !instance?.id || !historyLoaded || liveConnected) {return;}
 
     const interval = setInterval(() => {
-      if (document.visibilityState === "hidden") return;
+      if (document.visibilityState === "hidden") {return;}
       void fetchHistory(instance.id);
     }, HISTORY_FALLBACK_POLL_INTERVAL_MS);
 
@@ -451,10 +463,10 @@ export function useDashboardChat(instanceId: string) {
 
   // Keep history synchronized while a run is in-flight
   useEffect(() => {
-    if (instance?.status !== "running" || !instance?.id || !sending) return;
+    if (instance?.status !== "running" || !instance?.id || !sending) {return;}
 
     const interval = setInterval(() => {
-      if (document.visibilityState === "hidden") return;
+      if (document.visibilityState === "hidden") {return;}
       void fetchHistory(instance.id);
     }, 3000);
 
@@ -463,7 +475,7 @@ export function useDashboardChat(instanceId: string) {
 
   // WebSocket live connection
   useEffect(() => {
-    if (instance?.status !== "running" || !instance?.id) return;
+    if (instance?.status !== "running" || !instance?.id) {return;}
 
     let cancelled = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -479,7 +491,7 @@ export function useDashboardChat(instanceId: string) {
     };
 
     const scheduleHistoryRefresh = () => {
-      if (historySyncTimerRef.current) return;
+      if (historySyncTimerRef.current) {return;}
       historySyncTimerRef.current = setTimeout(() => {
         historySyncTimerRef.current = null;
         if (!cancelled) {
@@ -489,7 +501,7 @@ export function useDashboardChat(instanceId: string) {
     };
 
     const scheduleReconnect = () => {
-      if (cancelled || reconnectTimer) return;
+      if (cancelled || reconnectTimer) {return;}
       reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
         void connectLiveSocket();
@@ -505,19 +517,28 @@ export function useDashboardChat(instanceId: string) {
           cache: "no-store",
         });
         if (!controlUrlResponse.ok) {
-          setLiveError(`Control URL request failed (${controlUrlResponse.status})`);
+          const errorPayload = await readJsonResponse<{ error?: string; details?: string }>(
+            controlUrlResponse
+          );
+          const detail = errorPayload?.error || errorPayload?.details;
+          setLiveError(
+            detail
+              ? `${detail} (${controlUrlResponse.status})`
+              : `Control URL request failed (${controlUrlResponse.status})`
+          );
           scheduleReconnect();
           return;
         }
 
-        const controlData = await controlUrlResponse.json();
+        const controlData =
+          (await readJsonResponse<{ url?: string }>(controlUrlResponse)) ?? {};
         if (!controlData.url || cancelled) {
           setLiveError("Missing gateway control URL");
           scheduleReconnect();
           return;
         }
 
-        const parsedUrl = new URL(controlData.url as string);
+        const parsedUrl = new URL(controlData.url);
         const token = parsedUrl.searchParams.get("token");
         parsedUrl.search = "";
         if (!token) {
@@ -540,8 +561,8 @@ export function useDashboardChat(instanceId: string) {
         const ws = new WebSocket(safeWsUrl);
         liveSocketRef.current = ws;
 
-        ws.onopen = () => {
-          if (cancelled) return;
+        ws.addEventListener("open", () => {
+          if (cancelled) {return;}
           connectRequestId = generateRequestId();
           ws.send(
             JSON.stringify({
@@ -561,9 +582,9 @@ export function useDashboardChat(instanceId: string) {
               },
             })
           );
-        };
+        });
 
-        ws.onmessage = (event) => {
+        ws.addEventListener("message", (event) => {
           let frame: GatewayFrame;
           try {
             frame = JSON.parse(event.data as string) as GatewayFrame;
@@ -610,7 +631,7 @@ export function useDashboardChat(instanceId: string) {
 
               if (canRenderDelta) {
                 const text = extractTextContent(payload?.message);
-                if (text) setStreamingAssistant(text);
+                if (text) {setStreamingAssistant(text);}
                 setSending(true);
                 return;
               }
@@ -621,31 +642,36 @@ export function useDashboardChat(instanceId: string) {
                 extractTextContent(payload?.message) ||
                 (typeof payload?.noticeMessage === "string" ? payload.noticeMessage : "");
               const content = text.trim();
-              if (!content) return;
+              if (!content) {return;}
               setChatHistory((prev) => {
                 const last = prev[prev.length - 1];
-                if (last?.role === "system" && last.content === content) return prev;
+                if (last?.role === "system" && last.content === content) {return prev;}
                 return [...prev, { role: "system", content }];
               });
               return;
             }
 
             if (state === "final" || state === "error" || state === "aborted") {
-              if (runId && activeRunIdRef.current === runId) {
-                clearPendingRunState();
-              } else if (!runId && activeRunIdRef.current) {
-                clearPendingRunState();
+              const isCurrentRun =
+                (runId && activeRunIdRef.current === runId) || (!runId && activeRunIdRef.current);
+              if (isCurrentRun) {
+                if (state === "final") {
+                  // Keep the last streamed text visible until history sync lands the final message.
+                  clearPendingRunState({ preserveStream: true });
+                } else {
+                  clearPendingRunState();
+                }
               }
               scheduleHistoryRefresh();
             }
           }
-        };
+        });
 
-        ws.onerror = () => {
+        ws.addEventListener("error", () => {
           // Handled by onclose.
-        };
+        });
 
-        ws.onclose = (closeEvent) => {
+        ws.addEventListener("close", (closeEvent) => {
           if (liveSocketRef.current === ws) {
             liveSocketRef.current = null;
           }
@@ -655,7 +681,7 @@ export function useDashboardChat(instanceId: string) {
             setLiveError(`disconnected (${closeEvent.code}): ${reason}`);
             scheduleReconnect();
           }
-        };
+        });
       } catch (error) {
         setLiveConnected(false);
         setLiveError(`Error connecting live chat updates: ${String(error)}`);
@@ -669,7 +695,7 @@ export function useDashboardChat(instanceId: string) {
       cancelled = true;
       setLiveConnected(false);
       setLiveError(null);
-      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (reconnectTimer) {clearTimeout(reconnectTimer);}
       if (historySyncTimerRef.current) {
         clearTimeout(historySyncTimerRef.current);
         historySyncTimerRef.current = null;

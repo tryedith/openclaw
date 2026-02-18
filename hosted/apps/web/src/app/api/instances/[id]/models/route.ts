@@ -39,55 +39,55 @@ const PROVIDER_LABELS: Record<SupportedProvider, string> = {
 };
 
 function normalizeProvider(raw: unknown): SupportedProvider | null {
-  if (typeof raw !== "string") return null;
+  if (typeof raw !== "string") {return null;}
   const normalized = raw.trim().toLowerCase();
-  if (!SUPPORTED_PROVIDERS.includes(normalized as SupportedProvider)) return null;
+  if (!SUPPORTED_PROVIDERS.includes(normalized as SupportedProvider)) {return null;}
   return normalized as SupportedProvider;
 }
 
 function normalizeModelRef(raw: string): { provider: SupportedProvider; model: string } | null {
   const trimmed = raw.trim();
   const slash = trimmed.indexOf("/");
-  if (slash <= 0 || slash === trimmed.length - 1) return null;
+  if (slash <= 0 || slash === trimmed.length - 1) {return null;}
   const provider = normalizeProvider(trimmed.slice(0, slash));
-  if (!provider) return null;
+  if (!provider) {return null;}
   const model = trimmed.slice(slash + 1).trim();
-  if (!model) return null;
+  if (!model) {return null;}
   return { provider, model };
 }
 
 function readCurrentPrimaryModelRef(config: Record<string, unknown> | undefined): string {
   const agents = config?.agents;
-  if (!agents || typeof agents !== "object") return DEFAULT_MODEL_REF;
+  if (!agents || typeof agents !== "object") {return DEFAULT_MODEL_REF;}
   const defaults = (agents as Record<string, unknown>).defaults;
-  if (!defaults || typeof defaults !== "object") return DEFAULT_MODEL_REF;
+  if (!defaults || typeof defaults !== "object") {return DEFAULT_MODEL_REF;}
   const model = (defaults as Record<string, unknown>).model;
-  if (!model || typeof model !== "object") return DEFAULT_MODEL_REF;
+  if (!model || typeof model !== "object") {return DEFAULT_MODEL_REF;}
   const primary = (model as Record<string, unknown>).primary;
-  if (typeof primary !== "string" || !primary.trim()) return DEFAULT_MODEL_REF;
+  if (typeof primary !== "string" || !primary.trim()) {return DEFAULT_MODEL_REF;}
   return primary.trim();
 }
 
 function readHasAllowlist(config: Record<string, unknown> | undefined): boolean {
   const agents = config?.agents;
-  if (!agents || typeof agents !== "object") return false;
+  if (!agents || typeof agents !== "object") {return false;}
   const defaults = (agents as Record<string, unknown>).defaults;
-  if (!defaults || typeof defaults !== "object") return false;
+  if (!defaults || typeof defaults !== "object") {return false;}
   const models = (defaults as Record<string, unknown>).models;
-  if (!models || typeof models !== "object" || Array.isArray(models)) return false;
+  if (!models || typeof models !== "object" || Array.isArray(models)) {return false;}
   return Object.keys(models).length > 0;
 }
 
 function formatModelResponse(models: GatewayModel[]) {
   const grouped = new Map<SupportedProvider, Array<Record<string, unknown>>>();
-  for (const provider of SUPPORTED_PROVIDERS) grouped.set(provider, []);
+  for (const provider of SUPPORTED_PROVIDERS) {grouped.set(provider, []);}
 
   for (const entry of models) {
     const provider = normalizeProvider(entry.provider);
-    if (!provider) continue;
+    if (!provider) {continue;}
 
     const id = typeof entry.id === "string" ? entry.id.trim() : "";
-    if (!id) continue;
+    if (!id) {continue;}
 
     const providerModels = grouped.get(provider)!;
     providerModels.push({
@@ -106,9 +106,11 @@ function formatModelResponse(models: GatewayModel[]) {
   return SUPPORTED_PROVIDERS.map((provider) => ({
     provider,
     label: PROVIDER_LABELS[provider],
-    models: (grouped.get(provider) ?? []).sort((a, b) =>
-      String(a.name ?? "").localeCompare(String(b.name ?? ""))
-    ),
+    models: (grouped.get(provider) ?? []).toSorted((a, b) => {
+      const aName = typeof a.name === "string" ? a.name : "";
+      const bName = typeof b.name === "string" ? b.name : "";
+      return aName.localeCompare(bName);
+    }),
   })).filter((group) => group.models.length > 0);
 }
 
@@ -118,7 +120,7 @@ async function resolveInstanceForUser(params: { id: string }) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  if (!user) {return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };}
 
   const { data: instance, error } = await supabase
     .from("instances")
@@ -135,11 +137,25 @@ async function resolveInstanceForUser(params: { id: string }) {
     return { error: NextResponse.json({ error: "Instance not ready" }, { status: 400 }) };
   }
 
-  const { gatewayUrl, token } = resolveGatewayTarget({
-    instancePublicUrl: instance.public_url,
-    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
-    instanceId: params.id,
-  });
+  let gatewayUrl: string;
+  let token: string;
+  try {
+    const resolved = resolveGatewayTarget({
+      instancePublicUrl: instance.public_url,
+      instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
+      instanceId: params.id,
+    });
+    gatewayUrl = resolved.gatewayUrl;
+    token = resolved.token;
+  } catch (error) {
+    console.error("[models] Failed to resolve gateway target:", error);
+    return {
+      error: NextResponse.json(
+        { error: "Failed to resolve gateway credentials", details: String(error) },
+        { status: 500 }
+      ),
+    };
+  }
 
   return { user, instance, gatewayUrl, token };
 }
@@ -150,7 +166,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const resolved = await resolveInstanceForUser({ id });
-  if ("error" in resolved) return resolved.error;
+  if ("error" in resolved) {return resolved.error;}
 
   const [modelsResult, configResult] = await Promise.all([
     gatewayRpc<GatewayModelsPayload>({
@@ -196,7 +212,7 @@ export async function POST(
 ) {
   const { id } = await params;
   const resolved = await resolveInstanceForUser({ id });
-  if ("error" in resolved) return resolved.error;
+  if ("error" in resolved) {return resolved.error;}
 
   let body: { modelRef?: string };
   try {

@@ -1,6 +1,7 @@
 /**
  * AES-256-GCM encryption/decryption for gateway tokens.
  * Key is sourced from GATEWAY_TOKEN_ENCRYPTION_KEY env var (64 hex chars = 32 bytes).
+ * ENCRYPTION_KEY is accepted as a legacy fallback.
  */
 
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
@@ -10,16 +11,17 @@ const IV_LENGTH = 12; // 96-bit IV recommended for GCM
 const AUTH_TAG_LENGTH = 16; // 128-bit auth tag
 
 function getEncryptionKey(): Buffer {
-  const keyHex = process.env.GATEWAY_TOKEN_ENCRYPTION_KEY;
+  const keyHex =
+    process.env.GATEWAY_TOKEN_ENCRYPTION_KEY?.trim() || process.env.ENCRYPTION_KEY?.trim();
   if (!keyHex) {
     throw new Error(
-      "GATEWAY_TOKEN_ENCRYPTION_KEY environment variable is not set. " +
+      "GATEWAY_TOKEN_ENCRYPTION_KEY (or ENCRYPTION_KEY) environment variable is not set. " +
         "Generate one with: openssl rand -hex 32"
     );
   }
   if (keyHex.length !== 64) {
     throw new Error(
-      "GATEWAY_TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)"
+      "Gateway encryption key must be exactly 64 hex characters (32 bytes)"
     );
   }
   return Buffer.from(keyHex, "hex");
