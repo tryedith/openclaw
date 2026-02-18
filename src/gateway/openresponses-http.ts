@@ -6,37 +6,17 @@
  * @see https://www.open-responses.com/
  */
 
-import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-
-import { buildHistoryContextFromEntries, type HistoryEntry } from "../auto-reply/reply/history.js";
+import { randomUUID } from "node:crypto";
+import type { ClientToolDefinition } from "../agents/pi-embedded-runner/run/params.js";
+import type { ImageContent } from "../commands/agent/types.js";
+import type { GatewayHttpResponsesConfig } from "../config/types.gateway.js";
+import type { AuthRateLimiter } from "./auth-rate-limit.js";
+import type { ResolvedGatewayAuth } from "./auth.js";
 import { createDefaultDeps } from "../cli/deps.js";
 import { agentCommand } from "../commands/agent.js";
 import { emitAgentEvent, onAgentEvent } from "../infra/agent-events.js";
-import { defaultRuntime } from "../runtime.js";
-import { authorizeGatewayConnect, type ResolvedGatewayAuth } from "./auth.js";
-import { getBearerToken, resolveAgentIdForRequest, resolveSessionKey } from "./http-utils.js";
-import {
-  readJsonBodyOrError,
-  sendJson,
-  sendMethodNotAllowed,
-  sendUnauthorized,
-  setSseHeaders,
-  writeDone,
-} from "./http-common.js";
-import {
-  CreateResponseBodySchema,
-  type ContentPart,
-  type CreateResponseBody,
-  type ItemParam,
-  type OutputItem,
-  type ResponseResource,
-  type StreamingEvent,
-  type Usage,
-} from "./open-responses.schema.js";
-import type { GatewayHttpResponsesConfig } from "../config/types.gateway.js";
-import type { ClientToolDefinition } from "../agents/pi-embedded-runner/run/params.js";
-import type { ImageContent } from "../commands/agent/types.js";
+import { logWarn } from "../logger.js";
 import {
   DEFAULT_INPUT_FILE_MAX_BYTES,
   DEFAULT_INPUT_FILE_MAX_CHARS,
@@ -55,15 +35,36 @@ import {
   type InputImageLimits,
   type InputImageSource,
 } from "../media/input-files.js";
+import { defaultRuntime } from "../runtime.js";
+import { resolveAssistantStreamDeltaText } from "./agent-event-assistant-text.js";
+import {
+  buildAgentMessageFromConversationEntries,
+  type ConversationEntry,
+} from "./agent-prompt.js";
+import { sendJson, setSseHeaders, writeDone } from "./http-common.js";
+import { handleGatewayPostJsonEndpoint } from "./http-endpoint-helpers.js";
+import { resolveAgentIdForRequest, resolveSessionKey } from "./http-utils.js";
+import {
+  CreateResponseBodySchema,
+  type ContentPart,
+  type CreateResponseBody,
+  type ItemParam,
+  type OutputItem,
+  type ResponseResource,
+  type StreamingEvent,
+  type Usage,
+} from "./open-responses.schema.js";
 
 type OpenResponsesHttpOptions = {
   auth: ResolvedGatewayAuth;
   maxBodyBytes?: number;
   config?: GatewayHttpResponsesConfig;
   trustedProxies?: string[];
+  rateLimiter?: AuthRateLimiter;
 };
 
 const DEFAULT_BODY_BYTES = 20 * 1024 * 1024;
+const DEFAULT_MAX_URL_PARTS = 8;
 
 function writeSseEvent(res: ServerResponse, event: StreamingEvent) {
   res.write(`event: ${event.type}\n`);
@@ -71,11 +72,17 @@ function writeSseEvent(res: ServerResponse, event: StreamingEvent) {
 }
 
 function extractTextContent(content: string | ContentPart[]): string {
-  if (typeof content === "string") return content;
+  if (typeof content === "string") {
+    return content;
+  }
   return content
     .map((part) => {
-      if (part.type === "input_text") return part.text;
-      if (part.type === "output_text") return part.text;
+      if (part.type === "input_text") {
+        return part.text;
+      }
+      if (part.type === "output_text") {
+        return part.text;
+      }
       return "";
     })
     .filter(Boolean)
@@ -84,9 +91,18 @@ function extractTextContent(content: string | ContentPart[]): string {
 
 type ResolvedResponsesLimits = {
   maxBodyBytes: number;
+  maxUrlParts: number;
   files: InputFileLimits;
   images: InputImageLimits;
 };
+
+function normalizeHostnameAllowlist(values: string[] | undefined): string[] | undefined {
+  if (!values || values.length === 0) {
+    return undefined;
+  }
+  const normalized = values.map((value) => value.trim()).filter((value) => value.length > 0);
+  return normalized.length > 0 ? normalized : undefined;
+}
 
 function resolveResponsesLimits(
   config: GatewayHttpResponsesConfig | undefined,
@@ -95,8 +111,13 @@ function resolveResponsesLimits(
   const images = config?.images;
   return {
     maxBodyBytes: config?.maxBodyBytes ?? DEFAULT_BODY_BYTES,
+    maxUrlParts:
+      typeof config?.maxUrlParts === "number"
+        ? Math.max(0, Math.floor(config.maxUrlParts))
+        : DEFAULT_MAX_URL_PARTS,
     files: {
       allowUrl: files?.allowUrl ?? true,
+      urlAllowlist: normalizeHostnameAllowlist(files?.urlAllowlist),
       allowedMimes: normalizeMimeList(files?.allowedMimes, DEFAULT_INPUT_FILE_MIMES),
       maxBytes: files?.maxBytes ?? DEFAULT_INPUT_FILE_MAX_BYTES,
       maxChars: files?.maxChars ?? DEFAULT_INPUT_FILE_MAX_CHARS,
@@ -110,6 +131,7 @@ function resolveResponsesLimits(
     },
     images: {
       allowUrl: images?.allowUrl ?? true,
+      urlAllowlist: normalizeHostnameAllowlist(images?.urlAllowlist),
       allowedMimes: normalizeMimeList(images?.allowedMimes, DEFAULT_INPUT_IMAGE_MIMES),
       maxBytes: images?.maxBytes ?? DEFAULT_INPUT_IMAGE_MAX_BYTES,
       maxRedirects: images?.maxRedirects ?? DEFAULT_INPUT_MAX_REDIRECTS,
@@ -127,7 +149,9 @@ function applyToolChoice(params: {
   toolChoice: CreateResponseBody["tool_choice"];
 }): { tools: ClientToolDefinition[]; extraSystemPrompt?: string } {
   const { tools, toolChoice } = params;
-  if (!toolChoice) return { tools };
+  if (!toolChoice) {
+    return { tools };
+  }
 
   if (toolChoice === "none") {
     return { tools: [] };
@@ -170,13 +194,14 @@ export function buildAgentPrompt(input: string | ItemParam[]): {
   }
 
   const systemParts: string[] = [];
-  const conversationEntries: Array<{ role: "user" | "assistant" | "tool"; entry: HistoryEntry }> =
-    [];
+  const conversationEntries: ConversationEntry[] = [];
 
   for (const item of input) {
     if (item.type === "message") {
       const content = extractTextContent(item.content).trim();
-      if (!content) continue;
+      if (!content) {
+        continue;
+      }
 
       if (item.role === "system" || item.role === "developer") {
         systemParts.push(content);
@@ -199,34 +224,7 @@ export function buildAgentPrompt(input: string | ItemParam[]): {
     // Skip reasoning and item_reference for prompt building (Phase 1)
   }
 
-  let message = "";
-  if (conversationEntries.length > 0) {
-    // Find the last user or tool message as the current message
-    let currentIndex = -1;
-    for (let i = conversationEntries.length - 1; i >= 0; i -= 1) {
-      const entryRole = conversationEntries[i]?.role;
-      if (entryRole === "user" || entryRole === "tool") {
-        currentIndex = i;
-        break;
-      }
-    }
-    if (currentIndex < 0) currentIndex = conversationEntries.length - 1;
-
-    const currentEntry = conversationEntries[currentIndex]?.entry;
-    if (currentEntry) {
-      const historyEntries = conversationEntries.slice(0, currentIndex).map((entry) => entry.entry);
-      if (historyEntries.length === 0) {
-        message = currentEntry.body;
-      } else {
-        const formatEntry = (entry: HistoryEntry) => `${entry.sender}: ${entry.body}`;
-        message = buildHistoryContextFromEntries({
-          entries: [...historyEntries, currentEntry],
-          currentMessage: formatEntry(currentEntry),
-          formatEntry,
-        });
-      }
-    }
-  }
+  const message = buildAgentMessageFromConversationEntries(conversationEntries);
 
   return {
     message,
@@ -257,7 +255,9 @@ function toUsage(
       }
     | undefined,
 ): Usage {
-  if (!value) return createEmptyUsage();
+  if (!value) {
+    return createEmptyUsage();
+  }
   const input = value.input ?? 0;
   const output = value.output ?? 0;
   const cacheRead = value.cacheRead ?? 0;
@@ -314,45 +314,61 @@ function createAssistantOutputItem(params: {
   };
 }
 
+async function runResponsesAgentCommand(params: {
+  message: string;
+  images: ImageContent[];
+  clientTools: ClientToolDefinition[];
+  extraSystemPrompt: string;
+  streamParams: { maxTokens: number } | undefined;
+  sessionKey: string;
+  runId: string;
+  deps: ReturnType<typeof createDefaultDeps>;
+}) {
+  return agentCommand(
+    {
+      message: params.message,
+      images: params.images.length > 0 ? params.images : undefined,
+      clientTools: params.clientTools.length > 0 ? params.clientTools : undefined,
+      extraSystemPrompt: params.extraSystemPrompt || undefined,
+      streamParams: params.streamParams ?? undefined,
+      sessionKey: params.sessionKey,
+      runId: params.runId,
+      deliver: false,
+      messageChannel: "webchat",
+      bestEffortDeliver: false,
+    },
+    defaultRuntime,
+    params.deps,
+  );
+}
+
 export async function handleOpenResponsesHttpRequest(
   req: IncomingMessage,
   res: ServerResponse,
   opts: OpenResponsesHttpOptions,
 ): Promise<boolean> {
-  const url = new URL(req.url ?? "/", `http://${req.headers.host || "localhost"}`);
-  // Support path-based routing with prefix (e.g., /abc123/v1/responses)
-  if (url.pathname !== "/v1/responses" && !url.pathname.endsWith("/v1/responses")) {
-    return false;
-  }
-
-  if (req.method !== "POST") {
-    sendMethodNotAllowed(res);
-    return true;
-  }
-
-  const token = getBearerToken(req);
-  const authResult = await authorizeGatewayConnect({
-    auth: opts.auth,
-    connectAuth: { token, password: token },
-    req,
-    trustedProxies: opts.trustedProxies,
-  });
-  if (!authResult.ok) {
-    sendUnauthorized(res);
-    return true;
-  }
-
   const limits = resolveResponsesLimits(opts.config);
   const maxBodyBytes =
     opts.maxBodyBytes ??
     (opts.config?.maxBodyBytes
       ? limits.maxBodyBytes
       : Math.max(limits.maxBodyBytes, limits.files.maxBytes * 2, limits.images.maxBytes * 2));
-  const body = await readJsonBodyOrError(req, res, maxBodyBytes);
-  if (body === undefined) return true;
+  const handled = await handleGatewayPostJsonEndpoint(req, res, {
+    pathname: "/v1/responses",
+    auth: opts.auth,
+    trustedProxies: opts.trustedProxies,
+    rateLimiter: opts.rateLimiter,
+    maxBodyBytes,
+  });
+  if (handled === false) {
+    return false;
+  }
+  if (!handled) {
+    return true;
+  }
 
   // Validate request body with Zod
-  const parseResult = CreateResponseBodySchema.safeParse(body);
+  const parseResult = CreateResponseBodySchema.safeParse(handled.body);
   if (!parseResult.success) {
     const issue = parseResult.error.issues[0];
     const message = issue ? `${issue.path.join(".")}: ${issue.message}` : "Invalid request body";
@@ -370,6 +386,15 @@ export async function handleOpenResponsesHttpRequest(
   // Extract images + files from input (Phase 2)
   let images: ImageContent[] = [];
   let fileContexts: string[] = [];
+  let urlParts = 0;
+  const markUrlPart = () => {
+    urlParts += 1;
+    if (urlParts > limits.maxUrlParts) {
+      throw new Error(
+        `Too many URL-based input sources: ${urlParts} (limit: ${limits.maxUrlParts})`,
+      );
+    }
+  };
   try {
     if (Array.isArray(payload.input)) {
       for (const item of payload.input) {
@@ -386,6 +411,9 @@ export async function handleOpenResponsesHttpRequest(
                 source.type === "base64" || source.type === "url" ? source.type : undefined;
               if (!sourceType) {
                 throw new Error("input_image must have 'source.url' or 'source.data'");
+              }
+              if (sourceType === "url") {
+                markUrlPart();
               }
               const imageSource: InputImageSource = {
                 type: sourceType,
@@ -410,6 +438,9 @@ export async function handleOpenResponsesHttpRequest(
                 source.type === "base64" || source.type === "url" ? source.type : undefined;
               if (!sourceType) {
                 throw new Error("input_file must have 'source.url' or 'source.data'");
+              }
+              if (sourceType === "url") {
+                markUrlPart();
               }
               const file = await extractFileContentFromSource({
                 source: {
@@ -437,8 +468,9 @@ export async function handleOpenResponsesHttpRequest(
       }
     }
   } catch (err) {
+    logWarn(`openresponses: request parsing failed: ${String(err)}`);
     sendJson(res, 400, {
-      error: { message: String(err), type: "invalid_request_error" },
+      error: { message: "invalid request", type: "invalid_request_error" },
     });
     return true;
   }
@@ -454,8 +486,9 @@ export async function handleOpenResponsesHttpRequest(
     resolvedClientTools = toolChoiceResult.tools;
     toolChoicePrompt = toolChoiceResult.extraSystemPrompt;
   } catch (err) {
+    logWarn(`openresponses: tool configuration failed: ${String(err)}`);
     sendJson(res, 400, {
-      error: { message: String(err), type: "invalid_request_error" },
+      error: { message: "invalid tool configuration", type: "invalid_request_error" },
     });
     return true;
   }
@@ -498,22 +531,16 @@ export async function handleOpenResponsesHttpRequest(
 
   if (!stream) {
     try {
-      const result = await agentCommand(
-        {
-          message: prompt.message,
-          images: images.length > 0 ? images : undefined,
-          clientTools: resolvedClientTools.length > 0 ? resolvedClientTools : undefined,
-          extraSystemPrompt: extraSystemPrompt || undefined,
-          streamParams: streamParams ?? undefined,
-          sessionKey,
-          runId: responseId,
-          deliver: false,
-          messageChannel: "webchat",
-          bestEffortDeliver: false,
-        },
-        defaultRuntime,
+      const result = await runResponsesAgentCommand({
+        message: prompt.message,
+        images,
+        clientTools: resolvedClientTools,
+        extraSystemPrompt,
+        streamParams,
+        sessionKey,
+        runId: responseId,
         deps,
-      );
+      });
 
       const payloads = (result as { payloads?: Array<{ text?: string }> } | null)?.payloads;
       const usage = extractUsageFromResult(result);
@@ -569,12 +596,13 @@ export async function handleOpenResponsesHttpRequest(
 
       sendJson(res, 200, response);
     } catch (err) {
+      logWarn(`openresponses: non-stream response failed: ${String(err)}`);
       const response = createResponseResource({
         id: responseId,
         model,
         status: "failed",
         output: [],
-        error: { code: "api_error", message: String(err) },
+        error: { code: "api_error", message: "internal error" },
       });
       sendJson(res, 500, response);
     }
@@ -595,9 +623,15 @@ export async function handleOpenResponsesHttpRequest(
   let finalizeRequested: { status: ResponseResource["status"]; text: string } | null = null;
 
   const maybeFinalize = () => {
-    if (closed) return;
-    if (!finalizeRequested) return;
-    if (!finalUsage) return;
+    if (closed) {
+      return;
+    }
+    if (!finalizeRequested) {
+      return;
+    }
+    if (!finalUsage) {
+      return;
+    }
     const usage = finalUsage;
 
     closed = true;
@@ -645,7 +679,9 @@ export async function handleOpenResponsesHttpRequest(
   };
 
   const requestFinalize = (status: ResponseResource["status"], text: string) => {
-    if (finalizeRequested) return;
+    if (finalizeRequested) {
+      return;
+    }
     finalizeRequested = { status, text };
     maybeFinalize();
   };
@@ -684,14 +720,18 @@ export async function handleOpenResponsesHttpRequest(
   });
 
   unsubscribe = onAgentEvent((evt) => {
-    if (evt.runId !== responseId) return;
-    if (closed) return;
+    if (evt.runId !== responseId) {
+      return;
+    }
+    if (closed) {
+      return;
+    }
 
     if (evt.stream === "assistant") {
-      const delta = evt.data?.delta;
-      const text = evt.data?.text;
-      const content = typeof delta === "string" ? delta : typeof text === "string" ? text : "";
-      if (!content) return;
+      const content = resolveAssistantStreamDeltaText(evt);
+      if (!content) {
+        return;
+      }
 
       sawAssistantDelta = true;
       accumulatedText += content;
@@ -723,27 +763,23 @@ export async function handleOpenResponsesHttpRequest(
 
   void (async () => {
     try {
-      const result = await agentCommand(
-        {
-          message: prompt.message,
-          images: images.length > 0 ? images : undefined,
-          clientTools: resolvedClientTools.length > 0 ? resolvedClientTools : undefined,
-          extraSystemPrompt: extraSystemPrompt || undefined,
-          streamParams: streamParams ?? undefined,
-          sessionKey,
-          runId: responseId,
-          deliver: false,
-          messageChannel: "webchat",
-          bestEffortDeliver: false,
-        },
-        defaultRuntime,
+      const result = await runResponsesAgentCommand({
+        message: prompt.message,
+        images,
+        clientTools: resolvedClientTools,
+        extraSystemPrompt,
+        streamParams,
+        sessionKey,
+        runId: responseId,
         deps,
-      );
+      });
 
       finalUsage = extractUsageFromResult(result);
       maybeFinalize();
 
-      if (closed) return;
+      if (closed) {
+        return;
+      }
 
       // Fallback: if no streaming deltas were received, send the full response
       if (!sawAssistantDelta) {
@@ -848,7 +884,10 @@ export async function handleOpenResponsesHttpRequest(
         });
       }
     } catch (err) {
-      if (closed) return;
+      logWarn(`openresponses: streaming response failed: ${String(err)}`);
+      if (closed) {
+        return;
+      }
 
       finalUsage = finalUsage ?? createEmptyUsage();
       const errorResponse = createResponseResource({
@@ -856,7 +895,7 @@ export async function handleOpenResponsesHttpRequest(
         model,
         status: "failed",
         output: [],
-        error: { code: "api_error", message: String(err) },
+        error: { code: "api_error", message: "internal error" },
         usage: finalUsage,
       });
 

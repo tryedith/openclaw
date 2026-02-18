@@ -1,4 +1,5 @@
-import { detectMime } from "../media/mime.js";
+import { estimateBase64DecodedBytes } from "../media/base64.js";
+import { sniffMimeFromBase64 } from "../media/sniff-mime-from-base64.js";
 
 export type ChatAttachment = {
   type?: string;
@@ -23,29 +24,20 @@ type AttachmentLog = {
 };
 
 function normalizeMime(mime?: string): string | undefined {
-  if (!mime) return undefined;
+  if (!mime) {
+    return undefined;
+  }
   const cleaned = mime.split(";")[0]?.trim().toLowerCase();
   return cleaned || undefined;
 }
 
-async function sniffMimeFromBase64(base64: string): Promise<string | undefined> {
-  const trimmed = base64.trim();
-  if (!trimmed) return undefined;
-
-  const take = Math.min(256, trimmed.length);
-  const sliceLen = take - (take % 4);
-  if (sliceLen < 8) return undefined;
-
-  try {
-    const head = Buffer.from(trimmed.slice(0, sliceLen), "base64");
-    return await detectMime({ buffer: head });
-  } catch {
-    return undefined;
-  }
-}
-
 function isImageMime(mime?: string): boolean {
   return typeof mime === "string" && mime.startsWith("image/");
+}
+
+function isValidBase64(value: string): boolean {
+  // Minimal validation; avoid full decode allocations for large payloads.
+  return value.length > 0 && value.length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(value);
 }
 
 /**
@@ -58,7 +50,7 @@ export async function parseMessageWithAttachments(
   attachments: ChatAttachment[] | undefined,
   opts?: { maxBytes?: number; log?: AttachmentLog },
 ): Promise<ParsedMessageWithImages> {
-  const maxBytes = opts?.maxBytes ?? 5_000_000; // 5 MB
+  const maxBytes = opts?.maxBytes ?? 5_000_000; // decoded bytes (5,000,000)
   const log = opts?.log;
   if (!attachments || attachments.length === 0) {
     return { message, images: [] };
@@ -67,7 +59,9 @@ export async function parseMessageWithAttachments(
   const images: ChatImageContent[] = [];
 
   for (const [idx, att] of attachments.entries()) {
-    if (!att) continue;
+    if (!att) {
+      continue;
+    }
     const mime = att.mimeType ?? "";
     const content = att.content;
     const label = att.fileName || att.type || `attachment-${idx + 1}`;
@@ -83,15 +77,10 @@ export async function parseMessageWithAttachments(
     if (dataUrlMatch) {
       b64 = dataUrlMatch[1];
     }
-    // Basic base64 sanity: length multiple of 4 and charset check.
-    if (b64.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(b64)) {
+    if (!isValidBase64(b64)) {
       throw new Error(`attachment ${label}: invalid base64 content`);
     }
-    try {
-      sizeBytes = Buffer.from(b64, "base64").byteLength;
-    } catch {
-      throw new Error(`attachment ${label}: invalid base64 content`);
-    }
+    sizeBytes = estimateBase64DecodedBytes(b64);
     if (sizeBytes <= 0 || sizeBytes > maxBytes) {
       throw new Error(`attachment ${label}: exceeds size limit (${sizeBytes} > ${maxBytes} bytes)`);
     }
@@ -132,12 +121,16 @@ export function buildMessageWithAttachments(
   opts?: { maxBytes?: number },
 ): string {
   const maxBytes = opts?.maxBytes ?? 2_000_000; // 2 MB
-  if (!attachments || attachments.length === 0) return message;
+  if (!attachments || attachments.length === 0) {
+    return message;
+  }
 
   const blocks: string[] = [];
 
   for (const [idx, att] of attachments.entries()) {
-    if (!att) continue;
+    if (!att) {
+      continue;
+    }
     const mime = att.mimeType ?? "";
     const content = att.content;
     const label = att.fileName || att.type || `attachment-${idx + 1}`;
@@ -151,15 +144,10 @@ export function buildMessageWithAttachments(
 
     let sizeBytes = 0;
     const b64 = content.trim();
-    // Basic base64 sanity: length multiple of 4 and charset check.
-    if (b64.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(b64)) {
+    if (!isValidBase64(b64)) {
       throw new Error(`attachment ${label}: invalid base64 content`);
     }
-    try {
-      sizeBytes = Buffer.from(b64, "base64").byteLength;
-    } catch {
-      throw new Error(`attachment ${label}: invalid base64 content`);
-    }
+    sizeBytes = estimateBase64DecodedBytes(b64);
     if (sizeBytes <= 0 || sizeBytes > maxBytes) {
       throw new Error(`attachment ${label}: exceeds size limit (${sizeBytes} > ${maxBytes} bytes)`);
     }
@@ -169,7 +157,9 @@ export function buildMessageWithAttachments(
     blocks.push(dataUrl);
   }
 
-  if (blocks.length === 0) return message;
+  if (blocks.length === 0) {
+    return message;
+  }
   const separator = message.trim().length > 0 ? "\n\n" : "";
   return `${message}${separator}${blocks.join("\n\n")}`;
 }

@@ -1,5 +1,4 @@
 import type { Static } from "@sinclair/typebox";
-
 import type {
   AgentEventSchema,
   AgentIdentityParamsSchema,
@@ -10,8 +9,21 @@ import type {
 } from "./agent.js";
 import type {
   AgentSummarySchema,
+  AgentsFileEntrySchema,
+  AgentsCreateParamsSchema,
+  AgentsCreateResultSchema,
+  AgentsDeleteParamsSchema,
+  AgentsDeleteResultSchema,
+  AgentsFilesGetParamsSchema,
+  AgentsFilesGetResultSchema,
+  AgentsFilesListParamsSchema,
+  AgentsFilesListResultSchema,
+  AgentsFilesSetParamsSchema,
+  AgentsFilesSetResultSchema,
   AgentsListParamsSchema,
   AgentsListResultSchema,
+  AgentsUpdateParamsSchema,
+  AgentsUpdateResultSchema,
   ModelChoiceSchema,
   ModelsListParamsSchema,
   ModelsListResultSchema,
@@ -22,7 +34,14 @@ import type {
   SkillsUpdateParamsSchema,
 } from "./agents-models-skills.js";
 import type {
+  ChannelPairingApproveParamsSchema,
+  ChannelPairingClearParamsSchema,
+  ChannelPairingListParamsSchema,
+} from "./channel-pairing.js";
+import type {
   ChannelsLogoutParamsSchema,
+  TalkConfigParamsSchema,
+  TalkConfigResultSchema,
   ChannelsStatusParamsSchema,
   ChannelsStatusResultSchema,
   TalkModeParamsSchema,
@@ -50,6 +69,13 @@ import type {
   CronUpdateParamsSchema,
 } from "./cron.js";
 import type {
+  DevicePairApproveParamsSchema,
+  DevicePairListParamsSchema,
+  DevicePairRejectParamsSchema,
+  DeviceTokenRevokeParamsSchema,
+  DeviceTokenRotateParamsSchema,
+} from "./devices.js";
+import type {
   ExecApprovalsGetParamsSchema,
   ExecApprovalsNodeGetParamsSchema,
   ExecApprovalsNodeSetParamsSchema,
@@ -58,13 +84,6 @@ import type {
   ExecApprovalRequestParamsSchema,
   ExecApprovalResolveParamsSchema,
 } from "./exec-approvals.js";
-import type {
-  DevicePairApproveParamsSchema,
-  DevicePairListParamsSchema,
-  DevicePairRejectParamsSchema,
-  DeviceTokenRevokeParamsSchema,
-  DeviceTokenRotateParamsSchema,
-} from "./devices.js";
 import type {
   ConnectParamsSchema,
   ErrorShapeSchema,
@@ -104,6 +123,7 @@ import type {
   SessionsPreviewParamsSchema,
   SessionsResetParamsSchema,
   SessionsResolveParamsSchema,
+  SessionsUsageParamsSchema,
 } from "./sessions.js";
 import type { PresenceEntrySchema, SnapshotSchema, StateVersionSchema } from "./snapshot.js";
 import type {
@@ -116,11 +136,6 @@ import type {
   WizardStatusResultSchema,
   WizardStepSchema,
 } from "./wizard.js";
-import type {
-  ChannelPairingApproveParamsSchema,
-  ChannelPairingClearParamsSchema,
-  ChannelPairingListParamsSchema,
-} from "./channel-pairing.js";
 
 export type ConnectParams = Static<typeof ConnectParamsSchema>;
 export type HelloOk = Static<typeof HelloOkSchema>;
@@ -156,6 +171,7 @@ export type SessionsPatchParams = Static<typeof SessionsPatchParamsSchema>;
 export type SessionsResetParams = Static<typeof SessionsResetParamsSchema>;
 export type SessionsDeleteParams = Static<typeof SessionsDeleteParamsSchema>;
 export type SessionsCompactParams = Static<typeof SessionsCompactParamsSchema>;
+export type SessionsUsageParams = Static<typeof SessionsUsageParamsSchema>;
 export type ConfigGetParams = Static<typeof ConfigGetParamsSchema>;
 export type ConfigSetParams = Static<typeof ConfigSetParamsSchema>;
 export type ConfigApplyParams = Static<typeof ConfigApplyParamsSchema>;
@@ -171,12 +187,27 @@ export type WizardNextResult = Static<typeof WizardNextResultSchema>;
 export type WizardStartResult = Static<typeof WizardStartResultSchema>;
 export type WizardStatusResult = Static<typeof WizardStatusResultSchema>;
 export type TalkModeParams = Static<typeof TalkModeParamsSchema>;
+export type TalkConfigParams = Static<typeof TalkConfigParamsSchema>;
+export type TalkConfigResult = Static<typeof TalkConfigResultSchema>;
 export type ChannelsStatusParams = Static<typeof ChannelsStatusParamsSchema>;
 export type ChannelsStatusResult = Static<typeof ChannelsStatusResultSchema>;
 export type ChannelsLogoutParams = Static<typeof ChannelsLogoutParamsSchema>;
 export type WebLoginStartParams = Static<typeof WebLoginStartParamsSchema>;
 export type WebLoginWaitParams = Static<typeof WebLoginWaitParamsSchema>;
 export type AgentSummary = Static<typeof AgentSummarySchema>;
+export type AgentsFileEntry = Static<typeof AgentsFileEntrySchema>;
+export type AgentsCreateParams = Static<typeof AgentsCreateParamsSchema>;
+export type AgentsCreateResult = Static<typeof AgentsCreateResultSchema>;
+export type AgentsUpdateParams = Static<typeof AgentsUpdateParamsSchema>;
+export type AgentsUpdateResult = Static<typeof AgentsUpdateResultSchema>;
+export type AgentsDeleteParams = Static<typeof AgentsDeleteParamsSchema>;
+export type AgentsDeleteResult = Static<typeof AgentsDeleteResultSchema>;
+export type AgentsFilesListParams = Static<typeof AgentsFilesListParamsSchema>;
+export type AgentsFilesListResult = Static<typeof AgentsFilesListResultSchema>;
+export type AgentsFilesGetParams = Static<typeof AgentsFilesGetParamsSchema>;
+export type AgentsFilesGetResult = Static<typeof AgentsFilesGetResultSchema>;
+export type AgentsFilesSetParams = Static<typeof AgentsFilesSetParamsSchema>;
+export type AgentsFilesSetResult = Static<typeof AgentsFilesSetResultSchema>;
 export type AgentsListParams = Static<typeof AgentsListParamsSchema>;
 export type AgentsListResult = Static<typeof AgentsListResultSchema>;
 export type ModelChoice = Static<typeof ModelChoiceSchema>;

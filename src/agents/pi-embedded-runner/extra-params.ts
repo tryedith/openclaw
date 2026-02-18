@@ -1,9 +1,17 @@
 import type { StreamFn } from "@mariozechner/pi-agent-core";
-import type { Api, Model, SimpleStreamOptions } from "@mariozechner/pi-ai";
+import type { SimpleStreamOptions } from "@mariozechner/pi-ai";
 import { streamSimple } from "@mariozechner/pi-ai";
-
 import type { OpenClawConfig } from "../../config/config.js";
 import { log } from "./logger.js";
+
+const OPENROUTER_APP_HEADERS: Record<string, string> = {
+  "HTTP-Referer": "https://openclaw.ai",
+  "X-Title": "OpenClaw",
+};
+// NOTE: We only force `store=true` for *direct* OpenAI Responses.
+// Codex responses (chatgpt.com/backend-api/codex/responses) require `store=false`.
+const OPENAI_RESPONSES_APIS = new Set(["openai-responses"]);
+const OPENAI_RESPONSES_PROVIDERS = new Set(["openai"]);
 
 /**
  * Resolve provider-specific extra params from model config.
@@ -21,101 +29,62 @@ export function resolveExtraParams(params: {
   return modelConfig?.params ? { ...modelConfig.params } : undefined;
 }
 
-type CacheControlTtl = "5m" | "1h";
-type CacheRetention = "short" | "long" | "none";
+type CacheRetention = "none" | "short" | "long";
+type CacheRetentionStreamOptions = Partial<SimpleStreamOptions> & {
+  cacheRetention?: CacheRetention;
+};
 
-function toCacheRetention(ttl: CacheControlTtl): CacheRetention {
-  return ttl === "1h" ? "long" : "short";
-}
-
-export function applyAnthropicCacheControlTtl(payload: unknown, ttl: CacheControlTtl): void {
-  // Anthropic's explicit "1h" retention must be set on cache breakpoints.
-  // For "5m", ephemeral without ttl is sufficient.
-  if (ttl !== "1h") return;
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
-
-  const asRecord = payload as Record<string, unknown>;
-  const setCacheControl = (block: Record<string, unknown>) => {
-    block.cache_control = { type: "ephemeral", ttl: "1h" };
-  };
-
-  const system = asRecord.system;
-  if (Array.isArray(system)) {
-    for (const item of system) {
-      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
-      setCacheControl(item as Record<string, unknown>);
-    }
-  }
-
-  const messages = asRecord.messages;
-  if (!Array.isArray(messages) || messages.length === 0) return;
-  const last = messages[messages.length - 1];
-  if (!last || typeof last !== "object" || Array.isArray(last)) return;
-
-  const lastMessage = last as Record<string, unknown>;
-  if (lastMessage.role !== "user") return;
-
-  const content = lastMessage.content;
-  if (typeof content === "string") {
-    lastMessage.content = [
-      { type: "text", text: content, cache_control: { type: "ephemeral", ttl: "1h" } },
-    ];
-    return;
-  }
-  if (!Array.isArray(content) || content.length === 0) return;
-
-  const lastBlock = content[content.length - 1];
-  if (!lastBlock || typeof lastBlock !== "object" || Array.isArray(lastBlock)) return;
-  setCacheControl(lastBlock as Record<string, unknown>);
-}
-
-function resolveCacheControlTtl(
+/**
+ * Resolve cacheRetention from extraParams, supporting both new `cacheRetention`
+ * and legacy `cacheControlTtl` values for backwards compatibility.
+ *
+ * Mapping: "5m" → "short", "1h" → "long"
+ *
+ * Only applies to Anthropic provider (OpenRouter uses openai-completions API
+ * with hardcoded cache_control, not the cacheRetention stream option).
+ */
+function resolveCacheRetention(
   extraParams: Record<string, unknown> | undefined,
   provider: string,
-  modelId: string,
-): CacheControlTtl | undefined {
-  const raw = extraParams?.cacheControlTtl;
-  if (raw !== "5m" && raw !== "1h") return undefined;
-  if (provider === "anthropic") return raw;
-  if (provider === "openrouter" && modelId.startsWith("anthropic/")) return raw;
-  return undefined;
-}
-
-export function resolveCacheRetention(
-  extraParams: Record<string, unknown> | undefined,
-  provider: string,
-  modelId: string,
 ): CacheRetention | undefined {
-  const ttl = resolveCacheControlTtl(extraParams, provider, modelId);
-  if (!ttl) return undefined;
-  return toCacheRetention(ttl);
+  if (provider !== "anthropic") {
+    return undefined;
+  }
+
+  // Prefer new cacheRetention if present
+  const newVal = extraParams?.cacheRetention;
+  if (newVal === "none" || newVal === "short" || newVal === "long") {
+    return newVal;
+  }
+
+  // Fall back to legacy cacheControlTtl with mapping
+  const legacy = extraParams?.cacheControlTtl;
+  if (legacy === "5m") {
+    return "short";
+  }
+  if (legacy === "1h") {
+    return "long";
+  }
+  return undefined;
 }
 
 function createStreamFnWithExtraParams(
   baseStreamFn: StreamFn | undefined,
   extraParams: Record<string, unknown> | undefined,
   provider: string,
-  modelId: string,
 ): StreamFn | undefined {
   if (!extraParams || Object.keys(extraParams).length === 0) {
     return undefined;
   }
 
-  const streamParams: Partial<SimpleStreamOptions> & {
-    cacheControlTtl?: CacheControlTtl;
-    cacheRetention?: CacheRetention;
-  } = {};
+  const streamParams: CacheRetentionStreamOptions = {};
   if (typeof extraParams.temperature === "number") {
     streamParams.temperature = extraParams.temperature;
   }
   if (typeof extraParams.maxTokens === "number") {
     streamParams.maxTokens = extraParams.maxTokens;
   }
-  const cacheControlTtl = resolveCacheControlTtl(extraParams, provider, modelId);
-  if (cacheControlTtl) {
-    streamParams.cacheControlTtl = cacheControlTtl;
-  }
-  const cacheRetention = resolveCacheRetention(extraParams, provider, modelId);
+  const cacheRetention = resolveCacheRetention(extraParams, provider);
   if (cacheRetention) {
     streamParams.cacheRetention = cacheRetention;
   }
@@ -127,25 +96,85 @@ function createStreamFnWithExtraParams(
   log.debug(`creating streamFn wrapper with params: ${JSON.stringify(streamParams)}`);
 
   const underlying = baseStreamFn ?? streamSimple;
-  const wrappedStreamFn: StreamFn = (model, context, options) => {
-    const nextOnPayload = (payload: unknown) => {
-      if (cacheControlTtl) {
-        applyAnthropicCacheControlTtl(payload, cacheControlTtl);
-      }
-      options?.onPayload?.(payload);
-    };
-    return underlying(model as Model<Api>, context, {
+  const wrappedStreamFn: StreamFn = (model, context, options) =>
+    underlying(model, context, {
       ...streamParams,
       ...options,
-      onPayload: nextOnPayload,
     });
-  };
 
   return wrappedStreamFn;
 }
 
+function isDirectOpenAIBaseUrl(baseUrl: unknown): boolean {
+  if (typeof baseUrl !== "string" || !baseUrl.trim()) {
+    return true;
+  }
+
+  try {
+    const host = new URL(baseUrl).hostname.toLowerCase();
+    return host === "api.openai.com" || host === "chatgpt.com";
+  } catch {
+    const normalized = baseUrl.toLowerCase();
+    return normalized.includes("api.openai.com") || normalized.includes("chatgpt.com");
+  }
+}
+
+function shouldForceResponsesStore(model: {
+  api?: unknown;
+  provider?: unknown;
+  baseUrl?: unknown;
+}): boolean {
+  if (typeof model.api !== "string" || typeof model.provider !== "string") {
+    return false;
+  }
+  if (!OPENAI_RESPONSES_APIS.has(model.api)) {
+    return false;
+  }
+  if (!OPENAI_RESPONSES_PROVIDERS.has(model.provider)) {
+    return false;
+  }
+  return isDirectOpenAIBaseUrl(model.baseUrl);
+}
+
+function createOpenAIResponsesStoreWrapper(baseStreamFn: StreamFn | undefined): StreamFn {
+  const underlying = baseStreamFn ?? streamSimple;
+  return (model, context, options) => {
+    if (!shouldForceResponsesStore(model)) {
+      return underlying(model, context, options);
+    }
+
+    const originalOnPayload = options?.onPayload;
+    return underlying(model, context, {
+      ...options,
+      onPayload: (payload) => {
+        if (payload && typeof payload === "object") {
+          (payload as { store?: unknown }).store = true;
+        }
+        originalOnPayload?.(payload);
+      },
+    });
+  };
+}
+
+/**
+ * Create a streamFn wrapper that adds OpenRouter app attribution headers.
+ * These headers allow OpenClaw to appear on OpenRouter's leaderboard.
+ */
+function createOpenRouterHeadersWrapper(baseStreamFn: StreamFn | undefined): StreamFn {
+  const underlying = baseStreamFn ?? streamSimple;
+  return (model, context, options) =>
+    underlying(model, context, {
+      ...options,
+      headers: {
+        ...OPENROUTER_APP_HEADERS,
+        ...options?.headers,
+      },
+    });
+}
+
 /**
  * Apply extra params (like temperature) to an agent's streamFn.
+ * Also adds OpenRouter app attribution headers when using the OpenRouter provider.
  *
  * @internal Exported for testing
  */
@@ -168,10 +197,20 @@ export function applyExtraParamsToAgent(
         )
       : undefined;
   const merged = Object.assign({}, extraParams, override);
-  const wrappedStreamFn = createStreamFnWithExtraParams(agent.streamFn, merged, provider, modelId);
+  const wrappedStreamFn = createStreamFnWithExtraParams(agent.streamFn, merged, provider);
 
   if (wrappedStreamFn) {
     log.debug(`applying extraParams to agent streamFn for ${provider}/${modelId}`);
     agent.streamFn = wrappedStreamFn;
   }
+
+  if (provider === "openrouter") {
+    log.debug(`applying OpenRouter app attribution headers for ${provider}/${modelId}`);
+    agent.streamFn = createOpenRouterHeadersWrapper(agent.streamFn);
+  }
+
+  // Work around upstream pi-ai hardcoding `store: false` for Responses API.
+  // Force `store=true` for direct OpenAI/OpenAI Codex providers so multi-turn
+  // server-side conversation state is preserved.
+  agent.streamFn = createOpenAIResponsesStoreWrapper(agent.streamFn);
 }

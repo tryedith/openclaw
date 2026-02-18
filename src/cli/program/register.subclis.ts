@@ -1,8 +1,8 @@
 import type { Command } from "commander";
 import type { OpenClawConfig } from "../../config/config.js";
 import { isTruthyEnvValue } from "../../infra/env.js";
-import { buildParseArgv, getPrimaryCommand, hasHelpOrVersion } from "../argv.js";
-import { resolveActionArgs } from "./helpers.js";
+import { getPrimaryCommand, hasHelpOrVersion } from "../argv.js";
+import { reparseProgramFromActionArgs } from "./action-reparse.js";
 
 type SubCliRegistrar = (program: Command) => Promise<void> | void;
 
@@ -13,8 +13,12 @@ type SubCliEntry = {
 };
 
 const shouldRegisterPrimaryOnly = (argv: string[]) => {
-  if (isTruthyEnvValue(process.env.OPENCLAW_DISABLE_LAZY_SUBCOMMANDS)) return false;
-  if (hasHelpOrVersion(argv)) return false;
+  if (isTruthyEnvValue(process.env.OPENCLAW_DISABLE_LAZY_SUBCOMMANDS)) {
+    return false;
+  }
+  if (hasHelpOrVersion(argv)) {
+    return false;
+  }
   return true;
 };
 
@@ -227,7 +231,19 @@ const entries: SubCliEntry[] = [
       mod.registerUpdateCli(program);
     },
   },
+  {
+    name: "completion",
+    description: "Generate shell completion script",
+    register: async (program) => {
+      const mod = await import("../completion-cli.js");
+      mod.registerCompletionCli(program);
+    },
+  },
 ];
+
+export function getSubCliEntries(): SubCliEntry[] {
+  return entries;
+}
 
 function removeCommand(program: Command, command: Command) {
   const commands = program.commands as Command[];
@@ -239,9 +255,13 @@ function removeCommand(program: Command, command: Command) {
 
 export async function registerSubCliByName(program: Command, name: string): Promise<boolean> {
   const entry = entries.find((candidate) => candidate.name === name);
-  if (!entry) return false;
+  if (!entry) {
+    return false;
+  }
   const existing = program.commands.find((cmd) => cmd.name() === entry.name);
-  if (existing) removeCommand(program, existing);
+  if (existing) {
+    removeCommand(program, existing);
+  }
   await entry.register(program);
   return true;
 }
@@ -253,19 +273,7 @@ function registerLazyCommand(program: Command, entry: SubCliEntry) {
   placeholder.action(async (...actionArgs) => {
     removeCommand(program, placeholder);
     await entry.register(program);
-    const actionCommand = actionArgs.at(-1) as Command | undefined;
-    const root = actionCommand?.parent ?? program;
-    const rawArgs = (root as Command & { rawArgs?: string[] }).rawArgs;
-    const actionArgsList = resolveActionArgs(actionCommand);
-    const fallbackArgv = actionCommand?.name()
-      ? [actionCommand.name(), ...actionArgsList]
-      : actionArgsList;
-    const parseArgv = buildParseArgv({
-      programName: program.name(),
-      rawArgs,
-      fallbackArgv,
-    });
-    await program.parseAsync(parseArgv);
+    await reparseProgramFromActionArgs(program, actionArgs);
   });
 }
 

@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { EventEmitter } from "node:events";
-
-import { removeAckReactionAfterReply, shouldAckReaction } from "openclaw/plugin-sdk";
 import type { OpenClawConfig, PluginRuntime } from "openclaw/plugin-sdk";
+import { EventEmitter } from "node:events";
+import { removeAckReactionAfterReply, shouldAckReaction } from "openclaw/plugin-sdk";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ResolvedBlueBubblesAccount } from "./accounts.js";
 import {
   handleBlueBubblesWebhookRequest,
   registerBlueBubblesWebhookTarget,
@@ -11,7 +11,6 @@ import {
   _resetBlueBubblesShortIdState,
 } from "./monitor.js";
 import { setBlueBubblesRuntime } from "./runtime.js";
-import type { ResolvedBlueBubblesAccount } from "./accounts.js";
 
 // Mock dependencies
 vi.mock("./send.js", () => ({
@@ -68,6 +67,7 @@ const mockResolveEnvelopeFormatOptions = vi.fn(() => ({
   template: "channel+name+time",
 }));
 const mockFormatAgentEnvelope = vi.fn((opts: { body: string }) => opts.body);
+const mockFormatInboundEnvelope = vi.fn((opts: { body: string }) => opts.body);
 const mockChunkMarkdownText = vi.fn((text: string) => [text]);
 
 function createMockRuntime(): PluginRuntime {
@@ -78,88 +78,132 @@ function createMockRuntime(): PluginRuntime {
       writeConfigFile: vi.fn() as unknown as PluginRuntime["config"]["writeConfigFile"],
     },
     system: {
-      enqueueSystemEvent: mockEnqueueSystemEvent as unknown as PluginRuntime["system"]["enqueueSystemEvent"],
+      enqueueSystemEvent:
+        mockEnqueueSystemEvent as unknown as PluginRuntime["system"]["enqueueSystemEvent"],
       runCommandWithTimeout: vi.fn() as unknown as PluginRuntime["system"]["runCommandWithTimeout"],
     },
     media: {
       loadWebMedia: vi.fn() as unknown as PluginRuntime["media"]["loadWebMedia"],
       detectMime: vi.fn() as unknown as PluginRuntime["media"]["detectMime"],
       mediaKindFromMime: vi.fn() as unknown as PluginRuntime["media"]["mediaKindFromMime"],
-      isVoiceCompatibleAudio: vi.fn() as unknown as PluginRuntime["media"]["isVoiceCompatibleAudio"],
+      isVoiceCompatibleAudio:
+        vi.fn() as unknown as PluginRuntime["media"]["isVoiceCompatibleAudio"],
       getImageMetadata: vi.fn() as unknown as PluginRuntime["media"]["getImageMetadata"],
       resizeToJpeg: vi.fn() as unknown as PluginRuntime["media"]["resizeToJpeg"],
     },
     tools: {
       createMemoryGetTool: vi.fn() as unknown as PluginRuntime["tools"]["createMemoryGetTool"],
-      createMemorySearchTool: vi.fn() as unknown as PluginRuntime["tools"]["createMemorySearchTool"],
+      createMemorySearchTool:
+        vi.fn() as unknown as PluginRuntime["tools"]["createMemorySearchTool"],
       registerMemoryCli: vi.fn() as unknown as PluginRuntime["tools"]["registerMemoryCli"],
     },
     channel: {
       text: {
-        chunkMarkdownText: mockChunkMarkdownText as unknown as PluginRuntime["channel"]["text"]["chunkMarkdownText"],
+        chunkMarkdownText:
+          mockChunkMarkdownText as unknown as PluginRuntime["channel"]["text"]["chunkMarkdownText"],
         chunkText: vi.fn() as unknown as PluginRuntime["channel"]["text"]["chunkText"],
-        resolveTextChunkLimit: vi.fn(() => 4000) as unknown as PluginRuntime["channel"]["text"]["resolveTextChunkLimit"],
-        hasControlCommand: mockHasControlCommand as unknown as PluginRuntime["channel"]["text"]["hasControlCommand"],
-        resolveMarkdownTableMode: vi.fn(() => "code") as unknown as PluginRuntime["channel"]["text"]["resolveMarkdownTableMode"],
-        convertMarkdownTables: vi.fn((text: string) => text) as unknown as PluginRuntime["channel"]["text"]["convertMarkdownTables"],
+        resolveTextChunkLimit: vi.fn(
+          () => 4000,
+        ) as unknown as PluginRuntime["channel"]["text"]["resolveTextChunkLimit"],
+        hasControlCommand:
+          mockHasControlCommand as unknown as PluginRuntime["channel"]["text"]["hasControlCommand"],
+        resolveMarkdownTableMode: vi.fn(
+          () => "code",
+        ) as unknown as PluginRuntime["channel"]["text"]["resolveMarkdownTableMode"],
+        convertMarkdownTables: vi.fn(
+          (text: string) => text,
+        ) as unknown as PluginRuntime["channel"]["text"]["convertMarkdownTables"],
       },
       reply: {
-        dispatchReplyWithBufferedBlockDispatcher: mockDispatchReplyWithBufferedBlockDispatcher as unknown as PluginRuntime["channel"]["reply"]["dispatchReplyWithBufferedBlockDispatcher"],
-        createReplyDispatcherWithTyping: vi.fn() as unknown as PluginRuntime["channel"]["reply"]["createReplyDispatcherWithTyping"],
-        resolveEffectiveMessagesConfig: vi.fn() as unknown as PluginRuntime["channel"]["reply"]["resolveEffectiveMessagesConfig"],
-        resolveHumanDelayConfig: vi.fn() as unknown as PluginRuntime["channel"]["reply"]["resolveHumanDelayConfig"],
-        dispatchReplyFromConfig: vi.fn() as unknown as PluginRuntime["channel"]["reply"]["dispatchReplyFromConfig"],
-        finalizeInboundContext: vi.fn() as unknown as PluginRuntime["channel"]["reply"]["finalizeInboundContext"],
-        formatAgentEnvelope: mockFormatAgentEnvelope as unknown as PluginRuntime["channel"]["reply"]["formatAgentEnvelope"],
-        formatInboundEnvelope: vi.fn() as unknown as PluginRuntime["channel"]["reply"]["formatInboundEnvelope"],
-        resolveEnvelopeFormatOptions: mockResolveEnvelopeFormatOptions as unknown as PluginRuntime["channel"]["reply"]["resolveEnvelopeFormatOptions"],
+        dispatchReplyWithBufferedBlockDispatcher:
+          mockDispatchReplyWithBufferedBlockDispatcher as unknown as PluginRuntime["channel"]["reply"]["dispatchReplyWithBufferedBlockDispatcher"],
+        createReplyDispatcherWithTyping:
+          vi.fn() as unknown as PluginRuntime["channel"]["reply"]["createReplyDispatcherWithTyping"],
+        resolveEffectiveMessagesConfig:
+          vi.fn() as unknown as PluginRuntime["channel"]["reply"]["resolveEffectiveMessagesConfig"],
+        resolveHumanDelayConfig:
+          vi.fn() as unknown as PluginRuntime["channel"]["reply"]["resolveHumanDelayConfig"],
+        dispatchReplyFromConfig:
+          vi.fn() as unknown as PluginRuntime["channel"]["reply"]["dispatchReplyFromConfig"],
+        finalizeInboundContext: vi.fn(
+          (ctx: Record<string, unknown>) => ctx,
+        ) as unknown as PluginRuntime["channel"]["reply"]["finalizeInboundContext"],
+        formatAgentEnvelope:
+          mockFormatAgentEnvelope as unknown as PluginRuntime["channel"]["reply"]["formatAgentEnvelope"],
+        formatInboundEnvelope:
+          mockFormatInboundEnvelope as unknown as PluginRuntime["channel"]["reply"]["formatInboundEnvelope"],
+        resolveEnvelopeFormatOptions:
+          mockResolveEnvelopeFormatOptions as unknown as PluginRuntime["channel"]["reply"]["resolveEnvelopeFormatOptions"],
       },
       routing: {
-        resolveAgentRoute: mockResolveAgentRoute as unknown as PluginRuntime["channel"]["routing"]["resolveAgentRoute"],
+        resolveAgentRoute:
+          mockResolveAgentRoute as unknown as PluginRuntime["channel"]["routing"]["resolveAgentRoute"],
       },
       pairing: {
-        buildPairingReply: mockBuildPairingReply as unknown as PluginRuntime["channel"]["pairing"]["buildPairingReply"],
-        readAllowFromStore: mockReadAllowFromStore as unknown as PluginRuntime["channel"]["pairing"]["readAllowFromStore"],
-        upsertPairingRequest: mockUpsertPairingRequest as unknown as PluginRuntime["channel"]["pairing"]["upsertPairingRequest"],
+        buildPairingReply:
+          mockBuildPairingReply as unknown as PluginRuntime["channel"]["pairing"]["buildPairingReply"],
+        readAllowFromStore:
+          mockReadAllowFromStore as unknown as PluginRuntime["channel"]["pairing"]["readAllowFromStore"],
+        upsertPairingRequest:
+          mockUpsertPairingRequest as unknown as PluginRuntime["channel"]["pairing"]["upsertPairingRequest"],
       },
       media: {
-        fetchRemoteMedia: vi.fn() as unknown as PluginRuntime["channel"]["media"]["fetchRemoteMedia"],
-        saveMediaBuffer: mockSaveMediaBuffer as unknown as PluginRuntime["channel"]["media"]["saveMediaBuffer"],
+        fetchRemoteMedia:
+          vi.fn() as unknown as PluginRuntime["channel"]["media"]["fetchRemoteMedia"],
+        saveMediaBuffer:
+          mockSaveMediaBuffer as unknown as PluginRuntime["channel"]["media"]["saveMediaBuffer"],
       },
       session: {
-        resolveStorePath: mockResolveStorePath as unknown as PluginRuntime["channel"]["session"]["resolveStorePath"],
-        readSessionUpdatedAt: mockReadSessionUpdatedAt as unknown as PluginRuntime["channel"]["session"]["readSessionUpdatedAt"],
-        recordInboundSession: vi.fn() as unknown as PluginRuntime["channel"]["session"]["recordInboundSession"],
-        recordSessionMetaFromInbound: vi.fn() as unknown as PluginRuntime["channel"]["session"]["recordSessionMetaFromInbound"],
-        updateLastRoute: vi.fn() as unknown as PluginRuntime["channel"]["session"]["updateLastRoute"],
+        resolveStorePath:
+          mockResolveStorePath as unknown as PluginRuntime["channel"]["session"]["resolveStorePath"],
+        readSessionUpdatedAt:
+          mockReadSessionUpdatedAt as unknown as PluginRuntime["channel"]["session"]["readSessionUpdatedAt"],
+        recordInboundSession:
+          vi.fn() as unknown as PluginRuntime["channel"]["session"]["recordInboundSession"],
+        recordSessionMetaFromInbound:
+          vi.fn() as unknown as PluginRuntime["channel"]["session"]["recordSessionMetaFromInbound"],
+        updateLastRoute:
+          vi.fn() as unknown as PluginRuntime["channel"]["session"]["updateLastRoute"],
       },
       mentions: {
-        buildMentionRegexes: mockBuildMentionRegexes as unknown as PluginRuntime["channel"]["mentions"]["buildMentionRegexes"],
-        matchesMentionPatterns: mockMatchesMentionPatterns as unknown as PluginRuntime["channel"]["mentions"]["matchesMentionPatterns"],
+        buildMentionRegexes:
+          mockBuildMentionRegexes as unknown as PluginRuntime["channel"]["mentions"]["buildMentionRegexes"],
+        matchesMentionPatterns:
+          mockMatchesMentionPatterns as unknown as PluginRuntime["channel"]["mentions"]["matchesMentionPatterns"],
       },
       reactions: {
         shouldAckReaction,
         removeAckReactionAfterReply,
       },
       groups: {
-        resolveGroupPolicy: mockResolveGroupPolicy as unknown as PluginRuntime["channel"]["groups"]["resolveGroupPolicy"],
-        resolveRequireMention: mockResolveRequireMention as unknown as PluginRuntime["channel"]["groups"]["resolveRequireMention"],
+        resolveGroupPolicy:
+          mockResolveGroupPolicy as unknown as PluginRuntime["channel"]["groups"]["resolveGroupPolicy"],
+        resolveRequireMention:
+          mockResolveRequireMention as unknown as PluginRuntime["channel"]["groups"]["resolveRequireMention"],
       },
       debounce: {
         // Create a pass-through debouncer that immediately calls onFlush
-        createInboundDebouncer: vi.fn((params: { onFlush: (items: unknown[]) => Promise<void> }) => ({
-          enqueue: async (item: unknown) => {
-            await params.onFlush([item]);
-          },
-          flushKey: vi.fn(),
-        })) as unknown as PluginRuntime["channel"]["debounce"]["createInboundDebouncer"],
-        resolveInboundDebounceMs: vi.fn(() => 0) as unknown as PluginRuntime["channel"]["debounce"]["resolveInboundDebounceMs"],
+        createInboundDebouncer: vi.fn(
+          (params: { onFlush: (items: unknown[]) => Promise<void> }) => ({
+            enqueue: async (item: unknown) => {
+              await params.onFlush([item]);
+            },
+            flushKey: vi.fn(),
+          }),
+        ) as unknown as PluginRuntime["channel"]["debounce"]["createInboundDebouncer"],
+        resolveInboundDebounceMs: vi.fn(
+          () => 0,
+        ) as unknown as PluginRuntime["channel"]["debounce"]["resolveInboundDebounceMs"],
       },
       commands: {
-        resolveCommandAuthorizedFromAuthorizers: mockResolveCommandAuthorizedFromAuthorizers as unknown as PluginRuntime["channel"]["commands"]["resolveCommandAuthorizedFromAuthorizers"],
-        isControlCommandMessage: vi.fn() as unknown as PluginRuntime["channel"]["commands"]["isControlCommandMessage"],
-        shouldComputeCommandAuthorized: vi.fn() as unknown as PluginRuntime["channel"]["commands"]["shouldComputeCommandAuthorized"],
-        shouldHandleTextCommands: vi.fn() as unknown as PluginRuntime["channel"]["commands"]["shouldHandleTextCommands"],
+        resolveCommandAuthorizedFromAuthorizers:
+          mockResolveCommandAuthorizedFromAuthorizers as unknown as PluginRuntime["channel"]["commands"]["resolveCommandAuthorizedFromAuthorizers"],
+        isControlCommandMessage:
+          vi.fn() as unknown as PluginRuntime["channel"]["commands"]["isControlCommandMessage"],
+        shouldComputeCommandAuthorized:
+          vi.fn() as unknown as PluginRuntime["channel"]["commands"]["shouldComputeCommandAuthorized"],
+        shouldHandleTextCommands:
+          vi.fn() as unknown as PluginRuntime["channel"]["commands"]["shouldHandleTextCommands"],
       },
       discord: {} as PluginRuntime["channel"]["discord"],
       slack: {} as PluginRuntime["channel"]["slack"],
@@ -169,7 +213,9 @@ function createMockRuntime(): PluginRuntime {
       whatsapp: {} as PluginRuntime["channel"]["whatsapp"],
     },
     logging: {
-      shouldLogVerbose: vi.fn(() => false) as unknown as PluginRuntime["logging"]["shouldLogVerbose"],
+      shouldLogVerbose: vi.fn(
+        () => false,
+      ) as unknown as PluginRuntime["logging"]["shouldLogVerbose"],
       getChildLogger: vi.fn(() => ({
         info: vi.fn(),
         warn: vi.fn(),
@@ -178,12 +224,16 @@ function createMockRuntime(): PluginRuntime {
       })) as unknown as PluginRuntime["logging"]["getChildLogger"],
     },
     state: {
-      resolveStateDir: vi.fn(() => "/tmp/openclaw") as unknown as PluginRuntime["state"]["resolveStateDir"],
+      resolveStateDir: vi.fn(
+        () => "/tmp/openclaw",
+      ) as unknown as PluginRuntime["state"]["resolveStateDir"],
     },
   };
 }
 
-function createMockAccount(overrides: Partial<ResolvedBlueBubblesAccount["config"]> = {}): ResolvedBlueBubblesAccount {
+function createMockAccount(
+  overrides: Partial<ResolvedBlueBubblesAccount["config"]> = {},
+): ResolvedBlueBubblesAccount {
   return {
     accountId: "default",
     enabled: true,
@@ -206,13 +256,28 @@ function createMockRequest(
   body: unknown,
   headers: Record<string, string> = {},
 ): IncomingMessage {
+  if (headers.host === undefined) {
+    headers.host = "localhost";
+  }
+  const parsedUrl = new URL(url, "http://localhost");
+  const hasAuthQuery = parsedUrl.searchParams.has("guid") || parsedUrl.searchParams.has("password");
+  const hasAuthHeader =
+    headers["x-guid"] !== undefined ||
+    headers["x-password"] !== undefined ||
+    headers["x-bluebubbles-guid"] !== undefined ||
+    headers.authorization !== undefined;
+  if (!hasAuthQuery && !hasAuthHeader) {
+    parsedUrl.searchParams.set("password", "test-password");
+  }
+
   const req = new EventEmitter() as IncomingMessage;
   req.method = method;
-  req.url = url;
+  req.url = `${parsedUrl.pathname}${parsedUrl.search}`;
   req.headers = headers;
   (req as unknown as { socket: { remoteAddress: string } }).socket = { remoteAddress: "127.0.0.1" };
 
   // Emit body data after a microtask
+  // oxlint-disable-next-line no-floating-promises
   Promise.resolve().then(() => {
     const bodyStr = typeof body === "string" ? body : JSON.stringify(body);
     req.emit("data", Buffer.from(bodyStr));
@@ -344,6 +409,48 @@ describe("BlueBubbles webhook monitor", () => {
       expect(res.statusCode).toBe(400);
     });
 
+    it("returns 408 when request body times out (Slow-Loris protection)", async () => {
+      vi.useFakeTimers();
+      try {
+        const account = createMockAccount();
+        const config: OpenClawConfig = {};
+        const core = createMockRuntime();
+        setBlueBubblesRuntime(core);
+
+        unregister = registerBlueBubblesWebhookTarget({
+          account,
+          config,
+          runtime: { log: vi.fn(), error: vi.fn() },
+          core,
+          path: "/bluebubbles-webhook",
+        });
+
+        // Create a request that never sends data or ends (simulates slow-loris)
+        const req = new EventEmitter() as IncomingMessage;
+        req.method = "POST";
+        req.url = "/bluebubbles-webhook";
+        req.headers = {};
+        (req as unknown as { socket: { remoteAddress: string } }).socket = {
+          remoteAddress: "127.0.0.1",
+        };
+        req.destroy = vi.fn();
+
+        const res = createMockResponse();
+
+        const handledPromise = handleBlueBubblesWebhookRequest(req, res);
+
+        // Advance past the 30s timeout
+        await vi.advanceTimersByTimeAsync(31_000);
+
+        const handled = await handledPromise;
+        expect(handled).toBe(true);
+        expect(res.statusCode).toBe(408);
+        expect(req.destroy).toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("authenticates via password query parameter", async () => {
       const account = createMockAccount({ password: "secret-token" });
       const config: OpenClawConfig = {};
@@ -361,7 +468,9 @@ describe("BlueBubbles webhook monitor", () => {
           guid: "msg-1",
         },
       });
-      (req as unknown as { socket: { remoteAddress: string } }).socket = { remoteAddress: "192.168.1.100" };
+      (req as unknown as { socket: { remoteAddress: string } }).socket = {
+        remoteAddress: "192.168.1.100",
+      };
 
       unregister = registerBlueBubblesWebhookTarget({
         account,
@@ -399,7 +508,9 @@ describe("BlueBubbles webhook monitor", () => {
         },
         { "x-password": "secret-token" },
       );
-      (req as unknown as { socket: { remoteAddress: string } }).socket = { remoteAddress: "192.168.1.100" };
+      (req as unknown as { socket: { remoteAddress: string } }).socket = {
+        remoteAddress: "192.168.1.100",
+      };
 
       unregister = registerBlueBubblesWebhookTarget({
         account,
@@ -432,7 +543,9 @@ describe("BlueBubbles webhook monitor", () => {
           guid: "msg-1",
         },
       });
-      (req as unknown as { socket: { remoteAddress: string } }).socket = { remoteAddress: "192.168.1.100" };
+      (req as unknown as { socket: { remoteAddress: string } }).socket = {
+        remoteAddress: "192.168.1.100",
+      };
 
       unregister = registerBlueBubblesWebhookTarget({
         account,
@@ -449,8 +562,192 @@ describe("BlueBubbles webhook monitor", () => {
       expect(res.statusCode).toBe(401);
     });
 
-    it("allows localhost requests without authentication", async () => {
+    it("rejects ambiguous routing when multiple targets match the same password", async () => {
+      const accountA = createMockAccount({ password: "secret-token" });
+      const accountB = createMockAccount({ password: "secret-token" });
+      const config: OpenClawConfig = {};
+      const core = createMockRuntime();
+      setBlueBubblesRuntime(core);
+
+      const sinkA = vi.fn();
+      const sinkB = vi.fn();
+
+      const req = createMockRequest("POST", "/bluebubbles-webhook?password=secret-token", {
+        type: "new-message",
+        data: {
+          text: "hello",
+          handle: { address: "+15551234567" },
+          isGroup: false,
+          isFromMe: false,
+          guid: "msg-1",
+        },
+      });
+      (req as unknown as { socket: { remoteAddress: string } }).socket = {
+        remoteAddress: "192.168.1.100",
+      };
+
+      const unregisterA = registerBlueBubblesWebhookTarget({
+        account: accountA,
+        config,
+        runtime: { log: vi.fn(), error: vi.fn() },
+        core,
+        path: "/bluebubbles-webhook",
+        statusSink: sinkA,
+      });
+      const unregisterB = registerBlueBubblesWebhookTarget({
+        account: accountB,
+        config,
+        runtime: { log: vi.fn(), error: vi.fn() },
+        core,
+        path: "/bluebubbles-webhook",
+        statusSink: sinkB,
+      });
+      unregister = () => {
+        unregisterA();
+        unregisterB();
+      };
+
+      const res = createMockResponse();
+      const handled = await handleBlueBubblesWebhookRequest(req, res);
+
+      expect(handled).toBe(true);
+      expect(res.statusCode).toBe(401);
+      expect(sinkA).not.toHaveBeenCalled();
+      expect(sinkB).not.toHaveBeenCalled();
+    });
+
+    it("does not route to passwordless targets when a password-authenticated target matches", async () => {
+      const accountStrict = createMockAccount({ password: "secret-token" });
+      const accountFallback = createMockAccount({ password: undefined });
+      const config: OpenClawConfig = {};
+      const core = createMockRuntime();
+      setBlueBubblesRuntime(core);
+
+      const sinkStrict = vi.fn();
+      const sinkFallback = vi.fn();
+
+      const req = createMockRequest("POST", "/bluebubbles-webhook?password=secret-token", {
+        type: "new-message",
+        data: {
+          text: "hello",
+          handle: { address: "+15551234567" },
+          isGroup: false,
+          isFromMe: false,
+          guid: "msg-1",
+        },
+      });
+      (req as unknown as { socket: { remoteAddress: string } }).socket = {
+        remoteAddress: "192.168.1.100",
+      };
+
+      const unregisterStrict = registerBlueBubblesWebhookTarget({
+        account: accountStrict,
+        config,
+        runtime: { log: vi.fn(), error: vi.fn() },
+        core,
+        path: "/bluebubbles-webhook",
+        statusSink: sinkStrict,
+      });
+      const unregisterFallback = registerBlueBubblesWebhookTarget({
+        account: accountFallback,
+        config,
+        runtime: { log: vi.fn(), error: vi.fn() },
+        core,
+        path: "/bluebubbles-webhook",
+        statusSink: sinkFallback,
+      });
+      unregister = () => {
+        unregisterStrict();
+        unregisterFallback();
+      };
+
+      const res = createMockResponse();
+      const handled = await handleBlueBubblesWebhookRequest(req, res);
+
+      expect(handled).toBe(true);
+      expect(res.statusCode).toBe(200);
+      expect(sinkStrict).toHaveBeenCalledTimes(1);
+      expect(sinkFallback).not.toHaveBeenCalled();
+    });
+
+    it("requires authentication for loopback requests when password is configured", async () => {
       const account = createMockAccount({ password: "secret-token" });
+      const config: OpenClawConfig = {};
+      const core = createMockRuntime();
+      setBlueBubblesRuntime(core);
+      for (const remoteAddress of ["127.0.0.1", "::1", "::ffff:127.0.0.1"]) {
+        const req = createMockRequest("POST", "/bluebubbles-webhook", {
+          type: "new-message",
+          data: {
+            text: "hello",
+            handle: { address: "+15551234567" },
+            isGroup: false,
+            isFromMe: false,
+            guid: "msg-1",
+          },
+        });
+        (req as unknown as { socket: { remoteAddress: string } }).socket = {
+          remoteAddress,
+        };
+
+        const loopbackUnregister = registerBlueBubblesWebhookTarget({
+          account,
+          config,
+          runtime: { log: vi.fn(), error: vi.fn() },
+          core,
+          path: "/bluebubbles-webhook",
+        });
+
+        const res = createMockResponse();
+        const handled = await handleBlueBubblesWebhookRequest(req, res);
+        expect(handled).toBe(true);
+        expect(res.statusCode).toBe(401);
+
+        loopbackUnregister();
+      }
+    });
+
+    it("rejects passwordless targets when the request looks proxied (has forwarding headers)", async () => {
+      const account = createMockAccount({ password: undefined });
+      const config: OpenClawConfig = {};
+      const core = createMockRuntime();
+      setBlueBubblesRuntime(core);
+
+      const req = createMockRequest(
+        "POST",
+        "/bluebubbles-webhook",
+        {
+          type: "new-message",
+          data: {
+            text: "hello",
+            handle: { address: "+15551234567" },
+            isGroup: false,
+            isFromMe: false,
+            guid: "msg-1",
+          },
+        },
+        { "x-forwarded-for": "203.0.113.10", host: "localhost" },
+      );
+      (req as unknown as { socket: { remoteAddress: string } }).socket = {
+        remoteAddress: "127.0.0.1",
+      };
+
+      unregister = registerBlueBubblesWebhookTarget({
+        account,
+        config,
+        runtime: { log: vi.fn(), error: vi.fn() },
+        core,
+        path: "/bluebubbles-webhook",
+      });
+
+      const res = createMockResponse();
+      const handled = await handleBlueBubblesWebhookRequest(req, res);
+      expect(handled).toBe(true);
+      expect(res.statusCode).toBe(401);
+    });
+
+    it("accepts passwordless targets for direct localhost loopback requests (no forwarding headers)", async () => {
+      const account = createMockAccount({ password: undefined });
       const config: OpenClawConfig = {};
       const core = createMockRuntime();
       setBlueBubblesRuntime(core);
@@ -465,8 +762,9 @@ describe("BlueBubbles webhook monitor", () => {
           guid: "msg-1",
         },
       });
-      // Localhost address
-      (req as unknown as { socket: { remoteAddress: string } }).socket = { remoteAddress: "127.0.0.1" };
+      (req as unknown as { socket: { remoteAddress: string } }).socket = {
+        remoteAddress: "127.0.0.1",
+      };
 
       unregister = registerBlueBubblesWebhookTarget({
         account,
@@ -478,7 +776,6 @@ describe("BlueBubbles webhook monitor", () => {
 
       const res = createMockResponse();
       const handled = await handleBlueBubblesWebhookRequest(req, res);
-
       expect(handled).toBe(true);
       expect(res.statusCode).toBe(200);
     });
@@ -1150,6 +1447,145 @@ describe("BlueBubbles webhook monitor", () => {
     });
   });
 
+  describe("group sender identity in envelope", () => {
+    it("includes sender in envelope body and group label as from for group messages", async () => {
+      const account = createMockAccount({ groupPolicy: "open" });
+      const config: OpenClawConfig = {};
+      const core = createMockRuntime();
+      setBlueBubblesRuntime(core);
+
+      unregister = registerBlueBubblesWebhookTarget({
+        account,
+        config,
+        runtime: { log: vi.fn(), error: vi.fn() },
+        core,
+        path: "/bluebubbles-webhook",
+      });
+
+      const payload = {
+        type: "new-message",
+        data: {
+          text: "hello everyone",
+          handle: { address: "+15551234567" },
+          senderName: "Alice",
+          isGroup: true,
+          isFromMe: false,
+          guid: "msg-1",
+          chatGuid: "iMessage;+;chat123456",
+          chatName: "Family Chat",
+          date: Date.now(),
+        },
+      };
+
+      const req = createMockRequest("POST", "/bluebubbles-webhook", payload);
+      const res = createMockResponse();
+
+      await handleBlueBubblesWebhookRequest(req, res);
+      await flushAsync();
+
+      // formatInboundEnvelope should be called with group label + id as from, and sender info
+      expect(mockFormatInboundEnvelope).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: "Family Chat id:iMessage;+;chat123456",
+          chatType: "group",
+          sender: { name: "Alice", id: "+15551234567" },
+        }),
+      );
+      // ConversationLabel should be the group label + id, not the sender
+      const callArgs = mockDispatchReplyWithBufferedBlockDispatcher.mock.calls[0][0];
+      expect(callArgs.ctx.ConversationLabel).toBe("Family Chat id:iMessage;+;chat123456");
+      expect(callArgs.ctx.SenderName).toBe("Alice");
+      // BodyForAgent should be raw text, not the envelope-formatted body
+      expect(callArgs.ctx.BodyForAgent).toBe("hello everyone");
+    });
+
+    it("falls back to group:peerId when chatName is missing", async () => {
+      const account = createMockAccount({ groupPolicy: "open" });
+      const config: OpenClawConfig = {};
+      const core = createMockRuntime();
+      setBlueBubblesRuntime(core);
+
+      unregister = registerBlueBubblesWebhookTarget({
+        account,
+        config,
+        runtime: { log: vi.fn(), error: vi.fn() },
+        core,
+        path: "/bluebubbles-webhook",
+      });
+
+      const payload = {
+        type: "new-message",
+        data: {
+          text: "hello",
+          handle: { address: "+15551234567" },
+          isGroup: true,
+          isFromMe: false,
+          guid: "msg-1",
+          chatGuid: "iMessage;+;chat123456",
+          date: Date.now(),
+        },
+      };
+
+      const req = createMockRequest("POST", "/bluebubbles-webhook", payload);
+      const res = createMockResponse();
+
+      await handleBlueBubblesWebhookRequest(req, res);
+      await flushAsync();
+
+      expect(mockFormatInboundEnvelope).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: expect.stringMatching(/^Group id:/),
+          chatType: "group",
+          sender: { name: undefined, id: "+15551234567" },
+        }),
+      );
+    });
+
+    it("uses sender as from label for DM messages", async () => {
+      const account = createMockAccount();
+      const config: OpenClawConfig = {};
+      const core = createMockRuntime();
+      setBlueBubblesRuntime(core);
+
+      unregister = registerBlueBubblesWebhookTarget({
+        account,
+        config,
+        runtime: { log: vi.fn(), error: vi.fn() },
+        core,
+        path: "/bluebubbles-webhook",
+      });
+
+      const payload = {
+        type: "new-message",
+        data: {
+          text: "hello",
+          handle: { address: "+15551234567" },
+          senderName: "Alice",
+          isGroup: false,
+          isFromMe: false,
+          guid: "msg-1",
+          date: Date.now(),
+        },
+      };
+
+      const req = createMockRequest("POST", "/bluebubbles-webhook", payload);
+      const res = createMockResponse();
+
+      await handleBlueBubblesWebhookRequest(req, res);
+      await flushAsync();
+
+      expect(mockFormatInboundEnvelope).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: "Alice id:+15551234567",
+          chatType: "direct",
+          sender: { name: "Alice", id: "+15551234567" },
+        }),
+      );
+      const callArgs = mockDispatchReplyWithBufferedBlockDispatcher.mock.calls[0][0];
+      expect(callArgs.ctx.ConversationLabel).toBe("Alice id:+15551234567");
+    });
+  });
+
   describe("inbound debouncing", () => {
     it("coalesces text-only then attachment webhook events by messageId", async () => {
       vi.useFakeTimers();
@@ -1159,13 +1595,20 @@ describe("BlueBubbles webhook monitor", () => {
         const core = createMockRuntime();
 
         // Use a timing-aware debouncer test double that respects debounceMs/buildKey/shouldDebounce.
+        // oxlint-disable-next-line typescript/no-explicit-any
         core.channel.debounce.createInboundDebouncer = vi.fn((params: any) => {
+          // oxlint-disable-next-line typescript/no-explicit-any
           type Item = any;
-          const buckets = new Map<string, { items: Item[]; timer: ReturnType<typeof setTimeout> | null }>();
+          const buckets = new Map<
+            string,
+            { items: Item[]; timer: ReturnType<typeof setTimeout> | null }
+          >();
 
           const flush = async (key: string) => {
             const bucket = buckets.get(key);
-            if (!bucket) return;
+            if (!bucket) {
+              return;
+            }
             if (bucket.timer) {
               clearTimeout(bucket.timer);
               bucket.timer = null;
@@ -1193,7 +1636,9 @@ describe("BlueBubbles webhook monitor", () => {
               const existing = buckets.get(key);
               const bucket = existing ?? { items: [], timer: null };
               bucket.items.push(item);
-              if (bucket.timer) clearTimeout(bucket.timer);
+              if (bucket.timer) {
+                clearTimeout(bucket.timer);
+              }
               bucket.timer = setTimeout(async () => {
                 await flush(key);
               }, params.debounceMs);
@@ -2231,9 +2676,9 @@ describe("BlueBubbles webhook monitor", () => {
     });
 
     it("throws when numeric short ID is missing and requireKnownShortId is set", () => {
-      expect(() =>
-        resolveBlueBubblesMessageId("999", { requireKnownShortId: true }),
-      ).toThrow(/short message id/i);
+      expect(() => resolveBlueBubblesMessageId("999", { requireKnownShortId: true })).toThrow(
+        /short message id/i,
+      );
     });
   });
 

@@ -1,31 +1,31 @@
+import type { Command } from "commander";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import type { Command } from "commander";
-import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
 import type { OpenClawConfig } from "../config/config.js";
-import { resolveArchiveKind } from "../infra/archive.js";
+import type { HookEntry } from "../hooks/types.js";
+import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
+import { loadConfig, writeConfigFile } from "../config/io.js";
 import {
   buildWorkspaceHookStatus,
   type HookStatusEntry,
   type HookStatusReport,
 } from "../hooks/hooks-status.js";
-import type { HookEntry } from "../hooks/types.js";
-import { loadWorkspaceHookEntries } from "../hooks/workspace.js";
-import { loadConfig, writeConfigFile } from "../config/io.js";
 import {
   installHooksFromNpmSpec,
   installHooksFromPath,
   resolveHookInstallDir,
 } from "../hooks/install.js";
 import { recordHookInstall } from "../hooks/installs.js";
+import { loadWorkspaceHookEntries } from "../hooks/workspace.js";
+import { resolveArchiveKind } from "../infra/archive.js";
 import { buildPluginStatusReport } from "../plugins/status.js";
 import { defaultRuntime } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
 import { renderTable } from "../terminal/table.js";
 import { theme } from "../terminal/theme.js";
-import { formatCliCommand } from "./command-format.js";
 import { resolveUserPath, shortenHomePath } from "../utils.js";
+import { formatCliCommand } from "./command-format.js";
 
 export type HooksListOptions = {
   json?: boolean;
@@ -66,9 +66,57 @@ function buildHooksReport(config: OpenClawConfig): HookStatusReport {
   return buildWorkspaceHookStatus(workspaceDir, { config, entries });
 }
 
+function resolveHookForToggle(
+  report: HookStatusReport,
+  hookName: string,
+  opts?: { requireEligible?: boolean },
+): HookStatusEntry {
+  const hook = report.hooks.find((h) => h.name === hookName);
+  if (!hook) {
+    throw new Error(`Hook "${hookName}" not found`);
+  }
+  if (hook.managedByPlugin) {
+    throw new Error(
+      `Hook "${hookName}" is managed by plugin "${hook.pluginId ?? "unknown"}" and cannot be enabled/disabled.`,
+    );
+  }
+  if (opts?.requireEligible && !hook.eligible) {
+    throw new Error(`Hook "${hookName}" is not eligible (missing requirements)`);
+  }
+  return hook;
+}
+
+function buildConfigWithHookEnabled(params: {
+  config: OpenClawConfig;
+  hookName: string;
+  enabled: boolean;
+  ensureHooksEnabled?: boolean;
+}): OpenClawConfig {
+  const entries = { ...params.config.hooks?.internal?.entries };
+  entries[params.hookName] = { ...entries[params.hookName], enabled: params.enabled };
+
+  const internal = {
+    ...params.config.hooks?.internal,
+    ...(params.ensureHooksEnabled ? { enabled: true } : {}),
+    entries,
+  };
+
+  return {
+    ...params.config,
+    hooks: {
+      ...params.config.hooks,
+      internal,
+    },
+  };
+}
+
 function formatHookStatus(hook: HookStatusEntry): string {
-  if (hook.eligible) return theme.success("✓ ready");
-  if (hook.disabled) return theme.warn("⏸ disabled");
+  if (hook.eligible) {
+    return theme.success("✓ ready");
+  }
+  if (hook.disabled) {
+    return theme.warn("⏸ disabled");
+  }
   return theme.error("✗ missing");
 }
 
@@ -78,7 +126,9 @@ function formatHookName(hook: HookStatusEntry): string {
 }
 
 function formatHookSource(hook: HookStatusEntry): string {
-  if (!hook.managedByPlugin) return hook.source;
+  if (!hook.managedByPlugin) {
+    return hook.source;
+  }
   return `plugin:${hook.pluginId ?? "unknown"}`;
 }
 
@@ -110,6 +160,31 @@ async function readInstalledPackageVersion(dir: string): Promise<string | undefi
   } catch {
     return undefined;
   }
+}
+
+type HookInternalEntryLike = Record<string, unknown> & { enabled?: boolean };
+
+function enableInternalHookEntries(config: OpenClawConfig, hookNames: string[]): OpenClawConfig {
+  const entries = { ...config.hooks?.internal?.entries } as Record<string, HookInternalEntryLike>;
+
+  for (const hookName of hookNames) {
+    entries[hookName] = {
+      ...entries[hookName],
+      enabled: true,
+    };
+  }
+
+  return {
+    ...config,
+    hooks: {
+      ...config.hooks,
+      internal: {
+        ...config.hooks?.internal,
+        enabled: true,
+        entries,
+      },
+    },
+  };
 }
 
 /**
@@ -326,13 +401,24 @@ export function formatHooksCheck(report: HookStatusReport, opts: HooksCheckOptio
     lines.push(theme.heading("Hooks not ready:"));
     for (const hook of notEligible) {
       const reasons = [];
-      if (hook.disabled) reasons.push("disabled");
-      if (hook.missing.bins.length > 0) reasons.push(`bins: ${hook.missing.bins.join(", ")}`);
-      if (hook.missing.anyBins.length > 0)
+      if (hook.disabled) {
+        reasons.push("disabled");
+      }
+      if (hook.missing.bins.length > 0) {
+        reasons.push(`bins: ${hook.missing.bins.join(", ")}`);
+      }
+      if (hook.missing.anyBins.length > 0) {
         reasons.push(`anyBins: ${hook.missing.anyBins.join(", ")}`);
-      if (hook.missing.env.length > 0) reasons.push(`env: ${hook.missing.env.join(", ")}`);
-      if (hook.missing.config.length > 0) reasons.push(`config: ${hook.missing.config.join(", ")}`);
-      if (hook.missing.os.length > 0) reasons.push(`os: ${hook.missing.os.join(", ")}`);
+      }
+      if (hook.missing.env.length > 0) {
+        reasons.push(`env: ${hook.missing.env.join(", ")}`);
+      }
+      if (hook.missing.config.length > 0) {
+        reasons.push(`config: ${hook.missing.config.join(", ")}`);
+      }
+      if (hook.missing.os.length > 0) {
+        reasons.push(`os: ${hook.missing.os.join(", ")}`);
+      }
       lines.push(`  ${hook.emoji ?? "🔗"} ${hook.name} - ${reasons.join("; ")}`);
     }
   }
@@ -342,38 +428,13 @@ export function formatHooksCheck(report: HookStatusReport, opts: HooksCheckOptio
 
 export async function enableHook(hookName: string): Promise<void> {
   const config = loadConfig();
-  const report = buildHooksReport(config);
-  const hook = report.hooks.find((h) => h.name === hookName);
-
-  if (!hook) {
-    throw new Error(`Hook "${hookName}" not found`);
-  }
-
-  if (hook.managedByPlugin) {
-    throw new Error(
-      `Hook "${hookName}" is managed by plugin "${hook.pluginId ?? "unknown"}" and cannot be enabled/disabled.`,
-    );
-  }
-
-  if (!hook.eligible) {
-    throw new Error(`Hook "${hookName}" is not eligible (missing requirements)`);
-  }
-
-  // Update config
-  const entries = { ...config.hooks?.internal?.entries };
-  entries[hookName] = { ...entries[hookName], enabled: true };
-
-  const nextConfig = {
-    ...config,
-    hooks: {
-      ...config.hooks,
-      internal: {
-        ...config.hooks?.internal,
-        enabled: true,
-        entries,
-      },
-    },
-  };
+  const hook = resolveHookForToggle(buildHooksReport(config), hookName, { requireEligible: true });
+  const nextConfig = buildConfigWithHookEnabled({
+    config,
+    hookName,
+    enabled: true,
+    ensureHooksEnabled: true,
+  });
 
   await writeConfigFile(nextConfig);
   defaultRuntime.log(
@@ -383,33 +444,8 @@ export async function enableHook(hookName: string): Promise<void> {
 
 export async function disableHook(hookName: string): Promise<void> {
   const config = loadConfig();
-  const report = buildHooksReport(config);
-  const hook = report.hooks.find((h) => h.name === hookName);
-
-  if (!hook) {
-    throw new Error(`Hook "${hookName}" not found`);
-  }
-
-  if (hook.managedByPlugin) {
-    throw new Error(
-      `Hook "${hookName}" is managed by plugin "${hook.pluginId ?? "unknown"}" and cannot be enabled/disabled.`,
-    );
-  }
-
-  // Update config
-  const entries = { ...config.hooks?.internal?.entries };
-  entries[hookName] = { ...entries[hookName], enabled: false };
-
-  const nextConfig = {
-    ...config,
-    hooks: {
-      ...config.hooks,
-      internal: {
-        ...config.hooks?.internal,
-        entries,
-      },
-    },
-  };
+  const hook = resolveHookForToggle(buildHooksReport(config), hookName);
+  const nextConfig = buildConfigWithHookEnabled({ config, hookName, enabled: false });
 
   await writeConfigFile(nextConfig);
   defaultRuntime.log(
@@ -548,24 +584,7 @@ export function registerHooksCli(program: Command): void {
             },
           };
 
-          for (const hookName of probe.hooks) {
-            next = {
-              ...next,
-              hooks: {
-                ...next.hooks,
-                internal: {
-                  ...next.hooks?.internal,
-                  entries: {
-                    ...next.hooks?.internal?.entries,
-                    [hookName]: {
-                      ...(next.hooks?.internal?.entries?.[hookName] as object | undefined),
-                      enabled: true,
-                    },
-                  },
-                },
-              },
-            };
-          }
+          next = enableInternalHookEntries(next, probe.hooks);
 
           next = recordHookInstall(next, {
             hookId: probe.hookPackId,
@@ -594,38 +613,7 @@ export function registerHooksCli(program: Command): void {
           process.exit(1);
         }
 
-        let next: OpenClawConfig = {
-          ...cfg,
-          hooks: {
-            ...cfg.hooks,
-            internal: {
-              ...cfg.hooks?.internal,
-              enabled: true,
-              entries: {
-                ...cfg.hooks?.internal?.entries,
-              },
-            },
-          },
-        };
-
-        for (const hookName of result.hooks) {
-          next = {
-            ...next,
-            hooks: {
-              ...next.hooks,
-              internal: {
-                ...next.hooks?.internal,
-                entries: {
-                  ...next.hooks?.internal?.entries,
-                  [hookName]: {
-                    ...(next.hooks?.internal?.entries?.[hookName] as object | undefined),
-                    enabled: true,
-                  },
-                },
-              },
-            },
-          };
-        }
+        let next = enableInternalHookEntries(cfg, result.hooks);
 
         const source: "archive" | "path" = resolveArchiveKind(resolved) ? "archive" : "path";
 
@@ -674,38 +662,7 @@ export function registerHooksCli(program: Command): void {
         process.exit(1);
       }
 
-      let next: OpenClawConfig = {
-        ...cfg,
-        hooks: {
-          ...cfg.hooks,
-          internal: {
-            ...cfg.hooks?.internal,
-            enabled: true,
-            entries: {
-              ...cfg.hooks?.internal?.entries,
-            },
-          },
-        },
-      };
-
-      for (const hookName of result.hooks) {
-        next = {
-          ...next,
-          hooks: {
-            ...next.hooks,
-            internal: {
-              ...next.hooks?.internal,
-              entries: {
-                ...next.hooks?.internal?.entries,
-                [hookName]: {
-                  ...(next.hooks?.internal?.entries?.[hookName] as object | undefined),
-                  enabled: true,
-                },
-              },
-            },
-          },
-        };
-      }
+      let next = enableInternalHookEntries(cfg, result.hooks);
 
       next = recordHookInstall(next, {
         hookId: result.hookPackId,
@@ -754,7 +711,13 @@ export function registerHooksCli(program: Command): void {
           continue;
         }
 
-        const installPath = record.installPath ?? resolveHookInstallDir(hookId);
+        let installPath: string;
+        try {
+          installPath = record.installPath ?? resolveHookInstallDir(hookId);
+        } catch (err) {
+          defaultRuntime.log(theme.error(`Invalid install path for "${hookId}": ${String(err)}`));
+          continue;
+        }
         const currentVersion = await readInstalledPackageVersion(installPath);
 
         if (opts.dryRun) {

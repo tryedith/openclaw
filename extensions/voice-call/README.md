@@ -3,6 +3,7 @@
 Official Voice Call plugin for **OpenClaw**.
 
 Providers:
+
 - **Twilio** (Programmable Voice + Media Streams)
 - **Telnyx** (Call Control v2)
 - **Plivo** (Voice API + XML transfer + GetInput speech)
@@ -41,18 +42,26 @@ Put under `plugins.entries.voice-call.config`:
 
   twilio: {
     accountSid: "ACxxxxxxxx",
-    authToken: "your_token"
+    authToken: "your_token",
+  },
+
+  telnyx: {
+    apiKey: "KEYxxxx",
+    connectionId: "CONNxxxx",
+    // Telnyx webhook public key from the Telnyx Mission Control Portal
+    // (Base64 string; can also be set via TELNYX_PUBLIC_KEY).
+    publicKey: "...",
   },
 
   plivo: {
     authId: "MAxxxxxxxxxxxxxxxxxxxx",
-    authToken: "your_token"
+    authToken: "your_token",
   },
 
   // Webhook server
   serve: {
     port: 3334,
-    path: "/voice/webhook"
+    path: "/voice/webhook",
   },
 
   // Public exposure (pick one):
@@ -61,19 +70,21 @@ Put under `plugins.entries.voice-call.config`:
   // tailscale: { mode: "funnel", path: "/voice/webhook" }
 
   outbound: {
-    defaultMode: "notify" // or "conversation"
+    defaultMode: "notify", // or "conversation"
   },
 
   streaming: {
     enabled: true,
-    streamPath: "/voice/stream"
-  }
+    streamPath: "/voice/stream",
+  },
 }
 ```
 
 Notes:
+
 - Twilio/Telnyx/Plivo require a **publicly reachable** webhook URL.
 - `mock` is a local dev provider (no network calls).
+- Telnyx requires `telnyx.publicKey` (or `TELNYX_PUBLIC_KEY`) unless `skipSignatureVerification` is true.
 - `tunnel.allowNgrokFreeTierLoopbackBypass: true` allows Twilio webhooks with invalid signatures **only** when `tunnel.provider="ngrok"` and `serve.bind` is loopback (ngrok local agent). Use for local dev only.
 
 ## TTS for calls
@@ -87,13 +98,14 @@ same shape — overrides deep-merge with `messages.tts`.
   tts: {
     provider: "openai",
     openai: {
-      voice: "alloy"
-    }
-  }
+      voice: "alloy",
+    },
+  },
 }
 ```
 
 Notes:
+
 - Edge TTS is ignored for voice calls (telephony audio needs PCM; Edge output is unreliable).
 - Core TTS is used when Twilio media streaming is enabled; otherwise calls fall back to provider native voices.
 
@@ -114,6 +126,7 @@ openclaw voicecall expose --mode funnel
 Tool name: `voice_call`
 
 Actions:
+
 - `initiate_call` (message, to?, mode?)
 - `continue_call` (callId, message)
 - `speak_to_user` (callId, message)

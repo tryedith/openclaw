@@ -1,30 +1,28 @@
-import { randomUUID } from "node:crypto";
+import { CURRENT_SESSION_VERSION, SessionManager } from "@mariozechner/pi-coding-agent";
 import fs from "node:fs";
 import path from "node:path";
-
-import { CURRENT_SESSION_VERSION } from "@mariozechner/pi-coding-agent";
+import type { MsgContext } from "../../auto-reply/templating.js";
+import type { GatewayRequestContext, GatewayRequestHandlers } from "./types.js";
 import { resolveSessionAgentId } from "../../agents/agent-scope.js";
-import { resolveEffectiveMessagesConfig, resolveIdentityName } from "../../agents/identity.js";
 import { resolveThinkingDefault } from "../../agents/model-selection.js";
 import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
 import { dispatchInboundMessage } from "../../auto-reply/dispatch.js";
-import { resolveMemoryFlushSettings } from "../../auto-reply/reply/memory-flush.js";
 import { createReplyDispatcher } from "../../auto-reply/reply/reply-dispatcher.js";
-import {
-  extractShortModelName,
-  type ResponsePrefixContext,
-} from "../../auto-reply/reply/response-prefix-template.js";
-import type { MsgContext } from "../../auto-reply/templating.js";
-import { SILENT_REPLY_TOKEN, isSilentReplyText } from "../../auto-reply/tokens.js";
+import { createReplyPrefixOptions } from "../../channels/reply-prefix.js";
+import { resolveSessionFilePath } from "../../config/sessions.js";
 import { resolveSendPolicy } from "../../sessions/send-policy.js";
 import { INTERNAL_MESSAGE_CHANNEL } from "../../utils/message-channel.js";
 import {
   abortChatRunById,
   abortChatRunsForSessionKey,
+  type ChatAbortControllerEntry,
+  type ChatAbortOps,
   isChatStopCommandText,
   resolveChatRunExpiresAtMs,
 } from "../chat-abort.js";
 import { type ChatImageContent, parseMessageWithAttachments } from "../chat-attachments.js";
+import { stripEnvelopeFromMessages } from "../chat-sanitize.js";
+import { GATEWAY_CLIENT_CAPS, hasGatewayClientCap } from "../protocol/client-info.js";
 import {
   ErrorCodes,
   errorShape,
@@ -41,9 +39,9 @@ import {
   readSessionMessages,
   resolveSessionModelRef,
 } from "../session-utils.js";
-import { stripEnvelopeFromMessages } from "../chat-sanitize.js";
 import { formatForLog } from "../ws-log.js";
-import type { GatewayRequestContext, GatewayRequestHandlers } from "./types.js";
+import { injectTimestamp, timestampOptsFromConfig } from "./agent-timestamp.js";
+import { normalizeRpcAttachmentsToChatAttachments } from "./attachment-normalize.js";
 
 type TranscriptAppendResult = {
   ok: boolean;
@@ -52,81 +50,66 @@ type TranscriptAppendResult = {
   error?: string;
 };
 
-function extractTextFromMessageContent(content: unknown): string {
-  if (typeof content === "string") return content;
-  if (Array.isArray(content)) {
-    return content
-      .map((part) => {
-        if (!part || typeof part !== "object") return "";
-        const block = part as { text?: unknown };
-        return typeof block.text === "string" ? block.text : "";
-      })
-      .filter(Boolean)
-      .join("\n");
+type AppendMessageArg = Parameters<SessionManager["appendMessage"]>[0];
+type AbortOrigin = "rpc" | "stop-command";
+
+type AbortedPartialSnapshot = {
+  runId: string;
+  sessionId: string;
+  text: string;
+  abortOrigin: AbortOrigin;
+};
+
+function stripDisallowedChatControlChars(message: string): string {
+  let output = "";
+  for (const char of message) {
+    const code = char.charCodeAt(0);
+    if (code === 9 || code === 10 || code === 13 || (code >= 32 && code !== 127)) {
+      output += char;
+    }
   }
-  if (content && typeof content === "object") {
-    const block = content as { text?: unknown };
-    return typeof block.text === "string" ? block.text : "";
-  }
-  return "";
+  return output;
 }
 
-export function replaceMemoryFlushTurnsWithNotice(
-  messages: Record<string, unknown>[],
-  memoryFlushPrompt?: string,
-): Record<string, unknown>[] {
-  if (!memoryFlushPrompt?.trim()) return messages;
-  const prompt = memoryFlushPrompt.trim();
-  const notice = "Memory maintenance run completed.";
-  const out: Record<string, unknown>[] = [];
-
-  for (let i = 0; i < messages.length; i++) {
-    const current = messages[i];
-    const next = messages[i + 1];
-    const currentRole = typeof current?.role === "string" ? current.role.toLowerCase() : "";
-    const nextRole = typeof next?.role === "string" ? next.role.toLowerCase() : "";
-    if (currentRole !== "user" || nextRole !== "assistant") {
-      out.push(current);
-      continue;
-    }
-
-    const currentText = extractTextFromMessageContent(current.content).trim();
-    const nextText = extractTextFromMessageContent(next.content).trim();
-    const isFlushPromptTurn = currentText.includes(prompt);
-    const isSilentFlushReply = isSilentReplyText(nextText, SILENT_REPLY_TOKEN);
-    if (!isFlushPromptTurn || !isSilentFlushReply) {
-      out.push(current);
-      continue;
-    }
-
-    const timestamp = typeof next.timestamp === "number" ? next.timestamp : current.timestamp;
-    out.push({
-      role: "system",
-      content: [{ type: "text", text: notice }],
-      ...(typeof timestamp === "number" ? { timestamp } : {}),
-    });
-    i += 1;
+export function sanitizeChatSendMessageInput(
+  message: string,
+): { ok: true; message: string } | { ok: false; error: string } {
+  const normalized = message.normalize("NFC");
+  if (normalized.includes("\u0000")) {
+    return { ok: false, error: "message must not contain null bytes" };
   }
-
-  return out;
+  return { ok: true, message: stripDisallowedChatControlChars(normalized) };
 }
 
 function resolveTranscriptPath(params: {
   sessionId: string;
   storePath: string | undefined;
   sessionFile?: string;
+  agentId?: string;
 }): string | null {
-  const { sessionId, storePath, sessionFile } = params;
-  if (sessionFile) return sessionFile;
-  if (!storePath) return null;
-  return path.join(path.dirname(storePath), `${sessionId}.jsonl`);
+  const { sessionId, storePath, sessionFile, agentId } = params;
+  if (!storePath && !sessionFile) {
+    return null;
+  }
+  try {
+    const sessionsDir = storePath ? path.dirname(storePath) : undefined;
+    return resolveSessionFilePath(
+      sessionId,
+      sessionFile ? { sessionFile } : undefined,
+      sessionsDir || agentId ? { sessionsDir, agentId } : undefined,
+    );
+  } catch {
+    return null;
+  }
 }
 
 function ensureTranscriptFile(params: { transcriptPath: string; sessionId: string }): {
   ok: boolean;
   error?: string;
 } {
-  if (fs.existsSync(params.transcriptPath)) return { ok: true };
+  if (fs.existsSync(params.transcriptPath)) {
+    return { ok: true };
+  }
   try {
     fs.mkdirSync(path.dirname(params.transcriptPath), { recursive: true });
     const header = {
@@ -143,18 +126,44 @@ function ensureTranscriptFile(params: { transcriptPath: string; sessionId: strin
   }
 }
 
+function transcriptHasIdempotencyKey(transcriptPath: string, idempotencyKey: string): boolean {
+  try {
+    const lines = fs.readFileSync(transcriptPath, "utf-8").split(/\r?\n/);
+    for (const line of lines) {
+      if (!line.trim()) {
+        continue;
+      }
+      const parsed = JSON.parse(line) as { message?: { idempotencyKey?: unknown } };
+      if (parsed?.message?.idempotencyKey === idempotencyKey) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function appendAssistantTranscriptMessage(params: {
   message: string;
   label?: string;
   sessionId: string;
   storePath: string | undefined;
   sessionFile?: string;
+  agentId?: string;
   createIfMissing?: boolean;
+  idempotencyKey?: string;
+  abortMeta?: {
+    aborted: true;
+    origin: AbortOrigin;
+    runId: string;
+  };
 }): TranscriptAppendResult {
   const transcriptPath = resolveTranscriptPath({
     sessionId: params.sessionId,
     storePath: params.storePath,
     sessionFile: params.sessionFile,
+    agentId: params.agentId,
   });
   if (!transcriptPath) {
     return { ok: false, error: "transcript path not resolved" };
@@ -173,30 +182,156 @@ function appendAssistantTranscriptMessage(params: {
     }
   }
 
+  if (params.idempotencyKey && transcriptHasIdempotencyKey(transcriptPath, params.idempotencyKey)) {
+    return { ok: true };
+  }
+
   const now = Date.now();
-  const messageId = randomUUID().slice(0, 8);
   const labelPrefix = params.label ? `[${params.label}]\n\n` : "";
-  const messageBody: Record<string, unknown> = {
+  const usage = {
+    input: 0,
+    output: 0,
+    cacheRead: 0,
+    cacheWrite: 0,
+    totalTokens: 0,
+    cost: {
+      input: 0,
+      output: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      total: 0,
+    },
+  };
+  const messageBody: AppendMessageArg & Record<string, unknown> = {
     role: "assistant",
     content: [{ type: "text", text: `${labelPrefix}${params.message}` }],
     timestamp: now,
-    stopReason: "injected",
-    usage: { input: 0, output: 0, totalTokens: 0 },
-  };
-  const transcriptEntry = {
-    type: "message",
-    id: messageId,
-    timestamp: new Date(now).toISOString(),
-    message: messageBody,
+    // Pi stopReason is a strict enum; this is not model output, but we still store it as a
+    // normal assistant message so it participates in the session parentId chain.
+    stopReason: "stop",
+    usage,
+    // Make these explicit so downstream tooling never treats this as model output.
+    api: "openai-responses",
+    provider: "openclaw",
+    model: "gateway-injected",
+    ...(params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {}),
+    ...(params.abortMeta
+      ? {
+          openclawAbort: {
+            aborted: true,
+            origin: params.abortMeta.origin,
+            runId: params.abortMeta.runId,
+          },
+        }
+      : {}),
   };
 
   try {
-    fs.appendFileSync(transcriptPath, `${JSON.stringify(transcriptEntry)}\n`, "utf-8");
+    // IMPORTANT: Use SessionManager so the entry is attached to the current leaf via parentId.
+    // Raw jsonl appends break the parent chain and can hide compaction summaries from context.
+    const sessionManager = SessionManager.open(transcriptPath);
+    const messageId = sessionManager.appendMessage(messageBody);
+    return { ok: true, messageId, message: messageBody };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
+}
 
-  return { ok: true, messageId, message: transcriptEntry.message };
+function collectSessionAbortPartials(params: {
+  chatAbortControllers: Map<string, ChatAbortControllerEntry>;
+  chatRunBuffers: Map<string, string>;
+  sessionKey: string;
+  abortOrigin: AbortOrigin;
+}): AbortedPartialSnapshot[] {
+  const out: AbortedPartialSnapshot[] = [];
+  for (const [runId, active] of params.chatAbortControllers) {
+    if (active.sessionKey !== params.sessionKey) {
+      continue;
+    }
+    const text = params.chatRunBuffers.get(runId);
+    if (!text || !text.trim()) {
+      continue;
+    }
+    out.push({
+      runId,
+      sessionId: active.sessionId,
+      text,
+      abortOrigin: params.abortOrigin,
+    });
+  }
+  return out;
+}
+
+function persistAbortedPartials(params: {
+  context: Pick<GatewayRequestContext, "logGateway">;
+  sessionKey: string;
+  snapshots: AbortedPartialSnapshot[];
+}) {
+  if (params.snapshots.length === 0) {
+    return;
+  }
+  const { storePath, entry } = loadSessionEntry(params.sessionKey);
+  for (const snapshot of params.snapshots) {
+    const sessionId = entry?.sessionId ?? snapshot.sessionId ?? snapshot.runId;
+    const appended = appendAssistantTranscriptMessage({
+      message: snapshot.text,
+      sessionId,
+      storePath,
+      sessionFile: entry?.sessionFile,
+      createIfMissing: true,
+      idempotencyKey: `${snapshot.runId}:assistant`,
+      abortMeta: {
+        aborted: true,
+        origin: snapshot.abortOrigin,
+        runId: snapshot.runId,
+      },
+    });
+    if (!appended.ok) {
+      params.context.logGateway.warn(
+        `chat.abort transcript append failed: ${appended.error ?? "unknown error"}`,
+      );
+    }
+  }
+}
+
+function createChatAbortOps(context: GatewayRequestContext): ChatAbortOps {
+  return {
+    chatAbortControllers: context.chatAbortControllers,
+    chatRunBuffers: context.chatRunBuffers,
+    chatDeltaSentAt: context.chatDeltaSentAt,
+    chatAbortedRuns: context.chatAbortedRuns,
+    removeChatRun: context.removeChatRun,
+    agentRunSeq: context.agentRunSeq,
+    broadcast: context.broadcast,
+    nodeSendToSession: context.nodeSendToSession,
+  };
+}
+
+function abortChatRunsForSessionKeyWithPartials(params: {
+  context: GatewayRequestContext;
+  ops: ChatAbortOps;
+  sessionKey: string;
+  abortOrigin: AbortOrigin;
+  stopReason?: string;
+}) {
+  const snapshots = collectSessionAbortPartials({
+    chatAbortControllers: params.context.chatAbortControllers,
+    chatRunBuffers: params.context.chatRunBuffers,
+    sessionKey: params.sessionKey,
+    abortOrigin: params.abortOrigin,
+  });
+  const res = abortChatRunsForSessionKey(params.ops, {
+    sessionKey: params.sessionKey,
+    stopReason: params.stopReason,
+  });
+  if (res.aborted) {
+    persistAbortedPartials({
+      context: params.context,
+      sessionKey: params.sessionKey,
+      snapshots,
+    });
+  }
+  return res;
 }
 
 function nextChatSeq(context: { agentRunSeq: Map<string, number> }, runId: string) {
@@ -221,6 +356,7 @@ function broadcastChatFinal(params: {
   };
   params.context.broadcast("chat", payload);
   params.context.nodeSendToSession(params.sessionKey, "chat", payload);
+  params.context.agentRunSeq.delete(params.runId);
 }
 
 function broadcastChatError(params: {
@@ -239,6 +375,7 @@ function broadcastChatError(params: {
   };
   params.context.broadcast("chat", payload);
   params.context.nodeSendToSession(params.sessionKey, "chat", payload);
+  params.context.agentRunSeq.delete(params.runId);
 }
 
 export const chatHandlers: GatewayRequestHandlers = {
@@ -263,24 +400,20 @@ export const chatHandlers: GatewayRequestHandlers = {
     const rawMessages =
       sessionId && storePath ? readSessionMessages(sessionId, storePath, entry?.sessionFile) : [];
     const hardMax = 1000;
-    const defaultLimit = hardMax;
+    const defaultLimit = 200;
     const requested = typeof limit === "number" ? limit : defaultLimit;
     const max = Math.min(hardMax, requested);
     const sliced = rawMessages.length > max ? rawMessages.slice(-max) : rawMessages;
     const sanitized = stripEnvelopeFromMessages(sliced);
-    const memoryFlushPrompt = resolveMemoryFlushSettings(cfg)?.prompt;
-    const normalized = replaceMemoryFlushTurnsWithNotice(
-      sanitized as Record<string, unknown>[],
-      memoryFlushPrompt,
-    );
-    const capped = capArrayByJsonBytes(normalized, getMaxChatHistoryMessagesBytes()).items;
+    const capped = capArrayByJsonBytes(sanitized, getMaxChatHistoryMessagesBytes()).items;
     let thinkingLevel = entry?.thinkingLevel;
     if (!thinkingLevel) {
       const configured = cfg.agents?.defaults?.thinkingDefault;
       if (configured) {
         thinkingLevel = configured;
       } else {
-        const { provider, model } = resolveSessionModelRef(cfg, entry);
+        const sessionAgentId = resolveSessionAgentId({ sessionKey, config: cfg });
+        const { provider, model } = resolveSessionModelRef(cfg, entry, sessionAgentId);
         const catalog = await context.loadGatewayModelCatalog();
         thinkingLevel = resolveThinkingDefault({
           cfg,
@@ -290,11 +423,13 @@ export const chatHandlers: GatewayRequestHandlers = {
         });
       }
     }
+    const verboseLevel = entry?.verboseLevel ?? cfg.agents?.defaults?.verboseDefault;
     respond(true, {
       sessionKey,
       sessionId,
       messages: capped,
       thinkingLevel,
+      verboseLevel,
     });
   },
   "chat.abort": ({ params, respond, context }) => {
@@ -309,25 +444,19 @@ export const chatHandlers: GatewayRequestHandlers = {
       );
       return;
     }
-    const { sessionKey, runId } = params as {
+    const { sessionKey: rawSessionKey, runId } = params as {
       sessionKey: string;
       runId?: string;
     };
 
-    const ops = {
-      chatAbortControllers: context.chatAbortControllers,
-      chatRunBuffers: context.chatRunBuffers,
-      chatDeltaSentAt: context.chatDeltaSentAt,
-      chatAbortedRuns: context.chatAbortedRuns,
-      removeChatRun: context.removeChatRun,
-      agentRunSeq: context.agentRunSeq,
-      broadcast: context.broadcast,
-      nodeSendToSession: context.nodeSendToSession,
-    };
+    const ops = createChatAbortOps(context);
 
     if (!runId) {
-      const res = abortChatRunsForSessionKey(ops, {
-        sessionKey,
+      const res = abortChatRunsForSessionKeyWithPartials({
+        context,
+        ops,
+        sessionKey: rawSessionKey,
+        abortOrigin: "rpc",
         stopReason: "rpc",
       });
       respond(true, { ok: true, aborted: res.aborted, runIds: res.runIds });
@@ -339,7 +468,7 @@ export const chatHandlers: GatewayRequestHandlers = {
       respond(true, { ok: true, aborted: false, runIds: [] });
       return;
     }
-    if (active.sessionKey !== sessionKey) {
+    if (active.sessionKey !== rawSessionKey) {
       respond(
         false,
         undefined,
@@ -348,11 +477,26 @@ export const chatHandlers: GatewayRequestHandlers = {
       return;
     }
 
+    const partialText = context.chatRunBuffers.get(runId);
     const res = abortChatRunById(ops, {
       runId,
-      sessionKey,
+      sessionKey: rawSessionKey,
       stopReason: "rpc",
     });
+    if (res.aborted && partialText && partialText.trim()) {
+      persistAbortedPartials({
+        context,
+        sessionKey: rawSessionKey,
+        snapshots: [
+          {
+            runId,
+            sessionId: active.sessionId,
+            text: partialText,
+            abortOrigin: "rpc",
+          },
+        ],
+      });
+    }
     respond(true, {
       ok: true,
       aborted: res.aborted,
@@ -385,26 +529,19 @@ export const chatHandlers: GatewayRequestHandlers = {
       timeoutMs?: number;
       idempotencyKey: string;
     };
-    const stopCommand = isChatStopCommandText(p.message);
-    const normalizedAttachments =
-      p.attachments
-        ?.map((a) => ({
-          type: typeof a?.type === "string" ? a.type : undefined,
-          mimeType: typeof a?.mimeType === "string" ? a.mimeType : undefined,
-          fileName: typeof a?.fileName === "string" ? a.fileName : undefined,
-          content:
-            typeof a?.content === "string"
-              ? a.content
-              : ArrayBuffer.isView(a?.content)
-                ? Buffer.from(
-                    a.content.buffer,
-                    a.content.byteOffset,
-                    a.content.byteLength,
-                  ).toString("base64")
-                : undefined,
-        }))
-        .filter((a) => a.content) ?? [];
-    const rawMessage = p.message.trim();
+    const sanitizedMessageResult = sanitizeChatSendMessageInput(p.message);
+    if (!sanitizedMessageResult.ok) {
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, sanitizedMessageResult.error),
+      );
+      return;
+    }
+    const inboundMessage = sanitizedMessageResult.message;
+    const stopCommand = isChatStopCommandText(inboundMessage);
+    const normalizedAttachments = normalizeRpcAttachmentsToChatAttachments(p.attachments);
+    const rawMessage = inboundMessage.trim();
     if (!rawMessage && normalizedAttachments.length === 0) {
       respond(
         false,
@@ -413,11 +550,11 @@ export const chatHandlers: GatewayRequestHandlers = {
       );
       return;
     }
-    let parsedMessage = p.message;
+    let parsedMessage = inboundMessage;
     let parsedImages: ChatImageContent[] = [];
     if (normalizedAttachments.length > 0) {
       try {
-        const parsed = await parseMessageWithAttachments(p.message, normalizedAttachments, {
+        const parsed = await parseMessageWithAttachments(inboundMessage, normalizedAttachments, {
           maxBytes: 5_000_000,
           log: context.logGateway,
         });
@@ -428,7 +565,8 @@ export const chatHandlers: GatewayRequestHandlers = {
         return;
       }
     }
-    const { cfg, entry } = loadSessionEntry(p.sessionKey);
+    const rawSessionKey = p.sessionKey;
+    const { cfg, entry, canonicalKey: sessionKey } = loadSessionEntry(rawSessionKey);
     const timeoutMs = resolveAgentTimeoutMs({
       cfg,
       overrideMs: p.timeoutMs,
@@ -439,7 +577,7 @@ export const chatHandlers: GatewayRequestHandlers = {
     const sendPolicy = resolveSendPolicy({
       cfg,
       entry,
-      sessionKey: p.sessionKey,
+      sessionKey,
       channel: entry?.channel,
       chatType: entry?.chatType,
     });
@@ -453,19 +591,13 @@ export const chatHandlers: GatewayRequestHandlers = {
     }
 
     if (stopCommand) {
-      const res = abortChatRunsForSessionKey(
-        {
-          chatAbortControllers: context.chatAbortControllers,
-          chatRunBuffers: context.chatRunBuffers,
-          chatDeltaSentAt: context.chatDeltaSentAt,
-          chatAbortedRuns: context.chatAbortedRuns,
-          removeChatRun: context.removeChatRun,
-          agentRunSeq: context.agentRunSeq,
-          broadcast: context.broadcast,
-          nodeSendToSession: context.nodeSendToSession,
-        },
-        { sessionKey: p.sessionKey, stopReason: "stop" },
-      );
+      const res = abortChatRunsForSessionKeyWithPartials({
+        context,
+        ops: createChatAbortOps(context),
+        sessionKey: rawSessionKey,
+        abortOrigin: "stop-command",
+        stopReason: "stop",
+      });
       respond(true, { ok: true, aborted: res.aborted, runIds: res.runIds });
       return;
     }
@@ -492,11 +624,10 @@ export const chatHandlers: GatewayRequestHandlers = {
       context.chatAbortControllers.set(clientRunId, {
         controller: abortController,
         sessionId: entry?.sessionId ?? clientRunId,
-        sessionKey: p.sessionKey,
+        sessionKey: rawSessionKey,
         startedAtMs: now,
         expiresAtMs: resolveChatRunExpiresAtMs({ now, timeoutMs }),
       });
-
       const ackPayload = {
         runId: clientRunId,
         status: "started" as const,
@@ -509,13 +640,18 @@ export const chatHandlers: GatewayRequestHandlers = {
       );
       const commandBody = injectThinking ? `/think ${p.thinking} ${parsedMessage}` : parsedMessage;
       const clientInfo = client?.connect?.client;
+      // Inject timestamp so agents know the current date/time.
+      // Only BodyForAgent gets the timestamp — Body stays raw for UI display.
+      // See: https://github.com/moltbot/moltbot/issues/3658
+      const stampedMessage = injectTimestamp(parsedMessage, timestampOptsFromConfig(cfg));
+
       const ctx: MsgContext = {
         Body: parsedMessage,
-        BodyForAgent: parsedMessage,
+        BodyForAgent: stampedMessage,
         BodyForCommands: commandBody,
         RawBody: parsedMessage,
         CommandBody: commandBody,
-        SessionKey: p.sessionKey,
+        SessionKey: sessionKey,
         Provider: INTERNAL_MESSAGE_CHANNEL,
         Surface: INTERNAL_MESSAGE_CHANNEL,
         OriginatingChannel: INTERNAL_MESSAGE_CHANNEL,
@@ -525,26 +661,32 @@ export const chatHandlers: GatewayRequestHandlers = {
         SenderId: clientInfo?.id,
         SenderName: clientInfo?.displayName,
         SenderUsername: clientInfo?.displayName,
+        GatewayClientScopes: client?.connect?.scopes,
       };
 
       const agentId = resolveSessionAgentId({
-        sessionKey: p.sessionKey,
+        sessionKey,
         config: cfg,
       });
-      let prefixContext: ResponsePrefixContext = {
-        identityName: resolveIdentityName(cfg, agentId),
-      };
+      const { onModelSelected, ...prefixOptions } = createReplyPrefixOptions({
+        cfg,
+        agentId,
+        channel: INTERNAL_MESSAGE_CHANNEL,
+      });
       const finalReplyParts: string[] = [];
       const dispatcher = createReplyDispatcher({
-        responsePrefix: resolveEffectiveMessagesConfig(cfg, agentId).responsePrefix,
-        responsePrefixContextProvider: () => prefixContext,
+        ...prefixOptions,
         onError: (err) => {
           context.logGateway.warn(`webchat dispatch failed: ${formatForLog(err)}`);
         },
         deliver: async (payload, info) => {
-          if (info.kind !== "final") return;
+          if (info.kind !== "final") {
+            return;
+          }
           const text = payload.text?.trim() ?? "";
-          if (!text) return;
+          if (!text) {
+            return;
+          }
           finalReplyParts.push(text);
         },
       });
@@ -559,15 +701,26 @@ export const chatHandlers: GatewayRequestHandlers = {
           abortSignal: abortController.signal,
           images: parsedImages.length > 0 ? parsedImages : undefined,
           disableBlockStreaming: true,
-          onAgentRunStart: () => {
+          onAgentRunStart: (runId) => {
             agentRunStarted = true;
+            const connId = typeof client?.connId === "string" ? client.connId : undefined;
+            const wantsToolEvents = hasGatewayClientCap(
+              client?.connect?.caps,
+              GATEWAY_CLIENT_CAPS.TOOL_EVENTS,
+            );
+            if (connId && wantsToolEvents) {
+              context.registerToolEventRecipient(runId, connId);
+              // Register for any other active runs *in the same session* so
+              // late-joining clients (e.g. page refresh mid-response) receive
+              // in-progress tool events without leaking cross-session data.
+              for (const [activeRunId, active] of context.chatAbortControllers) {
+                if (activeRunId !== runId && active.sessionKey === p.sessionKey) {
+                  context.registerToolEventRecipient(activeRunId, connId);
+                }
+              }
+            }
           },
-          onModelSelected: (ctx) => {
-            prefixContext.provider = ctx.provider;
-            prefixContext.model = extractShortModelName(ctx.model);
-            prefixContext.modelFull = `${ctx.provider}/${ctx.model}`;
-            prefixContext.thinkingLevel = ctx.thinkLevel ?? "off";
-          },
+          onModelSelected,
         },
       })
         .then(() => {
@@ -579,15 +732,15 @@ export const chatHandlers: GatewayRequestHandlers = {
               .trim();
             let message: Record<string, unknown> | undefined;
             if (combinedReply) {
-              const { storePath: latestStorePath, entry: latestEntry } = loadSessionEntry(
-                p.sessionKey,
-              );
+              const { storePath: latestStorePath, entry: latestEntry } =
+                loadSessionEntry(sessionKey);
               const sessionId = latestEntry?.sessionId ?? entry?.sessionId ?? clientRunId;
               const appended = appendAssistantTranscriptMessage({
                 message: combinedReply,
                 sessionId,
                 storePath: latestStorePath,
                 sessionFile: latestEntry?.sessionFile,
+                agentId,
                 createIfMissing: true,
               });
               if (appended.ok) {
@@ -601,7 +754,9 @@ export const chatHandlers: GatewayRequestHandlers = {
                   role: "assistant",
                   content: [{ type: "text", text: combinedReply }],
                   timestamp: now,
-                  stopReason: "injected",
+                  // Keep this compatible with Pi stopReason enums even though this message isn't
+                  // persisted to the transcript due to the append failure.
+                  stopReason: "stop",
                   usage: { input: 0, output: 0, totalTokens: 0 },
                 };
               }
@@ -609,7 +764,7 @@ export const chatHandlers: GatewayRequestHandlers = {
             broadcastChatFinal({
               context,
               runId: clientRunId,
-              sessionKey: p.sessionKey,
+              sessionKey: rawSessionKey,
               message,
             });
           }
@@ -634,7 +789,7 @@ export const chatHandlers: GatewayRequestHandlers = {
           broadcastChatError({
             context,
             runId: clientRunId,
-            sessionKey: p.sessionKey,
+            sessionKey: rawSessionKey,
             errorMessage: String(err),
           });
         })
@@ -679,69 +834,46 @@ export const chatHandlers: GatewayRequestHandlers = {
     };
 
     // Load session to find transcript file
-    const { storePath, entry } = loadSessionEntry(p.sessionKey);
+    const rawSessionKey = p.sessionKey;
+    const { cfg, storePath, entry } = loadSessionEntry(rawSessionKey);
     const sessionId = entry?.sessionId;
     if (!sessionId || !storePath) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "session not found"));
       return;
     }
 
-    // Resolve transcript path
-    const transcriptPath = entry?.sessionFile
-      ? entry.sessionFile
-      : path.join(path.dirname(storePath), `${sessionId}.jsonl`);
-
-    if (!fs.existsSync(transcriptPath)) {
+    const appended = appendAssistantTranscriptMessage({
+      message: p.message,
+      label: p.label,
+      sessionId,
+      storePath,
+      sessionFile: entry?.sessionFile,
+      agentId: resolveSessionAgentId({ sessionKey: rawSessionKey, config: cfg }),
+      createIfMissing: false,
+    });
+    if (!appended.ok || !appended.messageId || !appended.message) {
       respond(
         false,
         undefined,
-        errorShape(ErrorCodes.INVALID_REQUEST, "transcript file not found"),
-      );
-      return;
-    }
-
-    // Build transcript entry
-    const now = Date.now();
-    const messageId = randomUUID().slice(0, 8);
-    const labelPrefix = p.label ? `[${p.label}]\n\n` : "";
-    const messageBody: Record<string, unknown> = {
-      role: "assistant",
-      content: [{ type: "text", text: `${labelPrefix}${p.message}` }],
-      timestamp: now,
-      stopReason: "injected",
-      usage: { input: 0, output: 0, totalTokens: 0 },
-    };
-    const transcriptEntry = {
-      type: "message",
-      id: messageId,
-      timestamp: new Date(now).toISOString(),
-      message: messageBody,
-    };
-
-    // Append to transcript file
-    try {
-      fs.appendFileSync(transcriptPath, `${JSON.stringify(transcriptEntry)}\n`, "utf-8");
-    } catch (err) {
-      const errMessage = err instanceof Error ? err.message : String(err);
-      respond(
-        false,
-        undefined,
-        errorShape(ErrorCodes.UNAVAILABLE, `failed to write transcript: ${errMessage}`),
+        errorShape(
+          ErrorCodes.UNAVAILABLE,
+          `failed to write transcript: ${appended.error ?? "unknown error"}`,
+        ),
       );
       return;
     }
 
     // Broadcast to webchat for immediate UI update
     const chatPayload = {
-      runId: `inject-${messageId}`,
-      sessionKey: p.sessionKey,
+      runId: `inject-${appended.messageId}`,
+      sessionKey: rawSessionKey,
       seq: 0,
       state: "final" as const,
-      message: transcriptEntry.message,
+      message: appended.message,
     };
     context.broadcast("chat", chatPayload);
-    context.nodeSendToSession(p.sessionKey, "chat", chatPayload);
+    context.nodeSendToSession(rawSessionKey, "chat", chatPayload);
 
-    respond(true, { ok: true, messageId });
+    respond(true, { ok: true, messageId: appended.messageId });
   },
 };

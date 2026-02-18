@@ -1,4 +1,5 @@
 import { normalizeVerboseLevel } from "../auto-reply/thinking.js";
+import { isSilentReplyText, SILENT_REPLY_TOKEN } from "../auto-reply/tokens.js";
 import { loadConfig } from "../config/config.js";
 import { type AgentEventPayload, getAgentRunContext } from "../infra/agent-events.js";
 import { resolveHeartbeatVisibility } from "../infra/heartbeat-visibility.js";
@@ -11,7 +12,9 @@ import { formatForLog } from "./ws-log.js";
  */
 function shouldSuppressHeartbeatBroadcast(runId: string): boolean {
   const runContext = getAgentRunContext(runId);
-  if (!runContext?.isHeartbeat) return false;
+  if (!runContext?.isHeartbeat) {
+    return false;
+  }
 
   try {
     const cfg = loadConfig();
@@ -21,11 +24,6 @@ function shouldSuppressHeartbeatBroadcast(runId: string): boolean {
     // Default to suppressing if we can't load config
     return true;
   }
-}
-
-function isInternalMemoryFlushRun(runId: string): boolean {
-  const runContext = getAgentRunContext(runId);
-  return runContext?.internalRunType === "memory_flush";
 }
 
 export type ChatRunEntry = {
@@ -57,22 +55,32 @@ export function createChatRunRegistry(): ChatRunRegistry {
 
   const shift = (sessionId: string) => {
     const queue = chatRunSessions.get(sessionId);
-    if (!queue || queue.length === 0) return undefined;
+    if (!queue || queue.length === 0) {
+      return undefined;
+    }
     const entry = queue.shift();
-    if (!queue.length) chatRunSessions.delete(sessionId);
+    if (!queue.length) {
+      chatRunSessions.delete(sessionId);
+    }
     return entry;
   };
 
   const remove = (sessionId: string, clientRunId: string, sessionKey?: string) => {
     const queue = chatRunSessions.get(sessionId);
-    if (!queue || queue.length === 0) return undefined;
+    if (!queue || queue.length === 0) {
+      return undefined;
+    }
     const idx = queue.findIndex(
       (entry) =>
         entry.clientRunId === clientRunId && (sessionKey ? entry.sessionKey === sessionKey : true),
     );
-    if (idx < 0) return undefined;
+    if (idx < 0) {
+      return undefined;
+    }
     const [entry] = queue.splice(idx, 1);
-    if (!queue.length) chatRunSessions.delete(sessionId);
+    if (!queue.length) {
+      chatRunSessions.delete(sessionId);
+    }
     return entry;
   };
 
@@ -113,6 +121,79 @@ export function createChatRunState(): ChatRunState {
   };
 }
 
+export type ToolEventRecipientRegistry = {
+  add: (runId: string, connId: string) => void;
+  get: (runId: string) => ReadonlySet<string> | undefined;
+  markFinal: (runId: string) => void;
+};
+
+type ToolRecipientEntry = {
+  connIds: Set<string>;
+  updatedAt: number;
+  finalizedAt?: number;
+};
+
+const TOOL_EVENT_RECIPIENT_TTL_MS = 10 * 60 * 1000;
+const TOOL_EVENT_RECIPIENT_FINAL_GRACE_MS = 30 * 1000;
+
+export function createToolEventRecipientRegistry(): ToolEventRecipientRegistry {
+  const recipients = new Map<string, ToolRecipientEntry>();
+
+  const prune = () => {
+    if (recipients.size === 0) {
+      return;
+    }
+    const now = Date.now();
+    for (const [runId, entry] of recipients) {
+      const cutoff = entry.finalizedAt
+        ? entry.finalizedAt + TOOL_EVENT_RECIPIENT_FINAL_GRACE_MS
+        : entry.updatedAt + TOOL_EVENT_RECIPIENT_TTL_MS;
+      if (now >= cutoff) {
+        recipients.delete(runId);
+      }
+    }
+  };
+
+  const add = (runId: string, connId: string) => {
+    if (!runId || !connId) {
+      return;
+    }
+    const now = Date.now();
+    const existing = recipients.get(runId);
+    if (existing) {
+      existing.connIds.add(connId);
+      existing.updatedAt = now;
+    } else {
+      recipients.set(runId, {
+        connIds: new Set([connId]),
+        updatedAt: now,
+      });
+    }
+    prune();
+  };
+
+  const get = (runId: string) => {
+    const entry = recipients.get(runId);
+    if (!entry) {
+      return undefined;
+    }
+    entry.updatedAt = Date.now();
+    prune();
+    return entry.connIds;
+  };
+
+  const markFinal = (runId: string) => {
+    const entry = recipients.get(runId);
+    if (!entry) {
+      return;
+    }
+    entry.finalizedAt = Date.now();
+    prune();
+  };
+
+  return { add, get, markFinal };
+}
+
 export type ChatEventBroadcast = (
   event: string,
   payload: unknown,
@@ -123,26 +204,40 @@ export type NodeSendToSession = (sessionKey: string, event: string, payload: unk
 
 export type AgentEventHandlerOptions = {
   broadcast: ChatEventBroadcast;
+  broadcastToConnIds: (
+    event: string,
+    payload: unknown,
+    connIds: ReadonlySet<string>,
+    opts?: { dropIfSlow?: boolean },
+  ) => void;
   nodeSendToSession: NodeSendToSession;
   agentRunSeq: Map<string, number>;
   chatRunState: ChatRunState;
   resolveSessionKeyForRun: (runId: string) => string | undefined;
   clearAgentRunContext: (runId: string) => void;
+  toolEventRecipients: ToolEventRecipientRegistry;
 };
 
 export function createAgentEventHandler({
   broadcast,
+  broadcastToConnIds,
   nodeSendToSession,
   agentRunSeq,
   chatRunState,
   resolveSessionKeyForRun,
   clearAgentRunContext,
+  toolEventRecipients,
 }: AgentEventHandlerOptions) {
   const emitChatDelta = (sessionKey: string, clientRunId: string, seq: number, text: string) => {
+    if (isSilentReplyText(text, SILENT_REPLY_TOKEN)) {
+      return;
+    }
     chatRunState.buffers.set(clientRunId, text);
     const now = Date.now();
     const last = chatRunState.deltaSentAt.get(clientRunId) ?? 0;
-    if (now - last < 150) return;
+    if (now - last < 150) {
+      return;
+    }
     chatRunState.deltaSentAt.set(clientRunId, now);
     const payload = {
       runId: clientRunId,
@@ -170,6 +265,7 @@ export function createAgentEventHandler({
     error?: unknown,
   ) => {
     const text = chatRunState.buffers.get(clientRunId)?.trim() ?? "";
+    const shouldSuppressSilent = isSilentReplyText(text, SILENT_REPLY_TOKEN);
     chatRunState.buffers.delete(clientRunId);
     chatRunState.deltaSentAt.delete(clientRunId);
     if (jobState === "done") {
@@ -178,13 +274,14 @@ export function createAgentEventHandler({
         sessionKey,
         seq,
         state: "final" as const,
-        message: text
-          ? {
-              role: "assistant",
-              content: [{ type: "text", text }],
-              timestamp: Date.now(),
-            }
-          : undefined,
+        message:
+          text && !shouldSuppressSilent
+            ? {
+                role: "assistant",
+                content: [{ type: "text", text }],
+                timestamp: Date.now(),
+              }
+            : undefined,
       };
       // Suppress webchat broadcast for heartbeat runs when showOk is false
       if (!shouldSuppressHeartbeatBroadcast(clientRunId)) {
@@ -204,36 +301,25 @@ export function createAgentEventHandler({
     nodeSendToSession(sessionKey, "chat", payload);
   };
 
-  const emitChatNotice = (sessionKey: string, clientRunId: string, seq: number, text: string) => {
-    const payload = {
-      runId: clientRunId,
-      sessionKey,
-      seq,
-      state: "notice" as const,
-      noticeType: "memory_flush" as const,
-      message: {
-        role: "system",
-        content: [{ type: "text", text }],
-        timestamp: Date.now(),
-      },
-    };
-    broadcast("chat", payload);
-    nodeSendToSession(sessionKey, "chat", payload);
-  };
-
-  const shouldEmitToolEvents = (runId: string, sessionKey?: string) => {
+  const resolveToolVerboseLevel = (runId: string, sessionKey?: string) => {
     const runContext = getAgentRunContext(runId);
     const runVerbose = normalizeVerboseLevel(runContext?.verboseLevel);
-    if (runVerbose) return runVerbose === "on";
-    if (!sessionKey) return false;
+    if (runVerbose) {
+      return runVerbose;
+    }
+    if (!sessionKey) {
+      return "off";
+    }
     try {
       const { cfg, entry } = loadSessionEntry(sessionKey);
       const sessionVerbose = normalizeVerboseLevel(entry?.verboseLevel);
-      if (sessionVerbose) return sessionVerbose === "on";
+      if (sessionVerbose) {
+        return sessionVerbose;
+      }
       const defaultVerbose = normalizeVerboseLevel(cfg.agents?.defaults?.verboseDefault);
-      return defaultVerbose === "on";
+      return defaultVerbose ?? "off";
     } catch {
-      return false;
+      return "off";
     }
   };
 
@@ -243,14 +329,21 @@ export function createAgentEventHandler({
     const clientRunId = chatLink?.clientRunId ?? evt.runId;
     const isAborted =
       chatRunState.abortedRuns.has(clientRunId) || chatRunState.abortedRuns.has(evt.runId);
-    const isInternalMemoryFlush = isInternalMemoryFlushRun(evt.runId);
     // Include sessionKey so Control UI can filter tool streams per session.
     const agentPayload = sessionKey ? { ...evt, sessionKey } : evt;
     const last = agentRunSeq.get(evt.runId) ?? 0;
-    if (evt.stream === "tool" && !shouldEmitToolEvents(evt.runId, sessionKey)) {
-      agentRunSeq.set(evt.runId, evt.seq);
-      return;
-    }
+    const isToolEvent = evt.stream === "tool";
+    const toolVerbose = isToolEvent ? resolveToolVerboseLevel(evt.runId, sessionKey) : "off";
+    // Build tool payload: strip result/partialResult unless verbose=full
+    const toolPayload =
+      isToolEvent && toolVerbose !== "full"
+        ? (() => {
+            const data = evt.data ? { ...evt.data } : {};
+            delete data.result;
+            delete data.partialResult;
+            return sessionKey ? { ...evt, sessionKey, data } : { ...evt, data };
+          })()
+        : agentPayload;
     if (evt.seq !== last + 1) {
       broadcast("agent", {
         runId: evt.runId,
@@ -265,18 +358,29 @@ export function createAgentEventHandler({
       });
     }
     agentRunSeq.set(evt.runId, evt.seq);
-    broadcast("agent", agentPayload);
+    if (isToolEvent) {
+      // Always broadcast tool events to registered WS recipients with
+      // tool-events capability, regardless of verboseLevel. The verbose
+      // setting only controls whether tool details are sent as channel
+      // messages to messaging surfaces (Telegram, Discord, etc.).
+      const recipients = toolEventRecipients.get(evt.runId);
+      if (recipients && recipients.size > 0) {
+        broadcastToConnIds("agent", toolPayload, recipients);
+      }
+    } else {
+      broadcast("agent", agentPayload);
+    }
 
     const lifecyclePhase =
       evt.stream === "lifecycle" && typeof evt.data?.phase === "string" ? evt.data.phase : null;
 
     if (sessionKey) {
-      nodeSendToSession(sessionKey, "agent", agentPayload);
-      if (isInternalMemoryFlush) {
-        if (lifecyclePhase === "end") {
-          emitChatNotice(sessionKey, clientRunId, evt.seq, "Memory maintenance run completed.");
-        }
-      } else if (!isAborted && evt.stream === "assistant" && typeof evt.data?.text === "string") {
+      // Send tool events to node/channel subscribers only when verbose is enabled;
+      // WS clients already received the event above via broadcastToConnIds.
+      if (!isToolEvent || toolVerbose !== "off") {
+        nodeSendToSession(sessionKey, "agent", isToolEvent ? toolPayload : agentPayload);
+      }
+      if (!isAborted && evt.stream === "assistant" && typeof evt.data?.text === "string") {
         emitChatDelta(sessionKey, clientRunId, evt.seq, evt.data.text);
       } else if (!isAborted && (lifecyclePhase === "end" || lifecyclePhase === "error")) {
         if (chatLink) {
@@ -313,7 +417,10 @@ export function createAgentEventHandler({
     }
 
     if (lifecyclePhase === "end" || lifecyclePhase === "error") {
+      toolEventRecipients.markFinal(evt.runId);
       clearAgentRunContext(evt.runId);
+      agentRunSeq.delete(evt.runId);
+      agentRunSeq.delete(clientRunId);
     }
   };
 }

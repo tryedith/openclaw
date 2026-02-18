@@ -1,12 +1,12 @@
-import { listChannelDocks } from "../channels/dock.js";
-import { getActivePluginRegistry } from "../plugins/runtime.js";
-import { listThinkingLevels } from "./thinking.js";
-import { COMMAND_ARG_FORMATTERS } from "./commands-args.js";
 import type {
   ChatCommandDefinition,
   CommandCategory,
   CommandScope,
 } from "./commands-registry.types.js";
+import { listChannelDocks } from "../channels/dock.js";
+import { getActivePluginRegistry } from "../plugins/runtime.js";
+import { COMMAND_ARG_FORMATTERS } from "./commands-args.js";
+import { listThinkingLevels } from "./thinking.js";
 
 type DefineChatCommandInput = {
   key: string;
@@ -66,9 +66,13 @@ function registerAlias(commands: ChatCommandDefinition[], key: string, ...aliase
   const existing = new Set(command.textAliases.map((alias) => alias.trim().toLowerCase()));
   for (const alias of aliases) {
     const trimmed = alias.trim();
-    if (!trimmed) continue;
+    if (!trimmed) {
+      continue;
+    }
     const lowered = trimmed.toLowerCase();
-    if (existing.has(lowered)) continue;
+    if (existing.has(lowered)) {
+      continue;
+    }
     existing.add(lowered);
     command.textAliases.push(trimmed);
   }
@@ -245,15 +249,15 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "subagents",
       nativeName: "subagents",
-      description: "List/stop/log/info subagent runs for this session.",
+      description: "List, kill, log, or steer subagent runs for this session.",
       textAlias: "/subagents",
       category: "management",
       args: [
         {
           name: "action",
-          description: "list | stop | log | info | send",
+          description: "list | kill | log | info | send | steer",
           type: "string",
-          choices: ["list", "stop", "log", "info", "send"],
+          choices: ["list", "kill", "log", "info", "send", "steer"],
         },
         {
           name: "target",
@@ -268,6 +272,41 @@ function buildChatCommands(): ChatCommandDefinition[] {
         },
       ],
       argsMenu: "auto",
+    }),
+    defineChatCommand({
+      key: "kill",
+      nativeName: "kill",
+      description: "Kill a running subagent (or all).",
+      textAlias: "/kill",
+      category: "management",
+      args: [
+        {
+          name: "target",
+          description: "Label, run id, index, or all",
+          type: "string",
+        },
+      ],
+      argsMenu: "auto",
+    }),
+    defineChatCommand({
+      key: "steer",
+      nativeName: "steer",
+      description: "Send guidance to a running subagent.",
+      textAlias: "/steer",
+      category: "management",
+      args: [
+        {
+          name: "target",
+          description: "Label, run id, or index",
+          type: "string",
+        },
+        {
+          name: "message",
+          description: "Steering message",
+          type: "string",
+          captureRemaining: true,
+        },
+      ],
     }),
     defineChatCommand({
       key: "config",
@@ -405,9 +444,9 @@ function buildChatCommands(): ChatCommandDefinition[] {
     }),
     defineChatCommand({
       key: "compact",
+      nativeName: "compact",
       description: "Compact the session context.",
       textAlias: "/compact",
-      scope: "text",
       category: "session",
       args: [
         {
@@ -578,6 +617,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
   registerAlias(commands, "verbose", "/v");
   registerAlias(commands, "reasoning", "/reason");
   registerAlias(commands, "elevated", "/elev");
+  registerAlias(commands, "steer", "/tell");
 
   assertCommandRegistry(commands);
   return commands;
@@ -585,7 +625,9 @@ function buildChatCommands(): ChatCommandDefinition[] {
 
 export function getChatCommands(): ChatCommandDefinition[] {
   const registry = getActivePluginRegistry();
-  if (cachedCommands && registry === cachedRegistry) return cachedCommands;
+  if (cachedCommands && registry === cachedRegistry) {
+    return cachedCommands;
+  }
   const commands = buildChatCommands();
   cachedCommands = commands;
   cachedRegistry = registry;
