@@ -41,7 +41,7 @@ function rawDataToText(data: WebSocket.RawData): string {
   if (Array.isArray(data)) {
     return Buffer.concat(data).toString("utf8");
   }
-  return Buffer.from(data).toString("utf8");
+  return Buffer.from(data as ArrayBuffer).toString("utf8");
 }
 
 /**
