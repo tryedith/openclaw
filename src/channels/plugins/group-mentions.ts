@@ -9,6 +9,7 @@ import type {
   GroupToolPolicyBySenderConfig,
   GroupToolPolicyConfig,
 } from "../../config/types.tools.js";
+import { normalizeAtHashSlug, normalizeHyphenSlug } from "../../shared/string-normalization.js";
 import { resolveSlackAccount } from "../../slack/accounts.js";
 
 type GroupMentionParams = {
@@ -24,27 +25,14 @@ type GroupMentionParams = {
 };
 
 function normalizeDiscordSlug(value?: string | null) {
-  if (!value) return "";
-  let text = value.trim().toLowerCase();
-  if (!text) return "";
-  text = text.replace(/^[@#]+/, "");
-  text = text.replace(/[\s_]+/g, "-");
-  text = text.replace(/[^a-z0-9-]+/g, "-");
-  text = text.replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "");
-  return text;
-}
-
-function normalizeSlackSlug(raw?: string | null) {
-  const trimmed = raw?.trim().toLowerCase() ?? "";
-  if (!trimmed) return "";
-  const dashed = trimmed.replace(/\s+/g, "-");
-  const cleaned = dashed.replace(/[^a-z0-9#@._+-]+/g, "-");
-  return cleaned.replace(/-{2,}/g, "-").replace(/^[-.]+|[-.]+$/g, "");
+  return normalizeAtHashSlug(value);
 }
 
 function parseTelegramGroupId(value?: string | null) {
   const raw = value?.trim() ?? "";
-  if (!raw) return { chatId: undefined, topicId: undefined };
+  if (!raw) {
+    return { chatId: undefined, topicId: undefined };
+  }
   const parts = raw.split(":").filter(Boolean);
   if (
     parts.length >= 3 &&
@@ -66,7 +54,9 @@ function resolveTelegramRequireMention(params: {
   topicId?: string;
 }): boolean | undefined {
   const { cfg, chatId, topicId } = params;
-  if (!chatId) return undefined;
+  if (!chatId) {
+    return undefined;
+  }
   const groupConfig = cfg.channels?.telegram?.groups?.[chatId];
   const groupDefault = cfg.channels?.telegram?.groups?.["*"];
   const topicConfig = topicId && groupConfig?.topics ? groupConfig.topics[topicId] : undefined;
@@ -88,18 +78,79 @@ function resolveTelegramRequireMention(params: {
 }
 
 function resolveDiscordGuildEntry(guilds: DiscordConfig["guilds"], groupSpace?: string | null) {
-  if (!guilds || Object.keys(guilds).length === 0) return null;
+  if (!guilds || Object.keys(guilds).length === 0) {
+    return null;
+  }
   const space = groupSpace?.trim() ?? "";
-  if (space && guilds[space]) return guilds[space];
+  if (space && guilds[space]) {
+    return guilds[space];
+  }
   const normalized = normalizeDiscordSlug(space);
-  if (normalized && guilds[normalized]) return guilds[normalized];
+  if (normalized && guilds[normalized]) {
+    return guilds[normalized];
+  }
   if (normalized) {
     const match = Object.values(guilds).find(
       (entry) => normalizeDiscordSlug(entry?.slug ?? undefined) === normalized,
     );
-    if (match) return match;
+    if (match) {
+      return match;
+    }
   }
   return guilds["*"] ?? null;
+}
+
+function resolveDiscordChannelEntry<TEntry>(
+  channelEntries: Record<string, TEntry> | undefined,
+  params: { groupId?: string | null; groupChannel?: string | null },
+): TEntry | undefined {
+  if (!channelEntries || Object.keys(channelEntries).length === 0) {
+    return undefined;
+  }
+  const groupChannel = params.groupChannel;
+  const channelSlug = normalizeDiscordSlug(groupChannel);
+  return (
+    (params.groupId ? channelEntries[params.groupId] : undefined) ??
+    (channelSlug
+      ? (channelEntries[channelSlug] ?? channelEntries[`#${channelSlug}`])
+      : undefined) ??
+    (groupChannel ? channelEntries[normalizeDiscordSlug(groupChannel)] : undefined)
+  );
+}
+
+type SlackChannelPolicyEntry = {
+  requireMention?: boolean;
+  tools?: GroupToolPolicyConfig;
+  toolsBySender?: GroupToolPolicyBySenderConfig;
+};
+
+function resolveSlackChannelPolicyEntry(
+  params: GroupMentionParams,
+): SlackChannelPolicyEntry | undefined {
+  const account = resolveSlackAccount({
+    cfg: params.cfg,
+    accountId: params.accountId,
+  });
+  const channels = (account.channels ?? {}) as Record<string, SlackChannelPolicyEntry>;
+  if (Object.keys(channels).length === 0) {
+    return undefined;
+  }
+  const channelId = params.groupId?.trim();
+  const groupChannel = params.groupChannel;
+  const channelName = groupChannel?.replace(/^#/, "");
+  const normalizedName = normalizeHyphenSlug(channelName);
+  const candidates = [
+    channelId ?? "",
+    channelName ? `#${channelName}` : "",
+    channelName ?? "",
+    normalizedName,
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    if (candidate && channels[candidate]) {
+      return channels[candidate];
+    }
+  }
+  return channels["*"];
 }
 
 export function resolveTelegramGroupRequireMention(
@@ -111,7 +162,9 @@ export function resolveTelegramGroupRequireMention(
     chatId,
     topicId,
   });
-  if (typeof requireMention === "boolean") return requireMention;
+  if (typeof requireMention === "boolean") {
+    return requireMention;
+  }
   return resolveChannelGroupRequireMention({
     cfg: params.cfg,
     channel: "telegram",
@@ -145,14 +198,7 @@ export function resolveDiscordGroupRequireMention(params: GroupMentionParams): b
   );
   const channelEntries = guildEntry?.channels;
   if (channelEntries && Object.keys(channelEntries).length > 0) {
-    const groupChannel = params.groupChannel;
-    const channelSlug = normalizeDiscordSlug(groupChannel);
-    const entry =
-      (params.groupId ? channelEntries[params.groupId] : undefined) ??
-      (channelSlug
-        ? (channelEntries[channelSlug] ?? channelEntries[`#${channelSlug}`])
-        : undefined) ??
-      (groupChannel ? channelEntries[normalizeDiscordSlug(groupChannel)] : undefined);
+    const entry = resolveDiscordChannelEntry(channelEntries, params);
     if (entry && typeof entry.requireMention === "boolean") {
       return entry.requireMention;
     }
@@ -188,32 +234,7 @@ export function resolveGoogleChatGroupToolPolicy(
 }
 
 export function resolveSlackGroupRequireMention(params: GroupMentionParams): boolean {
-  const account = resolveSlackAccount({
-    cfg: params.cfg,
-    accountId: params.accountId,
-  });
-  const channels = account.channels ?? {};
-  const keys = Object.keys(channels);
-  if (keys.length === 0) return true;
-  const channelId = params.groupId?.trim();
-  const groupChannel = params.groupChannel;
-  const channelName = groupChannel?.replace(/^#/, "");
-  const normalizedName = normalizeSlackSlug(channelName);
-  const candidates = [
-    channelId ?? "",
-    channelName ? `#${channelName}` : "",
-    channelName ?? "",
-    normalizedName,
-  ].filter(Boolean);
-  let matched: { requireMention?: boolean } | undefined;
-  for (const candidate of candidates) {
-    if (candidate && channels[candidate]) {
-      matched = channels[candidate];
-      break;
-    }
-  }
-  const fallback = channels["*"];
-  const resolved = matched ?? fallback;
+  const resolved = resolveSlackChannelPolicyEntry(params);
   if (typeof resolved?.requireMention === "boolean") {
     return resolved.requireMention;
   }
@@ -284,14 +305,7 @@ export function resolveDiscordGroupToolPolicy(
   );
   const channelEntries = guildEntry?.channels;
   if (channelEntries && Object.keys(channelEntries).length > 0) {
-    const groupChannel = params.groupChannel;
-    const channelSlug = normalizeDiscordSlug(groupChannel);
-    const entry =
-      (params.groupId ? channelEntries[params.groupId] : undefined) ??
-      (channelSlug
-        ? (channelEntries[channelSlug] ?? channelEntries[`#${channelSlug}`])
-        : undefined) ??
-      (groupChannel ? channelEntries[normalizeDiscordSlug(groupChannel)] : undefined);
+    const entry = resolveDiscordChannelEntry(channelEntries, params);
     const senderPolicy = resolveToolsBySender({
       toolsBySender: entry?.toolsBySender,
       senderId: params.senderId,
@@ -299,8 +313,12 @@ export function resolveDiscordGroupToolPolicy(
       senderUsername: params.senderUsername,
       senderE164: params.senderE164,
     });
-    if (senderPolicy) return senderPolicy;
-    if (entry?.tools) return entry.tools;
+    if (senderPolicy) {
+      return senderPolicy;
+    }
+    if (entry?.tools) {
+      return entry.tools;
+    }
   }
   const guildSenderPolicy = resolveToolsBySender({
     toolsBySender: guildEntry?.toolsBySender,
@@ -309,41 +327,22 @@ export function resolveDiscordGroupToolPolicy(
     senderUsername: params.senderUsername,
     senderE164: params.senderE164,
   });
-  if (guildSenderPolicy) return guildSenderPolicy;
-  if (guildEntry?.tools) return guildEntry.tools;
+  if (guildSenderPolicy) {
+    return guildSenderPolicy;
+  }
+  if (guildEntry?.tools) {
+    return guildEntry.tools;
+  }
   return undefined;
 }
 
 export function resolveSlackGroupToolPolicy(
   params: GroupMentionParams,
 ): GroupToolPolicyConfig | undefined {
-  const account = resolveSlackAccount({
-    cfg: params.cfg,
-    accountId: params.accountId,
-  });
-  const channels = account.channels ?? {};
-  const keys = Object.keys(channels);
-  if (keys.length === 0) return undefined;
-  const channelId = params.groupId?.trim();
-  const groupChannel = params.groupChannel;
-  const channelName = groupChannel?.replace(/^#/, "");
-  const normalizedName = normalizeSlackSlug(channelName);
-  const candidates = [
-    channelId ?? "",
-    channelName ? `#${channelName}` : "",
-    channelName ?? "",
-    normalizedName,
-  ].filter(Boolean);
-  let matched:
-    | { tools?: GroupToolPolicyConfig; toolsBySender?: GroupToolPolicyBySenderConfig }
-    | undefined;
-  for (const candidate of candidates) {
-    if (candidate && channels[candidate]) {
-      matched = channels[candidate];
-      break;
-    }
+  const resolved = resolveSlackChannelPolicyEntry(params);
+  if (!resolved) {
+    return undefined;
   }
-  const resolved = matched ?? channels["*"];
   const senderPolicy = resolveToolsBySender({
     toolsBySender: resolved?.toolsBySender,
     senderId: params.senderId,
@@ -351,8 +350,12 @@ export function resolveSlackGroupToolPolicy(
     senderUsername: params.senderUsername,
     senderE164: params.senderE164,
   });
-  if (senderPolicy) return senderPolicy;
-  if (resolved?.tools) return resolved.tools;
+  if (senderPolicy) {
+    return senderPolicy;
+  }
+  if (resolved?.tools) {
+    return resolved.tools;
+  }
   return undefined;
 }
 

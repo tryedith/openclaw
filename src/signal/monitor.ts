@@ -4,36 +4,23 @@ import type { ReplyPayload } from "../auto-reply/types.js";
 import type { OpenClawConfig } from "../config/config.js";
 import { loadConfig } from "../config/config.js";
 import type { SignalReactionNotificationMode } from "../config/types.js";
-import { saveMediaBuffer } from "../media/store.js";
-import type { RuntimeEnv } from "../runtime.js";
-import { normalizeE164 } from "../utils.js";
 import { waitForTransportReady } from "../infra/transport-ready.js";
+import { saveMediaBuffer } from "../media/store.js";
+import { createNonExitingRuntime, type RuntimeEnv } from "../runtime.js";
+import { normalizeStringEntries } from "../shared/string-normalization.js";
+import { normalizeE164 } from "../utils.js";
 import { resolveSignalAccount } from "./accounts.js";
 import { signalCheck, signalRpcRequest } from "./client.js";
 import { spawnSignalDaemon } from "./daemon.js";
 import { isSignalSenderAllowed, type resolveSignalSender } from "./identity.js";
 import { createSignalEventHandler } from "./monitor/event-handler.js";
+import type {
+  SignalAttachment,
+  SignalReactionMessage,
+  SignalReactionTarget,
+} from "./monitor/event-handler.types.js";
 import { sendMessageSignal } from "./send.js";
 import { runSignalSseLoop } from "./sse-reconnect.js";
-
-type SignalReactionMessage = {
-  emoji?: string | null;
-  targetAuthor?: string | null;
-  targetAuthorUuid?: string | null;
-  targetSentTimestamp?: number | null;
-  isRemove?: boolean | null;
-  groupInfo?: {
-    groupId?: string | null;
-    groupName?: string | null;
-  } | null;
-};
-
-type SignalAttachment = {
-  id?: string | null;
-  contentType?: string | null;
-  filename?: string | null;
-  size?: number | null;
-};
 
 export type MonitorSignalOpts = {
   runtime?: RuntimeEnv;
@@ -57,26 +44,12 @@ export type MonitorSignalOpts = {
 };
 
 function resolveRuntime(opts: MonitorSignalOpts): RuntimeEnv {
-  return (
-    opts.runtime ?? {
-      log: console.log,
-      error: console.error,
-      exit: (code: number): never => {
-        throw new Error(`exit ${code}`);
-      },
-    }
-  );
+  return opts.runtime ?? createNonExitingRuntime();
 }
 
 function normalizeAllowList(raw?: Array<string | number>): string[] {
-  return (raw ?? []).map((entry) => String(entry).trim()).filter(Boolean);
+  return normalizeStringEntries(raw);
 }
-
-type SignalReactionTarget = {
-  kind: "phone" | "uuid";
-  id: string;
-  display: string;
-};
 
 function resolveSignalReactionTargets(reaction: SignalReactionMessage): SignalReactionTarget[] {
   const targets: SignalReactionTarget[] = [];
@@ -95,7 +68,9 @@ function resolveSignalReactionTargets(reaction: SignalReactionMessage): SignalRe
 function isSignalReactionMessage(
   reaction: SignalReactionMessage | null | undefined,
 ): reaction is SignalReactionMessage {
-  if (!reaction) return false;
+  if (!reaction) {
+    return false;
+  }
   const emoji = reaction.emoji?.trim();
   const timestamp = reaction.targetSentTimestamp;
   const hasTarget = Boolean(reaction.targetAuthor?.trim() || reaction.targetAuthorUuid?.trim());
@@ -111,10 +86,14 @@ function shouldEmitSignalReactionNotification(params: {
 }) {
   const { mode, account, targets, sender, allowlist } = params;
   const effectiveMode = mode ?? "own";
-  if (effectiveMode === "off") return false;
+  if (effectiveMode === "off") {
+    return false;
+  }
   if (effectiveMode === "own") {
     const accountId = account?.trim();
-    if (!accountId || !targets || targets.length === 0) return false;
+    if (!accountId || !targets || targets.length === 0) {
+      return false;
+    }
     const normalizedAccount = normalizeE164(accountId);
     return targets.some((target) => {
       if (target.kind === "uuid") {
@@ -124,7 +103,9 @@ function shouldEmitSignalReactionNotification(params: {
     });
   }
   if (effectiveMode === "allowlist") {
-    if (!sender || !allowlist || allowlist.length === 0) return false;
+    if (!sender || !allowlist || allowlist.length === 0) {
+      return false;
+    }
     return isSignalSenderAllowed(sender, allowlist);
   }
   return true;
@@ -160,7 +141,9 @@ async function waitForSignalDaemonReady(params: {
     runtime: params.runtime,
     check: async () => {
       const res = await signalCheck(params.baseUrl, 1000);
-      if (res.ok) return { ok: true };
+      if (res.ok) {
+        return { ok: true };
+      }
       return {
         ok: false,
         error: res.error ?? (res.status ? `HTTP ${res.status}` : "unreachable"),
@@ -178,7 +161,9 @@ async function fetchAttachment(params: {
   maxBytes: number;
 }): Promise<{ path: string; contentType?: string } | null> {
   const { attachment } = params;
-  if (!attachment?.id) return null;
+  if (!attachment?.id) {
+    return null;
+  }
   if (attachment.size && attachment.size > params.maxBytes) {
     throw new Error(
       `Signal attachment ${attachment.id} exceeds ${(params.maxBytes / (1024 * 1024)).toFixed(0)}MB limit`,
@@ -187,15 +172,23 @@ async function fetchAttachment(params: {
   const rpcParams: Record<string, unknown> = {
     id: attachment.id,
   };
-  if (params.account) rpcParams.account = params.account;
-  if (params.groupId) rpcParams.groupId = params.groupId;
-  else if (params.sender) rpcParams.recipient = params.sender;
-  else return null;
+  if (params.account) {
+    rpcParams.account = params.account;
+  }
+  if (params.groupId) {
+    rpcParams.groupId = params.groupId;
+  } else if (params.sender) {
+    rpcParams.recipient = params.sender;
+  } else {
+    return null;
+  }
 
   const result = await signalRpcRequest<{ data?: string }>("getAttachment", rpcParams, {
     baseUrl: params.baseUrl,
   });
-  if (!result?.data) return null;
+  if (!result?.data) {
+    return null;
+  }
   const buffer = Buffer.from(result.data, "base64");
   const saved = await saveMediaBuffer(
     buffer,
@@ -222,7 +215,9 @@ async function deliverReplies(params: {
   for (const payload of replies) {
     const mediaList = payload.mediaUrls ?? (payload.mediaUrl ? [payload.mediaUrl] : []);
     const text = payload.text ?? "";
-    if (!text && mediaList.length === 0) continue;
+    if (!text && mediaList.length === 0) {
+      continue;
+    }
     if (mediaList.length === 0) {
       for (const chunk of chunkTextWithMode(text, textLimit, chunkMode)) {
         await sendMessageSignal(target, chunk, {
@@ -367,7 +362,9 @@ export async function monitorSignalProvider(opts: MonitorSignalOpts = {}): Promi
       },
     });
   } catch (err) {
-    if (opts.abortSignal?.aborted) return;
+    if (opts.abortSignal?.aborted) {
+      return;
+    }
     throw err;
   } finally {
     opts.abortSignal?.removeEventListener("abort", onAbort);

@@ -1,8 +1,10 @@
+import { resolveAgentModelFallbacksOverride } from "../../agents/agent-scope.js";
 import type { NormalizedUsage } from "../../agents/usage.js";
 import { getChannelDock } from "../../channels/dock.js";
 import type { ChannelId, ChannelThreadingToolContext } from "../../channels/plugins/types.js";
 import { normalizeAnyChannelId, normalizeChannelId } from "../../channels/registry.js";
 import type { OpenClawConfig } from "../../config/config.js";
+import { resolveAgentIdFromSessionKey } from "../../config/sessions.js";
 import { isReasoningTagProvider } from "../../utils/provider-utils.js";
 import { estimateUsageCost, formatTokenCount, formatUsd } from "../../utils/usage-format.js";
 import type { TemplateContext } from "../templating.js";
@@ -20,9 +22,13 @@ export function buildThreadingToolContext(params: {
   hasRepliedRef: { value: boolean } | undefined;
 }): ChannelThreadingToolContext {
   const { sessionCtx, config, hasRepliedRef } = params;
-  if (!config) return {};
+  if (!config) {
+    return {};
+  }
   const rawProvider = sessionCtx.Provider?.trim().toLowerCase();
-  if (!rawProvider) return {};
+  if (!rawProvider) {
+    return {};
+  }
   const provider = normalizeChannelId(rawProvider) ?? normalizeAnyChannelId(rawProvider);
   // Fallback for unrecognized/plugin channels (e.g., BlueBubbles before plugin registry init)
   const dock = provider ? getChannelDock(provider) : undefined;
@@ -78,10 +84,14 @@ export const formatResponseUsageLine = (params: {
   };
 }): string | null => {
   const usage = params.usage;
-  if (!usage) return null;
+  if (!usage) {
+    return null;
+  }
   const input = usage.input;
   const output = usage.output;
-  if (typeof input !== "number" && typeof output !== "number") return null;
+  if (typeof input !== "number" && typeof output !== "number") {
+    return null;
+  }
   const inputLabel = typeof input === "number" ? formatTokenCount(input) : "?";
   const outputLabel = typeof output === "number" ? formatTokenCount(output) : "?";
   const cost =
@@ -109,7 +119,9 @@ export const appendUsageLine = (payloads: ReplyPayload[], line: string): ReplyPa
       break;
     }
   }
-  if (index === -1) return [...payloads, { text: line }];
+  if (index === -1) {
+    return [...payloads, { text: line }];
+  }
   const existing = payloads[index];
   const existingText = existing.text ?? "";
   const separator = existingText.endsWith("\n") ? "" : "\n";
@@ -124,3 +136,115 @@ export const appendUsageLine = (payloads: ReplyPayload[], line: string): ReplyPa
 
 export const resolveEnforceFinalTag = (run: FollowupRun["run"], provider: string) =>
   Boolean(run.enforceFinalTag || isReasoningTagProvider(provider));
+
+export function resolveModelFallbackOptions(run: FollowupRun["run"]) {
+  return {
+    cfg: run.config,
+    provider: run.provider,
+    model: run.model,
+    agentDir: run.agentDir,
+    fallbacksOverride: resolveAgentModelFallbacksOverride(
+      run.config,
+      resolveAgentIdFromSessionKey(run.sessionKey),
+    ),
+  };
+}
+
+export function buildEmbeddedRunBaseParams(params: {
+  run: FollowupRun["run"];
+  provider: string;
+  model: string;
+  runId: string;
+  authProfile: ReturnType<typeof resolveProviderScopedAuthProfile>;
+}) {
+  return {
+    sessionFile: params.run.sessionFile,
+    workspaceDir: params.run.workspaceDir,
+    agentDir: params.run.agentDir,
+    config: params.run.config,
+    skillsSnapshot: params.run.skillsSnapshot,
+    ownerNumbers: params.run.ownerNumbers,
+    enforceFinalTag: resolveEnforceFinalTag(params.run, params.provider),
+    provider: params.provider,
+    model: params.model,
+    ...params.authProfile,
+    thinkLevel: params.run.thinkLevel,
+    verboseLevel: params.run.verboseLevel,
+    reasoningLevel: params.run.reasoningLevel,
+    execOverrides: params.run.execOverrides,
+    bashElevated: params.run.bashElevated,
+    timeoutMs: params.run.timeoutMs,
+    runId: params.runId,
+  };
+}
+
+export function buildEmbeddedContextFromTemplate(params: {
+  run: FollowupRun["run"];
+  sessionCtx: TemplateContext;
+  hasRepliedRef: { value: boolean } | undefined;
+}) {
+  return {
+    sessionId: params.run.sessionId,
+    sessionKey: params.run.sessionKey,
+    agentId: params.run.agentId,
+    messageProvider: params.sessionCtx.Provider?.trim().toLowerCase() || undefined,
+    agentAccountId: params.sessionCtx.AccountId,
+    messageTo: params.sessionCtx.OriginatingTo ?? params.sessionCtx.To,
+    messageThreadId: params.sessionCtx.MessageThreadId ?? undefined,
+    // Provider threading context for tool auto-injection
+    ...buildThreadingToolContext({
+      sessionCtx: params.sessionCtx,
+      config: params.run.config,
+      hasRepliedRef: params.hasRepliedRef,
+    }),
+  };
+}
+
+export function buildTemplateSenderContext(sessionCtx: TemplateContext) {
+  return {
+    senderId: sessionCtx.SenderId?.trim() || undefined,
+    senderName: sessionCtx.SenderName?.trim() || undefined,
+    senderUsername: sessionCtx.SenderUsername?.trim() || undefined,
+    senderE164: sessionCtx.SenderE164?.trim() || undefined,
+  };
+}
+
+export function resolveRunAuthProfile(run: FollowupRun["run"], provider: string) {
+  return resolveProviderScopedAuthProfile({
+    provider,
+    primaryProvider: run.provider,
+    authProfileId: run.authProfileId,
+    authProfileIdSource: run.authProfileIdSource,
+  });
+}
+
+export function buildEmbeddedRunContexts(params: {
+  run: FollowupRun["run"];
+  sessionCtx: TemplateContext;
+  hasRepliedRef: { value: boolean } | undefined;
+  provider: string;
+}) {
+  return {
+    authProfile: resolveRunAuthProfile(params.run, params.provider),
+    embeddedContext: buildEmbeddedContextFromTemplate({
+      run: params.run,
+      sessionCtx: params.sessionCtx,
+      hasRepliedRef: params.hasRepliedRef,
+    }),
+    senderContext: buildTemplateSenderContext(params.sessionCtx),
+  };
+}
+
+export function resolveProviderScopedAuthProfile(params: {
+  provider: string;
+  primaryProvider: string;
+  authProfileId?: string;
+  authProfileIdSource?: "auto" | "user";
+}): { authProfileId?: string; authProfileIdSource?: "auto" | "user" } {
+  const authProfileId =
+    params.provider === params.primaryProvider ? params.authProfileId : undefined;
+  return {
+    authProfileId,
+    authProfileIdSource: authProfileId ? params.authProfileIdSource : undefined,
+  };
+}
