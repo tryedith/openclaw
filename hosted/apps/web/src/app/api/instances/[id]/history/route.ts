@@ -39,11 +39,23 @@ export async function GET(
     return NextResponse.json({ error: "Instance not ready" }, { status: 400 });
   }
 
-  const { gatewayUrl, token } = resolveGatewayTarget({
-    instancePublicUrl: instance.public_url,
-    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
-    instanceId: id,
-  });
+  let gatewayUrl: string;
+  let token: string;
+  try {
+    const resolved = resolveGatewayTarget({
+      instancePublicUrl: instance.public_url,
+      instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
+      instanceId: id,
+    });
+    gatewayUrl = resolved.gatewayUrl;
+    token = resolved.token;
+  } catch (error) {
+    console.error("[history] Failed to resolve gateway target:", error);
+    return NextResponse.json(
+      { error: "Failed to resolve gateway credentials", details: String(error) },
+      { status: 500 }
+    );
+  }
 
   // Build session key matching what the chat endpoint uses
   const sessionKey = buildSessionKey(user.id);
