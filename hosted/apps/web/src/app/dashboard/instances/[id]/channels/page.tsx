@@ -11,6 +11,14 @@ interface ChannelStatus {
   configured?: boolean;
   linked?: boolean;
   enabled?: boolean;
+  connected?: boolean;
+  running?: boolean;
+  authAgeMs?: number | null;
+  lastError?: string | null;
+  self?: {
+    e164?: string | null;
+    jid?: string | null;
+  };
 }
 
 interface ChannelMeta {
@@ -46,13 +54,36 @@ interface ChannelAccountSnapshot {
   };
 }
 
+type WhatsAppDebugSnapshot = {
+  at?: string;
+  error?: string;
+  channel?: unknown;
+  account?: unknown;
+};
+
+type ChannelStatusResponse = {
+  channels?: Record<string, ChannelStatus>;
+};
+
 const SUPPORTED_CHANNELS = [
+  {
+    id: "whatsapp",
+    name: "WhatsApp",
+    color: "#25D366",
+    icon: WhatsAppIcon,
+    description: "Connect your bot to your WhatsApp account",
+    setupMode: "qr",
+    setupFields: [],
+    docsUrl: "https://docs.openclaw.ai/channels/whatsapp",
+    instructions: "Generate a QR code, then scan it in WhatsApp → Linked Devices",
+  },
   {
     id: "telegram",
     name: "Telegram",
     color: "#0088cc",
     icon: TelegramIcon,
     description: "Connect your bot to Telegram",
+    setupMode: "credentials",
     setupFields: [
       { key: "botToken", label: "Bot Token", type: "password", placeholder: "123456:ABC-DEF...", required: true },
     ],
@@ -65,6 +96,7 @@ const SUPPORTED_CHANNELS = [
     color: "#5865F2",
     icon: DiscordIcon,
     description: "Connect your bot to Discord servers",
+    setupMode: "credentials",
     setupFields: [
       { key: "token", label: "Bot Token", type: "password", placeholder: "Your Discord bot token", required: true },
       { key: "name", label: "Bot Name", type: "text", placeholder: "My Discord Bot", required: false },
@@ -75,9 +107,45 @@ const SUPPORTED_CHANNELS = [
 ];
 
 const COMING_SOON_CHANNELS = [
-  { id: "whatsapp", name: "WhatsApp", color: "#25D366", icon: WhatsAppIcon },
   { id: "slack", name: "Slack", color: "#4A154B", icon: SlackIcon },
 ];
+
+function isWhatsAppLoginTerminalFailure(message: string): boolean {
+  const normalized = message.trim().toLowerCase();
+  return (
+    normalized.includes("logged out") ||
+    normalized.includes("expired") ||
+    normalized.includes("ended without a connection") ||
+    normalized.includes("no active whatsapp login")
+  );
+}
+
+function isChannelConfigured(status: ChannelStatus | undefined): boolean {
+  return status?.configured === true || status?.linked === true;
+}
+
+function isWhatsAppRuntimeActive(status: ChannelStatus | undefined): boolean {
+  return status?.connected === true || status?.running === true;
+}
+
+function formatAuthAge(authAgeMs: number | null | undefined): string | null {
+  if (typeof authAgeMs !== "number" || !Number.isFinite(authAgeMs) || authAgeMs < 0) {
+    return null;
+  }
+  const minutes = Math.floor(authAgeMs / 60_000);
+  if (minutes < 1) {
+    return "linked just now";
+  }
+  if (minutes < 60) {
+    return `linked ${minutes}m ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `linked ${hours}h ago`;
+  }
+  const days = Math.floor(hours / 24);
+  return `linked ${days}d ago`;
+}
 
 export default function InstanceChannelsPage({
   params,
@@ -98,25 +166,31 @@ export default function InstanceChannelsPage({
   const [botUsernames, setBotUsernames] = useState<Record<string, string>>({});
   const [gatewayRestarting, setGatewayRestarting] = useState(false);
   const [approvedChannels, setApprovedChannels] = useState<Set<string>>(new Set());
+  const [whatsappQrDataUrl, setWhatsappQrDataUrl] = useState<string | null>(null);
+  const [waitingForWhatsAppScan, setWaitingForWhatsAppScan] = useState(false);
+  const [whatsappDebug, setWhatsappDebug] = useState<WhatsAppDebugSnapshot | null>(null);
   const hasProbed = useRef(false);
+  const whatsappLoginAttemptRef = useRef(0);
+  const whatsappRecoveryInFlightRef = useRef(false);
+  const whatsappLastRecoveryAtRef = useRef(0);
 
   useEffect(() => {
-    fetchInstance();
+    void fetchInstance();
   }, [instanceId]);
 
   useEffect(() => {
-    if (!instance || instance.status !== "running" || !channelsData) return;
+    if (!instance || instance.status !== "running" || !channelsData) {return;}
 
     const configuredChannels = SUPPORTED_CHANNELS.filter((channel) => {
       const status = channelsData.channels?.[channel.id];
-      return status?.configured || status?.enabled;
+      return isChannelConfigured(status);
     });
 
-    if (configuredChannels.length === 0) return;
+    if (configuredChannels.length === 0) {return;}
 
     const interval = setInterval(() => {
       for (const channel of configuredChannels) {
-        fetchPairingRequests(instance.id, channel.id);
+        void fetchPairingRequests(instance.id, channel.id);
       }
     }, 5000);
 
@@ -124,18 +198,61 @@ export default function InstanceChannelsPage({
   }, [instance, channelsData]);
 
   useEffect(() => {
-    if (!instance || instance.status !== "running" || !channelsData || hasProbed.current) return;
+    if (!instance || instance.status !== "running" || !channelsData || hasProbed.current) {return;}
 
     const hasConfiguredChannels = SUPPORTED_CHANNELS.some((channel) => {
       const status = channelsData.channels?.[channel.id];
-      return status?.configured || status?.enabled;
+      return isChannelConfigured(status);
     });
 
     if (hasConfiguredChannels) {
       hasProbed.current = true;
-      fetchChannels(instance.id, true);
+      void fetchChannels(instance.id, true);
     }
   }, [instance, channelsData]);
+
+  useEffect(() => {
+    if (!instance || instance.status !== "running" || !channelsData) {
+      return;
+    }
+    const status = channelsData.channels?.whatsapp;
+    const shouldRecover =
+      Boolean(status?.linked) &&
+      !isWhatsAppRuntimeActive(status) &&
+      !whatsappRecoveryInFlightRef.current &&
+      Date.now() - whatsappLastRecoveryAtRef.current > 10_000 &&
+      !waitingForWhatsAppScan &&
+      !whatsappQrDataUrl;
+    if (!shouldRecover) {
+      return;
+    }
+
+    whatsappRecoveryInFlightRef.current = true;
+    whatsappLastRecoveryAtRef.current = Date.now();
+    void (async () => {
+      try {
+        const response = await fetch(
+          `/api/instances/${instance.id}/channels/whatsapp/login/wait`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ timeoutMs: 2000 }),
+          },
+        );
+        const data = await response.json().catch(() => ({}));
+        setWhatsappDebug((data?.debug as WhatsAppDebugSnapshot | undefined) ?? null);
+        if (response.ok && data?.connected === true) {
+          setSuccess("WhatsApp session recovered.");
+          setTimeout(() => setSuccess(null), 3000);
+          void fetchChannels(instance.id, true);
+        }
+      } catch (err) {
+        console.error("Error recovering WhatsApp session:", err);
+      } finally {
+        whatsappRecoveryInFlightRef.current = false;
+      }
+    })();
+  }, [instance, channelsData, waitingForWhatsAppScan, whatsappQrDataUrl]);
 
   async function fetchInstance() {
     try {
@@ -146,7 +263,7 @@ export default function InstanceChannelsPage({
         if (inst) {
           setInstance(inst);
           if (inst.status === "running") {
-            fetchChannels(inst.id);
+            void fetchChannels(inst.id);
             return;
           }
         }
@@ -172,7 +289,7 @@ export default function InstanceChannelsPage({
 
       if (response.status === 503 && retryCount < 5) {
         setTimeout(() => {
-          fetchChannels(instId, withProbe, retryCount + 1);
+          void fetchChannels(instId, withProbe, retryCount + 1);
         }, 3000);
         return;
       }
@@ -199,8 +316,8 @@ export default function InstanceChannelsPage({
 
         for (const channel of SUPPORTED_CHANNELS) {
           const status = data.channels?.[channel.id];
-          if (status?.configured || status?.enabled) {
-            fetchPairingRequests(instId, channel.id);
+          if (isChannelConfigured(status)) {
+            void fetchPairingRequests(instId, channel.id);
           }
         }
       }
@@ -226,8 +343,45 @@ export default function InstanceChannelsPage({
     }
   }
 
+  async function fetchWhatsAppStatus(instId: string): Promise<ChannelStatus | null> {
+    try {
+      let response = await fetch(`/api/instances/${instId}/channels?probe=true`);
+      if (!response.ok) {
+        response = await fetch(`/api/instances/${instId}/channels`);
+      }
+      if (!response.ok) {
+        return null;
+      }
+      const data = (await response.json()) as ChannelStatusResponse;
+      return data.channels?.whatsapp ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function clearPairingRequests(channelId: string) {
+    if (!instance) {return;}
+    try {
+      const response = await fetch(
+        `/api/instances/${instance.id}/channels/${channelId}/pairing/clear`,
+        { method: "POST" }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || "Failed to clear pairing requests");
+        return;
+      }
+      setPairingRequests((prev) => ({ ...prev, [channelId]: [] }));
+      setSuccess("Pairing requests cleared.");
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to clear pairing requests");
+    }
+  }
+
   async function approvePairingRequest(channelId: string, code: string) {
-    if (!instance) return;
+    if (!instance) {return;}
     setApprovingCode(code);
     setError(null);
 
@@ -246,8 +400,8 @@ export default function InstanceChannelsPage({
       }
 
       setApprovedChannels(prev => new Set([...prev, channelId]));
-      fetchPairingRequests(instance.id, channelId);
-      fetchChannels(instance.id, false);
+      void fetchPairingRequests(instance.id, channelId);
+      void fetchChannels(instance.id, false);
 
       setSuccess(`Pairing approved! The user can now chat with your bot.`);
       setTimeout(() => setSuccess(null), 4000);
@@ -259,14 +413,252 @@ export default function InstanceChannelsPage({
     }
   }
 
+  async function waitForWhatsAppLogin(
+    timeoutMs = 15_000,
+    retryCount = 0,
+    autoContinue = true
+  ) {
+    if (!instance) {return;}
+    const currentStatus = await fetchWhatsAppStatus(instance.id);
+    if (currentStatus?.connected) {
+      setWhatsappQrDataUrl(null);
+      setSuccess("WhatsApp is already linked and ready.");
+      setTimeout(() => setSuccess(null), 4000);
+      void fetchChannels(instance.id, true);
+      return;
+    }
+    const attemptId = ++whatsappLoginAttemptRef.current;
+    setWaitingForWhatsAppScan(true);
+
+    try {
+      const response = await fetch(`/api/instances/${instance.id}/channels/whatsapp/login/wait`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeoutMs }),
+      });
+      const data = await response.json();
+      setWhatsappDebug((data?.debug as WhatsAppDebugSnapshot | undefined) ?? null);
+
+      if (whatsappLoginAttemptRef.current !== attemptId) {
+        return;
+      }
+
+      if (!response.ok) {
+        if (response.status === 503 && data.retryable && retryCount < 3) {
+          setGatewayRestarting(true);
+          setTimeout(() => {
+            void waitForWhatsAppLogin(timeoutMs, retryCount + 1);
+          }, 3000);
+          return;
+        }
+        setGatewayRestarting(false);
+        setError(
+          data.details
+            ? `${data.error || "Failed to verify WhatsApp login"}: ${data.details}`
+            : (data.error || "Failed to verify WhatsApp login")
+        );
+        return;
+      }
+
+      setGatewayRestarting(false);
+      if (data.connected) {
+        setWhatsappQrDataUrl(null);
+        setSuccess(data.message || "WhatsApp linked successfully!");
+        setTimeout(() => setSuccess(null), 5000);
+        void fetchChannels(instance.id, true);
+        return;
+      }
+
+      const message =
+        typeof data.message === "string" && data.message.trim()
+          ? data.message.trim()
+          : "Still waiting for QR scan.";
+
+      if (message.toLowerCase().includes("login failed")) {
+        if (message.includes("status=515")) {
+          setSuccess("WhatsApp requested a restart. Still finalizing login, keep WhatsApp open...");
+          setTimeout(() => setSuccess(null), 4000);
+          if (autoContinue && whatsappQrDataUrl) {
+            whatsappLoginAttemptRef.current += 1;
+            setTimeout(() => {
+              void waitForWhatsAppLogin(15_000, 0, true);
+            }, 2000);
+          }
+          return;
+        }
+        const status = await fetchWhatsAppStatus(instance.id);
+        if (status?.connected) {
+          setWhatsappQrDataUrl(null);
+          setSuccess("WhatsApp is linked and connected.");
+          setTimeout(() => setSuccess(null), 5000);
+          void fetchChannels(instance.id, true);
+          return;
+        }
+        setError(`${message} Please generate a new QR and scan again.`);
+        return;
+      }
+
+      if (message.toLowerCase().includes("no active whatsapp login")) {
+        const status = await fetchWhatsAppStatus(instance.id);
+        if (status?.connected) {
+          setWhatsappQrDataUrl(null);
+          setSuccess("WhatsApp is already linked and ready.");
+          setTimeout(() => setSuccess(null), 5000);
+          void fetchChannels(instance.id, true);
+          return;
+        }
+        if (whatsappQrDataUrl && retryCount < 1) {
+          setSuccess("Login session expired. Generating a fresh QR…");
+          setTimeout(() => setSuccess(null), 3000);
+          await startWhatsAppLogin(true);
+          return;
+        }
+      }
+
+      if (isWhatsAppLoginTerminalFailure(message)) {
+        setWhatsappQrDataUrl(null);
+        setError(`${message} Generate a new QR and scan again.`);
+        return;
+      }
+
+      setSuccess(message);
+      setTimeout(() => setSuccess(null), 3000);
+      if (autoContinue && whatsappQrDataUrl) {
+        // Reserve the next polling attempt immediately so the current `finally`
+        // block does not briefly flip the UI back to idle between polls.
+        whatsappLoginAttemptRef.current += 1;
+        setTimeout(() => {
+          void waitForWhatsAppLogin(15_000, 0, true);
+        }, 2000);
+      }
+    } catch (err) {
+      if (whatsappLoginAttemptRef.current !== attemptId) {
+        return;
+      }
+      setGatewayRestarting(false);
+      setError("Failed to verify WhatsApp login");
+      console.error(err);
+    } finally {
+      if (whatsappLoginAttemptRef.current === attemptId) {
+        setWaitingForWhatsAppScan(false);
+        setConfiguring((prev) => (prev === "whatsapp" ? null : prev));
+      }
+    }
+  }
+
+  async function startWhatsAppLogin(force = false, retryCount = 0) {
+    if (!instance) {return;}
+    const currentStatus = await fetchWhatsAppStatus(instance.id);
+    if (currentStatus?.connected) {
+      setWhatsappQrDataUrl(null);
+      setConfiguring(null);
+      setSuccess("WhatsApp is already linked and ready.");
+      setTimeout(() => setSuccess(null), 4000);
+      void fetchChannels(instance.id, true);
+      return;
+    }
+    whatsappLoginAttemptRef.current += 1;
+    setWaitingForWhatsAppScan(false);
+    setWhatsappDebug(null);
+    setConfiguring("whatsapp");
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await fetch(`/api/instances/${instance.id}/channels/whatsapp/login/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force, timeoutMs: 30000 }),
+      });
+      const data = await response.json();
+      setWhatsappDebug((data?.debug as WhatsAppDebugSnapshot | undefined) ?? null);
+
+      if (!response.ok) {
+        const statusAfterError = await fetchWhatsAppStatus(instance.id);
+        if (statusAfterError?.connected || statusAfterError?.linked) {
+          setGatewayRestarting(false);
+          setConfiguring(null);
+          setWhatsappQrDataUrl(null);
+          setError(null);
+          setSuccess(
+            isWhatsAppRuntimeActive(statusAfterError)
+              ? "WhatsApp is already linked and ready."
+              : "WhatsApp is linked, but reconnecting in progress.",
+          );
+          setTimeout(() => setSuccess(null), 5000);
+          void fetchChannels(instance.id, true);
+          return;
+        }
+        if (response.status === 503 && data.retryable && retryCount < 3) {
+          setGatewayRestarting(true);
+          setTimeout(() => {
+            void startWhatsAppLogin(force, retryCount + 1);
+          }, 3000);
+          return;
+        }
+        setGatewayRestarting(false);
+        setConfiguring(null);
+        setError(
+          data.details
+            ? `${data.error || "Failed to start WhatsApp login"}: ${data.details}`
+            : (data.error || "Failed to start WhatsApp login")
+        );
+        return;
+      }
+
+      setGatewayRestarting(false);
+      if (typeof data.qrDataUrl === "string" && data.qrDataUrl.length > 0) {
+        setWhatsappQrDataUrl(data.qrDataUrl);
+        setSuccess(data.message || "Scan the QR code in WhatsApp. We'll keep checking automatically.");
+        setTimeout(() => setSuccess(null), 5000);
+        void waitForWhatsAppLogin(15_000, 0, true);
+        return;
+      }
+
+      setConfiguring(null);
+      setWhatsappQrDataUrl(null);
+      if (typeof data.message === "string" && data.message.length > 0) {
+        const message = data.message.trim();
+        if (message.toLowerCase().includes("already linked")) {
+          const status = await fetchWhatsAppStatus(instance.id);
+          if (status?.connected) {
+            setSuccess(message);
+            setTimeout(() => setSuccess(null), 5000);
+            void fetchChannels(instance.id, true);
+            return;
+          }
+          if (!force) {
+            setSuccess("Existing link looks stale. Generating a fresh QR…");
+            setTimeout(() => setSuccess(null), 3000);
+            await startWhatsAppLogin(true);
+            return;
+          }
+        }
+        setSuccess(message);
+        setTimeout(() => setSuccess(null), 5000);
+      }
+      void fetchChannels(instance.id, true);
+    } catch (err) {
+      setGatewayRestarting(false);
+      setConfiguring(null);
+      setError("Failed to start WhatsApp login");
+      console.error(err);
+    }
+  }
+
   async function configureChannel(channelId: string, retryCount = 0) {
-    if (!instance) return;
+    if (!instance) {return;}
 
     setError(null);
     setSuccess(null);
 
+    if (channelId === "whatsapp") {
+      await startWhatsAppLogin(retryCount > 0);
+      return;
+    }
+
     const channel = SUPPORTED_CHANNELS.find((c) => c.id === channelId);
-    if (!channel) return;
+    if (!channel) {return;}
 
     for (const field of channel.setupFields) {
       if (field.required && !formData[field.key]?.trim()) {
@@ -290,7 +682,7 @@ export default function InstanceChannelsPage({
         if (response.status === 503 && data.retryable && retryCount < 3) {
           setGatewayRestarting(true);
           setTimeout(() => {
-            configureChannel(channelId, retryCount + 1);
+            void configureChannel(channelId, retryCount + 1);
           }, 3000);
           return;
         }
@@ -310,12 +702,12 @@ export default function InstanceChannelsPage({
       setTimeout(() => setSuccess(null), 6000);
 
       setTimeout(() => {
-        fetchChannels(instance.id, false);
+        void fetchChannels(instance.id, false);
       }, 3000);
 
       setTimeout(() => {
         hasProbed.current = false;
-        fetchChannels(instance.id, true);
+        void fetchChannels(instance.id, true);
       }, 8000);
     } catch (err) {
       setGatewayRestarting(false);
@@ -327,8 +719,8 @@ export default function InstanceChannelsPage({
   }
 
   async function disableChannel(channelId: string) {
-    if (!instance) return;
-    if (!confirm(`Are you sure you want to disable ${channelId}?`)) return;
+    if (!instance) {return;}
+    if (!confirm(`Are you sure you want to disable ${channelId}?`)) {return;}
 
     try {
       const response = await fetch(`/api/instances/${instance.id}/channels/${channelId}/configure`, {
@@ -336,6 +728,12 @@ export default function InstanceChannelsPage({
       });
 
       if (response.ok) {
+        if (channelId === "whatsapp") {
+          setWhatsappQrDataUrl(null);
+          setWaitingForWhatsAppScan(false);
+          setWhatsappDebug(null);
+          whatsappLoginAttemptRef.current += 1;
+        }
         setApprovedChannels(prev => {
           const next = new Set(prev);
           next.delete(channelId);
@@ -343,7 +741,7 @@ export default function InstanceChannelsPage({
         });
         setSuccess(`${channelId} disconnected`);
         setTimeout(() => setSuccess(null), 3000);
-        setTimeout(() => fetchChannels(instance.id), 3000);
+        setTimeout(() => void fetchChannels(instance.id), 3000);
       }
     } catch (err) {
       console.error(err);
@@ -415,7 +813,7 @@ export default function InstanceChannelsPage({
         <div className="grid gap-4">
           {SUPPORTED_CHANNELS.map((channel) => {
             const status = channelsData?.channels?.[channel.id];
-            const isConfigured = status?.configured || status?.enabled;
+            const isConfigured = isChannelConfigured(status);
             const Icon = channel.icon;
 
             return (
@@ -434,7 +832,10 @@ export default function InstanceChannelsPage({
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-foreground">{channel.name}</h3>
                       {isConfigured && (() => {
-                        const hasLinkedUsers = status?.linked || approvedChannels.has(channel.id);
+                        const hasLinkedUsers =
+                          channel.id === "whatsapp"
+                            ? Boolean(isWhatsAppRuntimeActive(status) || approvedChannels.has(channel.id))
+                            : Boolean(status?.linked || approvedChannels.has(channel.id));
                         return (
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
                             hasLinkedUsers
@@ -448,6 +849,29 @@ export default function InstanceChannelsPage({
                       })()}
                     </div>
                     <p className="text-sm text-foreground-muted">{channel.description}</p>
+                    {channel.id === "whatsapp" && isConfigured && (
+                      <div className="mt-1 text-xs text-foreground-subtle">
+                        {status?.self?.e164 || status?.self?.jid ? (
+                          <span>
+                            Connected as{" "}
+                            <span className="font-mono">
+                              {status?.self?.e164 || status?.self?.jid}
+                            </span>
+                          </span>
+                        ) : (
+                          <span>Connected account details unavailable</span>
+                        )}
+                        {(status?.connected || status?.running) && (
+                          <span className="ml-2">
+                            ({status?.connected ? "connected" : "starting"})
+                          </span>
+                        )}
+                        {formatAuthAge(status?.authAgeMs) && (
+                          <span className="ml-2">• {formatAuthAge(status?.authAgeMs)}</span>
+                        )}
+                        {status?.lastError && <span className="ml-2 text-warning">• {status.lastError}</span>}
+                      </div>
+                    )}
                   </div>
                   {isConfigured && (
                     <button
@@ -466,17 +890,38 @@ export default function InstanceChannelsPage({
                         <UserPlusIcon className="w-5 h-5 text-foreground-muted" />
                         <h4 className="font-medium text-foreground">Pairing Requests</h4>
                       </div>
-                      <button
-                        onClick={() => instance && fetchPairingRequests(instance.id, channel.id)}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        Refresh
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => void clearPairingRequests(channel.id)}
+                          className="text-sm text-foreground-muted hover:text-error transition-colors"
+                        >
+                          Clear all
+                        </button>
+                        <button
+                          onClick={() => instance && fetchPairingRequests(instance.id, channel.id)}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Refresh
+                        </button>
+                      </div>
                     </div>
+
+                    {channel.id === "whatsapp" && whatsappDebug && (
+                      <details className="rounded-xl border border-border bg-background-secondary p-3 mb-4">
+                        <summary className="cursor-pointer text-xs font-medium text-foreground-muted">
+                          WhatsApp debug snapshot
+                        </summary>
+                        <pre className="mt-2 text-[11px] leading-4 text-foreground-subtle overflow-x-auto whitespace-pre-wrap break-all">
+                          {JSON.stringify(whatsappDebug, null, 2)}
+                        </pre>
+                      </details>
+                    )}
 
                     {(pairingRequests[channel.id]?.length ?? 0) === 0 ? (
                       <div className="text-center py-8 text-foreground-muted">
-                        {(status?.linked || approvedChannels.has(channel.id)) ? (
+                        {(channel.id === "whatsapp"
+                          ? Boolean(isWhatsAppRuntimeActive(status) || approvedChannels.has(channel.id))
+                          : Boolean(status?.linked || approvedChannels.has(channel.id))) ? (
                           <>
                             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-success-light flex items-center justify-center">
                               <CheckIcon className="w-6 h-6 text-success" />
@@ -564,23 +1009,51 @@ export default function InstanceChannelsPage({
                   <div className="border-t border-border p-6 bg-background">
                     <p className="text-sm text-foreground-muted mb-4">{channel.instructions}</p>
 
-                    <div className="space-y-4">
-                      {channel.setupFields.map((field) => (
-                        <div key={field.key}>
-                          <label className="block text-sm font-medium text-foreground mb-1.5">
-                            {field.label}
-                            {field.required && <span className="text-error ml-0.5">*</span>}
-                          </label>
-                          <input
-                            type={field.type}
-                            placeholder={field.placeholder}
-                            value={formData[field.key] || ""}
-                            onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-                            className="w-full px-4 py-2.5 rounded-xl bg-background-secondary border border-border text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    {channel.setupMode === "credentials" && (
+                      <div className="space-y-4">
+                        {channel.setupFields.map((field) => (
+                          <div key={field.key}>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">
+                              {field.label}
+                              {field.required && <span className="text-error ml-0.5">*</span>}
+                            </label>
+                            <input
+                              type={field.type}
+                              placeholder={field.placeholder}
+                              value={formData[field.key] || ""}
+                              onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                              className="w-full px-4 py-2.5 rounded-xl bg-background-secondary border border-border text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {channel.id === "whatsapp" && whatsappQrDataUrl && (
+                      <div className="rounded-xl border border-border bg-background-secondary p-4 mb-4">
+                        <div className="flex flex-col items-center gap-3">
+                          <img
+                            src={whatsappQrDataUrl}
+                            alt="WhatsApp QR code"
+                            className="w-56 h-56 rounded-lg bg-white p-2 border border-border"
                           />
+                          <p className="text-xs text-foreground-subtle text-center">
+                            Open WhatsApp on your phone, go to Linked Devices, and scan this QR.
+                          </p>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
+
+                    {channel.id === "whatsapp" && whatsappDebug && (
+                      <details className="rounded-xl border border-border bg-background-secondary p-3 mb-4">
+                        <summary className="cursor-pointer text-xs font-medium text-foreground-muted">
+                          WhatsApp debug snapshot
+                        </summary>
+                        <pre className="mt-2 text-[11px] leading-4 text-foreground-subtle overflow-x-auto whitespace-pre-wrap break-all">
+                          {JSON.stringify(whatsappDebug, null, 2)}
+                        </pre>
+                      </details>
+                    )}
 
                     <div className="flex items-center gap-3 mt-6">
                       <button
@@ -588,18 +1061,28 @@ export default function InstanceChannelsPage({
                         disabled={configuring === channel.id}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {configuring === channel.id ? (
+                        {configuring === channel.id || waitingForWhatsAppScan ? (
                           <>
                             <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                            {gatewayRestarting ? "Waiting for gateway..." : "Connecting..."}
+                            {gatewayRestarting ? "Waiting for gateway..." : "Waiting for WhatsApp..."}
                           </>
                         ) : (
                           <>
                             <LinkIcon className="w-4 h-4" />
-                            Connect {channel.name}
+                            {channel.id === "whatsapp" ? "Generate QR" : `Connect ${channel.name}`}
                           </>
                         )}
                       </button>
+
+                      {channel.id === "whatsapp" && whatsappQrDataUrl && (
+                        <button
+                          onClick={() => void waitForWhatsAppLogin(45_000, 0, false)}
+                          disabled={waitingForWhatsAppScan}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-foreground font-medium hover:bg-background-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {waitingForWhatsAppScan ? "Checking..." : "I've scanned QR"}
+                        </button>
+                      )}
 
                       {channel.docsUrl && (
                         <a
@@ -623,7 +1106,7 @@ export default function InstanceChannelsPage({
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground-muted">Coming Soon</h2>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {COMING_SOON_CHANNELS.map((channel) => {
             const Icon = channel.icon;
             return (

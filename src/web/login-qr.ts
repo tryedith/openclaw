@@ -31,11 +31,14 @@ type ActiveLogin = {
   error?: string;
   errorStatus?: number;
   waitPromise: Promise<void>;
-  restartAttempted: boolean;
+  restartAttempts: number;
   verbose: boolean;
 };
 
 const ACTIVE_LOGIN_TTL_MS = 3 * 60_000;
+const MAX_515_RESTARTS = 20;
+const LINK_GRACE_AFTER_515_MS = 20_000;
+const LINK_GRACE_POLL_MS = 1_000;
 const activeLogins = new Map<string, ActiveLogin>();
 
 function closeSocket(sock: WaSocket) {
@@ -61,6 +64,17 @@ function isLoginFresh(login: ActiveLogin) {
   return Date.now() - login.startedAt < ACTIVE_LOGIN_TTL_MS;
 }
 
+async function waitForLinkedCreds(authDir: string, timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + Math.max(0, timeoutMs);
+  while (Date.now() <= deadline) {
+    if (await webAuthExists(authDir)) {
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, LINK_GRACE_POLL_MS));
+  }
+  return false;
+}
+
 function attachLoginWaiter(accountId: string, login: ActiveLogin) {
   login.waitPromise = waitForWaConnection(login.sock)
     .then(() => {
@@ -80,12 +94,14 @@ function attachLoginWaiter(accountId: string, login: ActiveLogin) {
 }
 
 async function restartLoginSocket(login: ActiveLogin, runtime: RuntimeEnv) {
-  if (login.restartAttempted) {
+  if (login.restartAttempts >= MAX_515_RESTARTS) {
     return false;
   }
-  login.restartAttempted = true;
+  login.restartAttempts += 1;
   runtime.log(
-    info("WhatsApp asked for a restart after pairing (code 515); retrying connection once…"),
+    info(
+      `WhatsApp asked for a restart after pairing (code 515); retrying connection (${login.restartAttempts}/${MAX_515_RESTARTS})…`,
+    ),
   );
   closeSocket(login.sock);
   try {
@@ -124,6 +140,13 @@ export async function startWebLoginWithQr(
     return {
       message: `WhatsApp is already linked (${who}). Say “relink” if you want a fresh QR.`,
     };
+  }
+  if (hasWeb && opts.force) {
+    await logoutWeb({
+      authDir: account.authDir,
+      isLegacyAuthDir: account.isLegacyAuthDir,
+      runtime,
+    });
   }
 
   const existing = activeLogins.get(account.accountId);
@@ -185,7 +208,7 @@ export async function startWebLoginWithQr(
     startedAt: Date.now(),
     connected: false,
     waitPromise: Promise.resolve(),
-    restartAttempted: false,
+    restartAttempts: 0,
     verbose: Boolean(opts.verbose),
   };
   activeLogins.set(account.accountId, login);
@@ -246,16 +269,21 @@ export async function waitForWebLogin(
         message: "Still waiting for the QR scan. Let me know when you’ve scanned it.",
       };
     }
+    const pollDelayMs = Math.min(2_000, remaining);
+    const tick = new Promise<"tick">((resolve) => setTimeout(() => resolve("tick"), pollDelayMs));
     const timeout = new Promise<"timeout">((resolve) =>
       setTimeout(() => resolve("timeout"), remaining),
     );
-    const result = await Promise.race([login.waitPromise.then(() => "done"), timeout]);
+    const result = await Promise.race([login.waitPromise.then(() => "done"), tick, timeout]);
 
     if (result === "timeout") {
       return {
         connected: false,
         message: "Still waiting for the QR scan. Let me know when you’ve scanned it.",
       };
+    }
+    if (result === "tick") {
+      continue;
     }
 
     if (login.error) {
@@ -275,6 +303,24 @@ export async function waitForWebLogin(
         const restarted = await restartLoginSocket(login, runtime);
         if (restarted && isLoginFresh(login)) {
           continue;
+        }
+        const remaining = Math.max(0, deadline - Date.now());
+        const graceMs = Math.min(LINK_GRACE_AFTER_515_MS, remaining);
+        if (graceMs > 0) {
+          runtime.log(
+            info(
+              `WhatsApp requested restart (515). Waiting up to ${Math.ceil(graceMs / 1000)}s for link finalization…`,
+            ),
+          );
+          const linked = await waitForLinkedCreds(login.authDir, graceMs);
+          if (linked) {
+            const self = readWebSelfId(login.authDir);
+            const who = self.e164 ?? self.jid ?? "unknown";
+            const message = `WhatsApp linked (${who}).`;
+            runtime.log(success(message));
+            await resetActiveLogin(account.accountId);
+            return { connected: true, message };
+          }
         }
       }
       const message = `WhatsApp login failed: ${login.error}`;

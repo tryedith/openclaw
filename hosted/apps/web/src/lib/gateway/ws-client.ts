@@ -31,6 +31,19 @@ interface ChatHistoryResult {
   thinkingLevel?: string;
 }
 
+function rawDataToText(data: WebSocket.RawData): string {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof Buffer) {
+    return data.toString("utf8");
+  }
+  if (Array.isArray(data)) {
+    return Buffer.concat(data).toString("utf8");
+  }
+  return Buffer.from(data).toString("utf8");
+}
+
 /**
  * Create a short-lived WebSocket connection to the gateway,
  * execute an RPC call, and close the connection.
@@ -61,7 +74,7 @@ export async function gatewayRpc<T = unknown>(params: {
       ws = new WebSocket(wsUrl);
     } catch (err) {
       clearTimeout(timeout);
-      resolve({ ok: false, error: `Failed to connect: ${err}` });
+      resolve({ ok: false, error: `Failed to connect: ${String(err)}` });
       return;
     }
 
@@ -83,7 +96,7 @@ export async function gatewayRpc<T = unknown>(params: {
 
     ws.on("message", (data) => {
       try {
-        const msg: GatewayMessage = JSON.parse(data.toString());
+        const msg: GatewayMessage = JSON.parse(rawDataToText(data));
 
         if (msg.type === "res" && msg.id) {
           const handler = pendingRequests.get(msg.id);
@@ -102,7 +115,11 @@ export async function gatewayRpc<T = unknown>(params: {
         // Step 1: Connect/authenticate
         // Valid client IDs: webchat-ui, openclaw-control-ui, webchat, cli, gateway-client, etc.
         // Valid client modes: webchat, cli, ui, backend, node, probe, test
-        const connectRes = await sendRequest(ws, pendingRequests, "connect", {
+        const connectRes = await sendRequest(
+          ws,
+          pendingRequests,
+          "connect",
+          {
           minProtocol: PROTOCOL_VERSION,
           maxProtocol: PROTOCOL_VERSION,
           client: {
@@ -112,7 +129,9 @@ export async function gatewayRpc<T = unknown>(params: {
             mode: "backend",
           },
           auth: { token },
-        });
+          },
+          Math.min(timeoutMs, 15_000)
+        );
 
         if (!connectRes.ok) {
           clearTimeout(timeout);
@@ -127,7 +146,7 @@ export async function gatewayRpc<T = unknown>(params: {
         connected = true;
 
         // Step 2: Execute the requested RPC method
-        const rpcRes = await sendRequest(ws, pendingRequests, method, rpcParams);
+        const rpcRes = await sendRequest(ws, pendingRequests, method, rpcParams, timeoutMs);
 
         clearTimeout(timeout);
         ws.close();
@@ -148,7 +167,7 @@ export async function gatewayRpc<T = unknown>(params: {
       } catch (err) {
         clearTimeout(timeout);
         ws.close();
-        resolve({ ok: false, error: `RPC error: ${err}` });
+        resolve({ ok: false, error: `RPC error: ${String(err)}` });
       }
     });
   });
@@ -158,14 +177,15 @@ function sendRequest(
   ws: WebSocket,
   pendingRequests: Map<string, (res: GatewayMessage) => void>,
   method: string,
-  params: unknown
+  params: unknown,
+  timeoutMs: number
 ): Promise<GatewayMessage> {
   return new Promise((resolve, reject) => {
     const id = randomUUID();
     const timeout = setTimeout(() => {
       pendingRequests.delete(id);
       reject(new Error(`Request timeout for ${method}`));
-    }, 15000);
+    }, Math.max(1000, timeoutMs));
 
     pendingRequests.set(id, (res) => {
       clearTimeout(timeout);

@@ -208,6 +208,20 @@ export async function DELETE(
   });
 
   try {
+    if (channel === "whatsapp") {
+      const logoutResult = await gatewayRpc<{ channel?: string; cleared?: boolean }>({
+        gatewayUrl,
+        token,
+        method: "channels.logout",
+        rpcParams: { channel },
+      });
+      if (!logoutResult.ok) {
+        console.log("[channels/configure] WhatsApp logout failed:", logoutResult.error);
+      } else {
+        console.log("[channels/configure] WhatsApp logout result:", logoutResult.payload);
+      }
+    }
+
     // Step 1: Clear pairing data (approved users) for this channel
     console.log("[channels/configure] Clearing pairing data for channel:", channel);
     const clearResult = await gatewayRpc<{ ok: boolean; cleared?: boolean; previousCount?: number }>({
