@@ -7,6 +7,20 @@ const HISTORY_CONTEXT_MARKER = "[Chat messages since your last reply - for conte
 const CURRENT_MESSAGE_MARKER = "[Current message - respond to this]";
 const THREAD_STARTER_MARKER = "[Thread starter - for context]";
 
+// Matches blocks prepended by buildInboundUserContextPrefix (inbound-meta.ts):
+//   "Conversation info (untrusted metadata):\n```json\n{...}\n```"
+//   "Sender (untrusted metadata):\n```json\n{...}\n```"
+//   etc.
+const UNTRUSTED_META_BLOCK = /^[^\n]+\(untrusted[^)]*\):\n```json\n[\s\S]*?\n```/;
+
+function stripInboundMetaBlocks(text: string): string {
+  let result = text;
+  while (UNTRUSTED_META_BLOCK.test(result)) {
+    result = result.replace(UNTRUSTED_META_BLOCK, "").replace(/^\n+/, "");
+  }
+  return result;
+}
+
 function stripPrependedSystemEventBlock(text: string): string {
   if (!text.startsWith("System:")) {
     return text;
@@ -63,8 +77,12 @@ function stripEnvelopeFromContent(content: unknown[]): { content: unknown[]; cha
     if (entry.type !== "text" || typeof entry.text !== "string") {
       return item;
     }
-    const stripped = stripEmbeddedHistoryContext(
-      stripPrependedSystemEventBlock(stripMessageIdHints(stripEnvelope(entry.text))),
+    const stripped = stripEnvelope(
+      stripInboundMetaBlocks(
+        stripEmbeddedHistoryContext(
+          stripPrependedSystemEventBlock(stripMessageIdHints(entry.text)),
+        ),
+      ),
     );
     if (stripped === entry.text) {
       return item;
@@ -92,8 +110,12 @@ export function stripEnvelopeFromMessage(message: unknown): unknown {
   const next: Record<string, unknown> = { ...entry };
 
   if (typeof entry.content === "string") {
-    const stripped = stripEmbeddedHistoryContext(
-      stripPrependedSystemEventBlock(stripMessageIdHints(stripEnvelope(entry.content))),
+    const stripped = stripEnvelope(
+      stripInboundMetaBlocks(
+        stripEmbeddedHistoryContext(
+          stripPrependedSystemEventBlock(stripMessageIdHints(entry.content)),
+        ),
+      ),
     );
     if (stripped !== entry.content) {
       next.content = stripped;
@@ -106,8 +128,12 @@ export function stripEnvelopeFromMessage(message: unknown): unknown {
       changed = true;
     }
   } else if (typeof entry.text === "string") {
-    const stripped = stripEmbeddedHistoryContext(
-      stripPrependedSystemEventBlock(stripMessageIdHints(stripEnvelope(entry.text))),
+    const stripped = stripEnvelope(
+      stripInboundMetaBlocks(
+        stripEmbeddedHistoryContext(
+          stripPrependedSystemEventBlock(stripMessageIdHints(entry.text)),
+        ),
+      ),
     );
     if (stripped !== entry.text) {
       next.text = stripped;
