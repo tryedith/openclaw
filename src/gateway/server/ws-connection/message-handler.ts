@@ -439,6 +439,14 @@ export function attachGatewayWsMessageHandler(params: {
             close(1008, "device identity required");
             return;
           }
+
+          // Grant default operator scopes to shared-auth connections without a device.
+          // This covers hosted platform clients (webchat-ui, gateway-client) that
+          // authenticate with the gateway token but don't present a device identity.
+          if (scopes.length === 0 && role === "operator") {
+            scopes = ["operator.admin"];
+            connectParams.scopes = scopes;
+          }
         }
         if (device) {
           const derivedId = deriveDeviceIdFromPublicKey(device.publicKey);
