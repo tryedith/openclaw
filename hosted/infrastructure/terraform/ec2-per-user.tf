@@ -21,8 +21,9 @@ data "aws_ami" "amazon_linux_2023" {
   owners      = ["amazon"]
 
   filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    name = "name"
+    # Use standard AL2023 AMIs (exclude "minimal" variants).
+    values = ["al2023-ami-20*-kernel-*-x86_64"]
   }
 
   filter {
@@ -189,9 +190,16 @@ resource "aws_launch_template" "user_instance" {
     systemctl start docker
     usermod -aG docker ec2-user
 
-    # Install SSM agent (should be pre-installed, but ensure it's running)
-    systemctl enable amazon-ssm-agent
-    systemctl start amazon-ssm-agent
+    # Ensure SSM agent is present and running. Some AMI variants do not include it.
+    if ! rpm -q amazon-ssm-agent >/dev/null 2>&1; then
+      yum install -y amazon-ssm-agent || true
+    fi
+    if systemctl list-unit-files --type=service | grep -q '^amazon-ssm-agent.service'; then
+      systemctl enable amazon-ssm-agent || true
+      systemctl start amazon-ssm-agent || true
+    else
+      echo "WARNING: amazon-ssm-agent.service not found; SSM commands may be unavailable on this instance."
+    fi
 
     # Login to ECR
     aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.$REGION.amazonaws.com
@@ -221,8 +229,18 @@ resource "aws_launch_template" "user_instance" {
     HOSTED_USAGE_REPORT_URL=$(echo $SECRETS | jq -r '.HOSTED_USAGE_REPORT_URL // empty')
     USAGE_SERVICE_KEY=$(echo $SECRETS | jq -r '.USAGE_SERVICE_KEY // empty')
 
+    # Persist gateway state and workspace on host disk so container/image refreshes
+    # keep session transcripts, memory index, and workspace memory files.
+    STATE_DIR=/var/lib/openclaw/state
+    WORKSPACE_DIR=/var/lib/openclaw/workspace
+    mkdir -p $STATE_DIR
+    mkdir -p $WORKSPACE_DIR
+    chown -R 1000:1000 /var/lib/openclaw
+
     # Start the container (pre-warmed and ready)
     docker run -d --name openclaw-gateway --restart=always -p 8080:8080 \
+      -v $STATE_DIR:/tmp/.openclaw \
+      -v $WORKSPACE_DIR:/home/node/.openclaw/workspace \
       -e OPENCLAW_GATEWAY_TOKEN="$GATEWAY_TOKEN" \
       -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
       -e OPENAI_API_KEY="$OPENAI_API_KEY" \

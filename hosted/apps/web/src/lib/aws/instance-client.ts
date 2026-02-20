@@ -69,31 +69,55 @@ export class InstanceClient {
 
     console.log(`[Instance] Creating instance ${params.instanceId} for user ${params.userId}`);
 
-    // 1. Assign EC2 instance from pool (container already running, get gateway token)
-    const { ec2InstanceId, privateIp, gatewayToken } = await this.pool.assignToUser({
-      userId: params.userId,
-      instanceId: params.instanceId,
-    });
-    console.log(`[Instance] Assigned EC2 instance: ${ec2InstanceId}`);
+    let ec2InstanceId = "";
+    let targetGroupArn = "";
+    let ruleArn = "";
+    let gatewayToken = "";
 
-    // 2. Create target group for this user
-    const targetGroupArn = await this.createTargetGroup(serviceName);
-    console.log(`[Instance] Created target group: ${targetGroupArn}`);
+    try {
+      // 1. Assign EC2 instance from pool (container already running, get gateway token)
+      const assigned = await this.pool.assignToUser({
+        userId: params.userId,
+        instanceId: params.instanceId,
+      });
+      ec2InstanceId = assigned.ec2InstanceId;
+      gatewayToken = assigned.gatewayToken;
+      console.log(`[Instance] Assigned EC2 instance: ${ec2InstanceId}`);
 
-    // 3. Register instance with target group
-    await this.pool.registerWithTargetGroup(targetGroupArn, ec2InstanceId);
+      // 2. Create target group for this user
+      targetGroupArn = await this.createTargetGroup(serviceName);
+      console.log(`[Instance] Created target group: ${targetGroupArn}`);
 
-    // 4. Create ALB listener rule for routing
-    const ruleArn = await this.createListenerRule(serviceName, subdomain, targetGroupArn);
-    console.log(`[Instance] Created listener rule: ${ruleArn}`);
+      // 3. Register instance with target group
+      await this.pool.registerWithTargetGroup(targetGroupArn, ec2InstanceId);
 
-    return {
-      ec2InstanceId,
-      targetGroupArn,
-      ruleArn,
-      url,
-      gatewayToken,
-    };
+      // 4. Create ALB listener rule for routing
+      ruleArn = await this.createListenerRule(serviceName, subdomain, targetGroupArn);
+      console.log(`[Instance] Created listener rule: ${ruleArn}`);
+
+      return {
+        ec2InstanceId,
+        targetGroupArn,
+        ruleArn,
+        url,
+        gatewayToken,
+      };
+    } catch (error) {
+      console.error(`[Instance] Provisioning failed for ${params.instanceId}:`, error);
+
+      // Best-effort cleanup so partial provisioning doesn't leak infrastructure.
+      if (ruleArn) {
+        await this.deleteListenerRule(ruleArn);
+      }
+      if (targetGroupArn) {
+        await this.deleteTargetGroup(targetGroupArn);
+      }
+      if (ec2InstanceId) {
+        await this.pool.releaseInstance(ec2InstanceId);
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -205,7 +229,7 @@ export class InstanceClient {
   /**
    * Delete target group by name
    */
-  private async deleteTargetGroupByName(serviceName: string): Promise<void> {
+  private async deleteTargetGroupByName(_serviceName: string): Promise<void> {
     console.log(`[Instance] Skipping target group deletion by name (no ARN stored)`);
   }
 

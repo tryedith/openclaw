@@ -11,7 +11,6 @@ import {
   CreateTagsCommand,
   waitUntilInstanceRunning,
   Tag,
-  Instance,
 } from "@aws-sdk/client-ec2";
 import {
   ElasticLoadBalancingV2Client,
@@ -27,6 +26,7 @@ import {
 const AWS_REGION = process.env.AWS_REGION || "us-west-2";
 const LAUNCH_TEMPLATE_ID = process.env.LAUNCH_TEMPLATE_ID!;
 const POOL_SPARE_COUNT = parseInt(process.env.POOL_SPARE_COUNT || "2", 10);
+const INSTANCE_READY_TIMEOUT_MS = parseInt(process.env.INSTANCE_READY_TIMEOUT_MS || "300000", 10);
 const SUBNET_IDS = (process.env.SUBNET_IDS || "")
   .split(",")
   .map((value) => value.trim())
@@ -51,21 +51,25 @@ interface AssignInstanceParams {
 }
 
 function getErrorCode(error: unknown): string {
-  if (!error || typeof error !== "object") return "UnknownError";
+  if (!error || typeof error !== "object") {return "UnknownError";}
   const code = (error as { Code?: unknown; code?: unknown }).Code;
-  if (typeof code === "string" && code.length > 0) return code;
+  if (typeof code === "string" && code.length > 0) {return code;}
   const lowerCode = (error as { code?: unknown }).code;
-  if (typeof lowerCode === "string" && lowerCode.length > 0) return lowerCode;
+  if (typeof lowerCode === "string" && lowerCode.length > 0) {return lowerCode;}
   return "UnknownError";
 }
 
 function getErrorMessage(error: unknown): string {
-  if (!error || typeof error !== "object") return String(error);
+  if (!error || typeof error !== "object") {return String(error);}
   const message = (error as { message?: unknown; Message?: unknown }).message;
-  if (typeof message === "string" && message.length > 0) return message;
+  if (typeof message === "string" && message.length > 0) {return message;}
   const upperMessage = (error as { Message?: unknown }).Message;
-  if (typeof upperMessage === "string" && upperMessage.length > 0) return upperMessage;
-  return String(error);
+  if (typeof upperMessage === "string" && upperMessage.length > 0) {return upperMessage;}
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Unknown error object";
+  }
 }
 
 export class EC2PoolManager {
@@ -139,7 +143,7 @@ export class EC2PoolManager {
 
     const attempts: string[] = [];
     for (let i = 0; i < candidateSubnets.length; i++) {
-      const subnet = candidateSubnets[(offset + i) % candidateSubnets.length]!;
+      const subnet = candidateSubnets[(offset + i) % candidateSubnets.length];
       try {
         const response = await this.ec2.send(
           new RunInstancesCommand({
@@ -186,7 +190,7 @@ export class EC2PoolManager {
     return launchedInstanceIds;
   }
 
-  async waitForInstanceReady(instanceId: string, timeoutMs: number = 180000): Promise<void> {
+  async waitForInstanceReady(instanceId: string, timeoutMs: number = INSTANCE_READY_TIMEOUT_MS): Promise<void> {
     await waitUntilInstanceRunning(
       { client: this.ec2, maxWaitTime: 120 },
       { InstanceIds: [instanceId] }
@@ -196,10 +200,12 @@ export class EC2PoolManager {
     while (Date.now() - startTime < timeoutMs) {
       const instances = await this.getPoolInstances();
       const instance = instances.find((i) => i.instanceId === instanceId);
-      if (instance?.status === "available") return;
+      if (instance?.status === "available") {return;}
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
-    throw new Error(`Instance ${instanceId} did not become available within timeout`);
+    throw new Error(
+      `Instance ${instanceId} did not become available within ${Math.round(timeoutMs / 1000)}s`
+    );
   }
 
   async maintainPool(): Promise<void> {
@@ -289,7 +295,7 @@ export class EC2PoolManager {
 
   async releaseInstance(ec2InstanceId: string): Promise<void> {
     const instance = await this.getInstanceByEC2Id(ec2InstanceId);
-    if (!instance) return;
+    if (!instance) {return;}
 
     // Clean up gateway token from Secrets Manager
     try {

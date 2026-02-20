@@ -53,12 +53,12 @@ push: ecr-login ## Build and push the gateway image to ECR
 	@echo "Pushed: $(ECR_REPO):$(TAG)"
 	@echo "Pushed: $(ECR_REPO):latest"
 
-deploy: push rotate-pool ## Build, push, and rotate the instance pool
+deploy: push rolling-restart-assigned rotate-spares ## Build, push, restart assigned instances, and refresh spare pool
 	@echo "Deploy complete."
 
 # ── Instance Pool ────────────────────────────────────────────
 
-.PHONY: pool-status rotate-pool terminate-pool
+.PHONY: pool-status rotate-pool rotate-spares rolling-restart-assigned terminate-pool
 
 pool-status: ## Show all OpenClaw EC2 instances and their status
 	@aws ec2 describe-instances --region $(AWS_REGION) \
@@ -80,6 +80,39 @@ rotate-pool: ## Terminate ALL pool instances (assigned + available) so fresh one
 		echo "Terminating: $$INSTANCE_IDS"; \
 		aws ec2 terminate-instances --region $(AWS_REGION) --instance-ids $$INSTANCE_IDS --output text; \
 		echo "Done. New instances will launch from the pool manager on next request."; \
+	fi
+
+rotate-spares: ## Terminate only spare (unassigned) pool instances so replacements boot on latest image
+	@echo "Terminating spare pool instances (Status=available|initializing)..."
+	@INSTANCE_IDS=$$(aws ec2 describe-instances --region $(AWS_REGION) \
+		--filters "Name=tag:Name,Values=openclaw-user-instance" \
+		         "Name=tag:Status,Values=available,initializing" \
+		         "Name=instance-state-name,Values=pending,running" \
+		--query 'Reservations[*].Instances[*].InstanceId' \
+		--output text); \
+	if [ -z "$$INSTANCE_IDS" ]; then \
+		echo "No spare instances to terminate."; \
+	else \
+		echo "Terminating spares: $$INSTANCE_IDS"; \
+		aws ec2 terminate-instances --region $(AWS_REGION) --instance-ids $$INSTANCE_IDS --output text; \
+		echo "Done. Spare pool will repopulate with latest image."; \
+	fi
+
+rolling-restart-assigned: ## Restart gateway container on assigned instances (preserves /tmp/.openclaw via host mount)
+	@set -e; \
+	INSTANCE_IDS=$$(aws ec2 describe-instances --region $(AWS_REGION) \
+		--filters "Name=tag:Name,Values=openclaw-user-instance" \
+		         "Name=tag:Status,Values=assigned" \
+		         "Name=instance-state-name,Values=running" \
+		--query 'Reservations[*].Instances[*].InstanceId' \
+		--output text); \
+	if [ -z "$$INSTANCE_IDS" ]; then \
+		echo "No assigned instances to restart."; \
+	else \
+		for INSTANCE_ID in $$INSTANCE_IDS; do \
+			echo "Rolling restart on $$INSTANCE_ID"; \
+			$(MAKE) --no-print-directory container-restart INSTANCE=$$INSTANCE_ID; \
+		done; \
 	fi
 
 terminate-pool: rotate-pool ## Alias for rotate-pool
@@ -112,7 +145,7 @@ container-restart: ## Pull latest image and restart the container on a single in
 	@echo "Restarting container on $(INSTANCE)..."
 	@aws ssm send-command --instance-ids $(INSTANCE) \
 		--document-name "AWS-RunShellScript" \
-		--parameters 'commands=["aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com && docker pull $(ECR_REPO):latest && docker stop openclaw-gateway && docker rm openclaw-gateway && GATEWAY_TOKEN=$$(curl -s http://169.254.169.254/latest/meta-data/tags/instance/GatewayToken 2>/dev/null || aws ec2 describe-tags --region $(AWS_REGION) --filters Name=resource-id,Values=$$(curl -s http://169.254.169.254/latest/meta-data/instance-id) Name=key,Values=GatewayToken --query Tags[0].Value --output text) && SECRETS=$$(aws secretsmanager get-secret-value --region $(AWS_REGION) --secret-id openclaw/platform-credentials --query SecretString --output text) && ANTHROPIC_API_KEY=$$(echo $$SECRETS | jq -r '.ANTHROPIC_API_KEY // empty') && OPENAI_API_KEY=$$(echo $$SECRETS | jq -r '.OPENAI_API_KEY // empty') && GEMINI_API_KEY=$$(echo $$SECRETS | jq -r '.GEMINI_API_KEY // empty') && HOSTED_USAGE_REPORT_URL=$$(echo $$SECRETS | jq -r '.HOSTED_USAGE_REPORT_URL // empty') && USAGE_SERVICE_KEY=$$(echo $$SECRETS | jq -r '.USAGE_SERVICE_KEY // empty') && docker run -d --name openclaw-gateway --restart=always -p 8080:8080 -e OPENCLAW_GATEWAY_TOKEN=$$GATEWAY_TOKEN -e ANTHROPIC_API_KEY=$$ANTHROPIC_API_KEY -e OPENAI_API_KEY=$$OPENAI_API_KEY -e GEMINI_API_KEY=$$GEMINI_API_KEY -e HOSTED_USAGE_REPORT_URL=$$HOSTED_USAGE_REPORT_URL -e USAGE_SERVICE_KEY=$$USAGE_SERVICE_KEY -e OPENCLAW_CONFIG_PATH=/app/hosted-config.json -e OPENCLAW_STATE_DIR=/tmp/.openclaw -e PORT=8080 -e NODE_ENV=production $(ECR_REPO):latest"]' \
+		--parameters 'commands=["aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com && docker pull $(ECR_REPO):latest && STATE_DIR=/var/lib/openclaw/state && WORKSPACE_DIR=/var/lib/openclaw/workspace && mkdir -p $$STATE_DIR $$WORKSPACE_DIR && chown -R 1000:1000 /var/lib/openclaw && docker stop openclaw-gateway >/dev/null 2>&1 || true && docker rm openclaw-gateway >/dev/null 2>&1 || true && IMDS_TOKEN=$$(curl -s -X PUT \"http://169.254.169.254/latest/api/token\" -H \"X-aws-ec2-metadata-token-ttl-seconds: 300\") && INSTANCE_ID=$$(curl -s -H \"X-aws-ec2-metadata-token: $$IMDS_TOKEN\" http://169.254.169.254/latest/meta-data/instance-id) && GATEWAY_TOKEN=$$(aws secretsmanager get-secret-value --region $(AWS_REGION) --secret-id openclaw/instance/$$INSTANCE_ID/gateway-token --query SecretString --output text) && SECRETS=$$(aws secretsmanager get-secret-value --region $(AWS_REGION) --secret-id openclaw/platform-credentials --query SecretString --output text) && ANTHROPIC_API_KEY=$$(echo $$SECRETS | jq -r \".ANTHROPIC_API_KEY // empty\") && OPENAI_API_KEY=$$(echo $$SECRETS | jq -r \".OPENAI_API_KEY // empty\") && GEMINI_API_KEY=$$(echo $$SECRETS | jq -r \".GEMINI_API_KEY // empty\") && HOSTED_USAGE_REPORT_URL=$$(echo $$SECRETS | jq -r \".HOSTED_USAGE_REPORT_URL // empty\") && USAGE_SERVICE_KEY=$$(echo $$SECRETS | jq -r \".USAGE_SERVICE_KEY // empty\") && docker run -d --name openclaw-gateway --restart=always -p 8080:8080 -v $$STATE_DIR:/tmp/.openclaw -v $$WORKSPACE_DIR:/home/node/.openclaw/workspace -e OPENCLAW_GATEWAY_TOKEN=$$GATEWAY_TOKEN -e ANTHROPIC_API_KEY=$$ANTHROPIC_API_KEY -e OPENAI_API_KEY=$$OPENAI_API_KEY -e GEMINI_API_KEY=$$GEMINI_API_KEY -e HOSTED_USAGE_REPORT_URL=$$HOSTED_USAGE_REPORT_URL -e USAGE_SERVICE_KEY=$$USAGE_SERVICE_KEY -e OPENCLAW_CONFIG_PATH=/app/hosted-config.json -e OPENCLAW_STATE_DIR=/tmp/.openclaw -e PORT=8080 -e NODE_ENV=production $(ECR_REPO):latest"]' \
 		--region $(AWS_REGION) --output json --query 'Command.CommandId' | \
 	xargs -I{} sh -c 'sleep 15 && aws ssm get-command-invocation \
 		--command-id {} --instance-id $(INSTANCE) \

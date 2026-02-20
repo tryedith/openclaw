@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getInstanceClient } from "@/lib/aws/instance-client";
 import { encryptGatewayToken } from "@/lib/crypto";
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 
 // GET /api/instances - List user's instances
 export async function GET() {
@@ -123,60 +124,91 @@ export async function POST(request: Request) {
     );
   }
 
-  // Create instance record (status: provisioning)
-  // gateway_token_encrypted will be updated after we get it from the EC2 instance
-  console.log("[instances] POST - Creating Supabase record with name:", name);
-  const { data: instance, error: insertError } = await supabase
+  // Fail fast on duplicate name before provisioning infrastructure.
+  const { data: existingRows, error: existingError } = await supabase
     .from("instances")
-    .insert({
-      user_id: user.id,
-      name,
-      description,
-      status: "provisioning",
-      provider: "aws",
-      gateway_token_encrypted: "pending", // Placeholder, will be updated
-    })
-    .select()
-    .single();
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("name", name)
+    .limit(1);
 
-  if (insertError) {
-    console.error("[instances] POST - Supabase insert error:", insertError);
+  if (existingError) {
+    console.error("[instances] POST - Supabase precheck error:", existingError);
     return NextResponse.json(
-      { error: "Failed to create instance: " + insertError.message },
+      { error: "Failed to validate instance name: " + existingError.message },
       { status: 500 }
     );
   }
-  console.log("[instances] POST - Supabase record created:", instance.id);
 
-  // Provision EC2 instance from pool (container already running, get gateway token)
+  if (existingRows && existingRows.length > 0) {
+    return NextResponse.json(
+      { error: `An instance named "${name}" already exists.` },
+      { status: 409 }
+    );
+  }
+
+  const instanceClient = getInstanceClient();
+  const instanceId = randomUUID();
+
+  // Provision EC2 instance from pool first.
   try {
     console.log("[instances] POST - Assigning EC2 instance from pool...");
-    const instanceClient = getInstanceClient();
-
     const { ec2InstanceId, targetGroupArn, ruleArn, url, gatewayToken } = await instanceClient.createInstance({
       userId: user.id,
-      instanceId: instance.id,
+      instanceId,
     });
     console.log("[instances] POST - EC2 instance assigned:", { ec2InstanceId, url });
 
-    // Update instance with AWS details and gateway token
-    console.log("[instances] POST - Updating Supabase with AWS details...");
-    await supabase
+    // Persist only after provisioning succeeds.
+    console.log("[instances] POST - Creating Supabase record after successful provisioning...");
+    const { error: insertError } = await supabase
       .from("instances")
-      .update({
+      .insert({
+        id: instanceId,
+        user_id: user.id,
+        name,
+        description,
+        provider: "aws",
         provider_resource_id: ec2InstanceId,
         aws_service_arn: ec2InstanceId, // Stores EC2 instance ID
         aws_target_group_arn: targetGroupArn,
         aws_rule_arn: ruleArn,
         public_url: url,
         gateway_token_encrypted: encryptGatewayToken(gatewayToken),
-        status: "running", // Container is already running
-      })
-      .eq("id", instance.id);
+        status: "running",
+      });
+
+    if (insertError) {
+      console.error("[instances] POST - Supabase insert error after provisioning:", insertError);
+
+      // Avoid leaking provisioned infrastructure if DB write fails.
+      try {
+        await instanceClient.deleteInstance({
+          instanceId,
+          ec2InstanceId,
+          targetGroupArn,
+          ruleArn,
+        });
+      } catch (cleanupError) {
+        console.error("[instances] POST - Rollback cleanup failed:", cleanupError);
+      }
+
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          { error: `An instance named "${name}" already exists.` },
+          { status: 409 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: "Failed to create instance record: " + insertError.message },
+        { status: 500 }
+      );
+    }
 
     console.log("[instances] POST - Success! Instance is ready.");
     return NextResponse.json({
-      id: instance.id,
+      id: instanceId,
       status: "running",
       url,
       message: "Instance is ready.",
@@ -189,14 +221,6 @@ export async function POST(request: Request) {
       rawMsg === "Could not load credentials from any providers"
         ? "Could not load AWS credentials. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY (and AWS_REGION) in the Vercel environment for the hosted web app."
         : rawMsg;
-    await supabase
-      .from("instances")
-      .update({
-        status: "error",
-        error_message: errorMsg,
-      })
-      .eq("id", instance.id);
-
     return NextResponse.json(
       { error: "Failed to provision instance: " + errorMsg },
       { status: 500 }

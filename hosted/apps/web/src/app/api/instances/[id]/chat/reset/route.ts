@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { gatewayRpc, buildSessionKey } from "@/lib/gateway/ws-client";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
+import { decryptGatewayToken } from "@/lib/crypto";
 
 type SessionsResetResult = {
   ok?: boolean;
@@ -41,7 +42,7 @@ export async function POST(
 
   const { gatewayUrl, token } = resolveGatewayTarget({
     instancePublicUrl: instance.public_url,
-    instanceToken: instance.gateway_token_encrypted,
+    instanceToken: decryptGatewayToken(instance.gateway_token_encrypted),
     instanceId: id,
   });
 
@@ -54,6 +55,7 @@ export async function POST(
       method: "sessions.reset",
       rpcParams: {
         key: sessionKey,
+        reason: "new",
       },
       timeoutMs: 30000,
     });
