@@ -36,6 +36,7 @@ const INSTANCE_SUB_ITEMS = [
   { suffix: "", label: "Chat", icon: MessageSquare },
   { suffix: "/channels", label: "Channels", icon: Radio },
   { suffix: "/usage", label: "Usage", icon: BarChart3 },
+  { suffix: "/settings", label: "Settings", icon: Settings },
   { suffix: "/debug", label: "Debug", icon: Bug },
 ] as const;
 
@@ -62,9 +63,9 @@ export function SidebarNav() {
   const activeInstanceId = instanceMatch?.[1];
 
   function isInstanceSubActive(instanceId: string, suffix: string) {
-    if (activeInstanceId !== instanceId) return false;
+    if (activeInstanceId !== instanceId) {return false;}
     const base = `/dashboard/instances/${instanceId}`;
-    if (suffix === "") return pathname === base;
+    if (suffix === "") {return pathname === base;}
     return pathname.startsWith(`${base}${suffix}`);
   }
 

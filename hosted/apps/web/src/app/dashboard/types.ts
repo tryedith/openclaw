@@ -25,6 +25,13 @@ export interface HistoryMessageRaw {
 }
 
 export type ProviderId = "anthropic" | "openai" | "google";
+export type ApiKeyProvider = ProviderId;
+
+export interface InstanceApiKeyStatus {
+  provider: ApiKeyProvider;
+  hasKey: boolean;
+  updatedAt: string | null;
+}
 
 export interface ProviderModel {
   id: string;

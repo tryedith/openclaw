@@ -297,16 +297,18 @@ export class EC2PoolManager {
     const instance = await this.getInstanceByEC2Id(ec2InstanceId);
     if (!instance) {return;}
 
-    // Clean up gateway token from Secrets Manager
-    try {
-      await this.secrets.send(
-        new DeleteSecretCommand({
-          SecretId: `openclaw/instance/${instance.instanceId}/gateway-token`,
-          ForceDeleteWithoutRecovery: true,
-        })
-      );
-    } catch (error) {
-      console.log(`[ec2-pool] Secret cleanup for ${instance.instanceId}: ${getErrorMessage(error)}`);
+    // Clean up secrets from Secrets Manager (gateway token + user-provided API keys)
+    for (const suffix of ["gateway-token", "user-keys"]) {
+      try {
+        await this.secrets.send(
+          new DeleteSecretCommand({
+            SecretId: `openclaw/instance/${instance.instanceId}/${suffix}`,
+            ForceDeleteWithoutRecovery: true,
+          })
+        );
+      } catch (error) {
+        console.log(`[ec2-pool] Secret cleanup ${suffix} for ${instance.instanceId}: ${getErrorMessage(error)}`);
+      }
     }
 
     await this.ec2.send(
