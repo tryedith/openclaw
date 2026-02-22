@@ -15,6 +15,11 @@ import type {
   ProviderModelGroup,
 } from "./types";
 
+const MODEL_RESTART_GRACE_MS = 20_000;
+const MODEL_RELOAD_RETRY_MS = 1_500;
+const MODEL_RELOAD_MAX_ATTEMPTS = 12;
+const MODEL_POST_RESTART_STABILIZE_MS = 1_000;
+
 function generateRequestId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
@@ -141,6 +146,7 @@ export function useDashboardChat(instanceId: string) {
   const [modelsError, setModelsError] = useState<string | null>(null);
   const [modelSaving, setModelSaving] = useState(false);
   const [modelMessage, setModelMessage] = useState<string | null>(null);
+  const [modelRestarting, setModelRestarting] = useState(false);
   const [providerGroups, setProviderGroups] = useState<ProviderModelGroup[]>([]);
   const [currentModelRef, setCurrentModelRef] = useState("");
   const [selectedProvider, setSelectedProvider] = useState<ProviderId>("anthropic");
@@ -148,6 +154,9 @@ export function useDashboardChat(instanceId: string) {
 
   const liveSocketRef = useRef<WebSocket | null>(null);
   const historySyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modelReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modelRestartClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modelRestartUntilRef = useRef<number>(0);
   const activeRunIdRef = useRef<string | null>(null);
   const activeRunStartedAtRef = useRef<number | null>(null);
   const assistantCountAtRunStartRef = useRef<number | null>(null);
@@ -170,7 +179,45 @@ export function useDashboardChat(instanceId: string) {
     clearPendingRunState();
   }
 
+  function clearModelReloadTimer() {
+    if (modelReloadTimerRef.current) {
+      clearTimeout(modelReloadTimerRef.current);
+      modelReloadTimerRef.current = null;
+    }
+  }
+
+  function clearModelRestartClearTimer() {
+    if (modelRestartClearTimerRef.current) {
+      clearTimeout(modelRestartClearTimerRef.current);
+      modelRestartClearTimerRef.current = null;
+    }
+  }
+
+  function scheduleModelRestartClear() {
+    clearModelRestartClearTimer();
+    const remainingMs = Math.max(0, modelRestartUntilRef.current - Date.now());
+    modelRestartClearTimerRef.current = setTimeout(() => {
+      setModelRestarting(false);
+      modelRestartClearTimerRef.current = null;
+    }, remainingMs + MODEL_POST_RESTART_STABILIZE_MS);
+  }
+
+  function inModelRestartGrace(): boolean {
+    return Date.now() < modelRestartUntilRef.current;
+  }
+
+  function beginModelRestartGrace() {
+    modelRestartUntilRef.current = Date.now() + MODEL_RESTART_GRACE_MS;
+    setModelRestarting(true);
+    setModelMessage("Model updated. Gateway restarting; reconnecting...");
+    scheduleModelRestartClear();
+  }
+
   function clearModelState() {
+    clearModelReloadTimer();
+    clearModelRestartClearTimer();
+    modelRestartUntilRef.current = 0;
+    setModelRestarting(false);
     setProviderGroups([]);
     setCurrentModelRef("");
     setSelectedProvider("anthropic");
@@ -253,7 +300,7 @@ export function useDashboardChat(instanceId: string) {
     }
   }
 
-  async function fetchModels(instId: string) {
+  async function fetchModels(instId: string): Promise<boolean> {
     setModelsLoading(true);
     setModelsError(null);
 
@@ -282,15 +329,54 @@ export function useDashboardChat(instanceId: string) {
         setSelectedProvider(nextSelection.provider);
         setSelectedModelRef(nextSelection.modelRef);
       }
+      if (inModelRestartGrace()) {
+        scheduleModelRestartClear();
+      } else {
+        setModelRestarting(false);
+        clearModelRestartClearTimer();
+      }
     } catch (error) {
+      if (inModelRestartGrace()) {
+        setModelMessage("Gateway restarting; reconnecting...");
+        return false;
+      }
       setModelsError(error instanceof Error ? error.message : String(error));
+      return false;
     } finally {
       setModelsLoading(false);
     }
+    return true;
+  }
+
+  function scheduleModelReload(instId: string, attemptsLeft: number) {
+    clearModelReloadTimer();
+    modelReloadTimerRef.current = setTimeout(() => {
+      void fetchModels(instId).then((ok) => {
+        if (ok) {
+          clearModelReloadTimer();
+          return;
+        }
+        if (attemptsLeft > 1) {
+          scheduleModelReload(instId, attemptsLeft - 1);
+          return;
+        }
+        if (inModelRestartGrace()) {
+          scheduleModelReload(instId, 1);
+          return;
+        }
+        setModelRestarting(false);
+      });
+    }, MODEL_RELOAD_RETRY_MS);
   }
 
   async function sendMessage() {
-    if (!message.trim() || !instance?.id || instance.status !== "running" || sending) {return;}
+    if (
+      !message.trim() ||
+      !instance?.id ||
+      instance.status !== "running" ||
+      sending ||
+      modelRestarting
+    ) {return;}
 
     const userMessage = message;
     setMessage("");
@@ -332,6 +418,12 @@ export function useDashboardChat(instanceId: string) {
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      if (inModelRestartGrace()) {
+        setMessage(userMessage);
+        setModelMessage("Gateway restarting; reconnecting...");
+        clearPendingRunState();
+        return;
+      }
       clearPendingRunState();
       setChatHistory((prev) => [
         ...prev,
@@ -368,14 +460,8 @@ export function useDashboardChat(instanceId: string) {
 
       const appliedRef = typeof data.modelRef === "string" ? data.modelRef : selectedModelRef;
       setCurrentModelRef(appliedRef);
-      setModelMessage(
-        data.restart?.scheduled
-          ? "Model updated. Gateway is restarting briefly."
-          : "Model updated."
-      );
-      setTimeout(() => {
-        void fetchModels(instance.id);
-      }, 2000);
+      beginModelRestartGrace();
+      scheduleModelReload(instance.id, MODEL_RELOAD_MAX_ATTEMPTS);
     } catch (error) {
       setModelsError(error instanceof Error ? error.message : String(error));
     } finally {
@@ -695,6 +781,8 @@ export function useDashboardChat(instanceId: string) {
       cancelled = true;
       setLiveConnected(false);
       setLiveError(null);
+      clearModelReloadTimer();
+      clearModelRestartClearTimer();
       if (reconnectTimer) {clearTimeout(reconnectTimer);}
       if (historySyncTimerRef.current) {
         clearTimeout(historySyncTimerRef.current);
@@ -709,8 +797,11 @@ export function useDashboardChat(instanceId: string) {
   const canSaveModel =
     selectedModelRef.length > 0 &&
     !modelSaving &&
+    !modelRestarting &&
     !modelsLoading &&
     selectedModelRef !== currentModelRef;
+
+  const sendingEffective = sending || modelRestarting;
 
   return {
     instance,
@@ -718,7 +809,7 @@ export function useDashboardChat(instanceId: string) {
     message,
     setMessage,
     chatHistory,
-    sending,
+    sending: sendingEffective,
     streamingAssistant,
     activeRunId,
     startingNewChat,

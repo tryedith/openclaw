@@ -270,6 +270,7 @@ local-gateway-up: local-check-env ## Run local gateway container with billing en
 		set -a; source "$(LOCAL_ENV_FILE)"; set +a; \
 		docker rm -f "$(LOCAL_GATEWAY_CONTAINER)" >/dev/null 2>&1 || true; \
 		CONTAINER_ID=$$(docker run -d --name "$(LOCAL_GATEWAY_CONTAINER)" \
+			--restart=unless-stopped \
 			-p $(LOCAL_GATEWAY_PORT):8080 \
 			-e OPENCLAW_GATEWAY_TOKEN="$(LOCAL_GATEWAY_TOKEN)" \
 			-e ANTHROPIC_API_KEY="$${ANTHROPIC_API_KEY:-}" \
