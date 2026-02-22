@@ -32,6 +32,10 @@ import type {
   SkillsInstallParamsSchema,
   SkillsStatusParamsSchema,
   SkillsUpdateParamsSchema,
+  WorkspaceTreeParamsSchema,
+  WorkspaceTreeResultSchema,
+  WorkspaceReadParamsSchema,
+  WorkspaceReadResultSchema,
 } from "./agents-models-skills.js";
 import type {
   ChannelPairingApproveParamsSchema,
@@ -214,6 +218,10 @@ export type AgentsFilesSetParams = Static<typeof AgentsFilesSetParamsSchema>;
 export type AgentsFilesSetResult = Static<typeof AgentsFilesSetResultSchema>;
 export type AgentsListParams = Static<typeof AgentsListParamsSchema>;
 export type AgentsListResult = Static<typeof AgentsListResultSchema>;
+export type WorkspaceTreeParams = Static<typeof WorkspaceTreeParamsSchema>;
+export type WorkspaceTreeResult = Static<typeof WorkspaceTreeResultSchema>;
+export type WorkspaceReadParams = Static<typeof WorkspaceReadParamsSchema>;
+export type WorkspaceReadResult = Static<typeof WorkspaceReadResultSchema>;
 export type ModelChoice = Static<typeof ModelChoiceSchema>;
 export type ModelsListParams = Static<typeof ModelsListParamsSchema>;
 export type ModelsListResult = Static<typeof ModelsListResultSchema>;

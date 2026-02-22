@@ -40,6 +40,15 @@ import {
   AgentsListParamsSchema,
   type AgentsListResult,
   AgentsListResultSchema,
+  type WorkspaceTreeParams,
+  WorkspaceTreeParamsSchema,
+  type WorkspaceTreeResult,
+  WorkspaceTreeResultSchema,
+  WorkspaceTreeEntrySchema,
+  type WorkspaceReadParams,
+  WorkspaceReadParamsSchema,
+  type WorkspaceReadResult,
+  WorkspaceReadResultSchema,
   type AgentWaitParams,
   AgentWaitParamsSchema,
   type ChannelsLogoutParams,
@@ -259,6 +268,10 @@ export const validateAgentsFilesGetParams = ajv.compile<AgentsFilesGetParams>(
 export const validateAgentsFilesSetParams = ajv.compile<AgentsFilesSetParams>(
   AgentsFilesSetParamsSchema,
 );
+export const validateWorkspaceTreeParams =
+  ajv.compile<WorkspaceTreeParams>(WorkspaceTreeParamsSchema);
+export const validateWorkspaceReadParams =
+  ajv.compile<WorkspaceReadParams>(WorkspaceReadParamsSchema);
 export const validateNodePairRequestParams = ajv.compile<NodePairRequestParams>(
   NodePairRequestParamsSchema,
 );
@@ -507,6 +520,11 @@ export {
   AgentsFilesSetResultSchema,
   AgentsListParamsSchema,
   AgentsListResultSchema,
+  WorkspaceTreeParamsSchema,
+  WorkspaceTreeResultSchema,
+  WorkspaceTreeEntrySchema,
+  WorkspaceReadParamsSchema,
+  WorkspaceReadResultSchema,
   ModelsListParamsSchema,
   SkillsStatusParamsSchema,
   SkillsInstallParamsSchema,
@@ -598,6 +616,10 @@ export type {
   AgentsFilesSetResult,
   AgentsListParams,
   AgentsListResult,
+  WorkspaceTreeParams,
+  WorkspaceTreeResult,
+  WorkspaceReadParams,
+  WorkspaceReadResult,
   SkillsStatusParams,
   SkillsBinsParams,
   SkillsBinsResult,

@@ -62,6 +62,15 @@ export type GatewayFrame =
       error?: { message?: string };
     };
 
+export interface FileNode {
+  name: string;
+  type: "file" | "directory";
+  path: string;
+  size?: number;
+  updatedAt?: number;
+  children?: FileNode[];
+}
+
 export type ChatEventPayload = {
   runId?: string;
   sessionKey?: string;

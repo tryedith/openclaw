@@ -27,6 +27,7 @@ import { usageHandlers } from "./server-methods/usage.js";
 import { voicewakeHandlers } from "./server-methods/voicewake.js";
 import { webHandlers } from "./server-methods/web.js";
 import { wizardHandlers } from "./server-methods/wizard.js";
+import { workspaceHandlers } from "./server-methods/workspace.js";
 
 const ADMIN_SCOPE = "operator.admin";
 const READ_SCOPE = "operator.read";
@@ -84,6 +85,8 @@ const READ_METHODS = new Set([
   "chat.history",
   "config.get",
   "talk.config",
+  "workspace.tree",
+  "workspace.read",
 ]);
 const WRITE_METHODS = new Set([
   "send",
@@ -203,6 +206,7 @@ export const coreGatewayHandlers: GatewayRequestHandlers = {
   ...agentHandlers,
   ...agentsHandlers,
   ...browserHandlers,
+  ...workspaceHandlers,
 };
 
 export async function handleGatewayRequest(

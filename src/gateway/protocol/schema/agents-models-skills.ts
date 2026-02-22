@@ -164,6 +164,56 @@ export const AgentsFilesSetResultSchema = Type.Object(
   { additionalProperties: false },
 );
 
+// -- workspace.tree --
+export const WorkspaceTreeParamsSchema = Type.Object(
+  { agentId: NonEmptyString, path: Type.Optional(Type.String()) },
+  { additionalProperties: false },
+);
+
+export const WorkspaceTreeEntrySchema = Type.Object(
+  {
+    name: NonEmptyString,
+    path: Type.String(),
+    type: Type.Union([Type.Literal("file"), Type.Literal("directory")]),
+    size: Type.Optional(Type.Integer({ minimum: 0 })),
+    updatedAtMs: Type.Optional(Type.Integer({ minimum: 0 })),
+  },
+  { additionalProperties: false },
+);
+
+export const WorkspaceTreeResultSchema = Type.Object(
+  {
+    agentId: NonEmptyString,
+    workspace: NonEmptyString,
+    entries: Type.Array(WorkspaceTreeEntrySchema),
+  },
+  { additionalProperties: false },
+);
+
+// -- workspace.read --
+export const WorkspaceReadParamsSchema = Type.Object(
+  { agentId: NonEmptyString, path: NonEmptyString },
+  { additionalProperties: false },
+);
+
+export const WorkspaceReadResultSchema = Type.Object(
+  {
+    agentId: NonEmptyString,
+    workspace: NonEmptyString,
+    file: Type.Object(
+      {
+        name: NonEmptyString,
+        path: Type.String(),
+        size: Type.Integer({ minimum: 0 }),
+        updatedAtMs: Type.Integer({ minimum: 0 }),
+        content: Type.String(),
+      },
+      { additionalProperties: false },
+    ),
+  },
+  { additionalProperties: false },
+);
+
 export const ModelsListParamsSchema = Type.Object({}, { additionalProperties: false });
 
 export const ModelsListResultSchema = Type.Object(

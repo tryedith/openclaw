@@ -7,6 +7,7 @@ import {
   Grid2x2,
   MessageSquare,
   Radio,
+  FolderOpen,
   BarChart3,
   Bug,
   Settings,
@@ -35,6 +36,7 @@ const HELP_ITEMS = [
 const INSTANCE_SUB_ITEMS = [
   { suffix: "", label: "Chat", icon: MessageSquare },
   { suffix: "/channels", label: "Channels", icon: Radio },
+  { suffix: "/files", label: "Files", icon: FolderOpen },
   { suffix: "/usage", label: "Usage", icon: BarChart3 },
   { suffix: "/settings", label: "Settings", icon: Settings },
   { suffix: "/debug", label: "Debug", icon: Bug },

@@ -15,11 +15,6 @@ import type {
   ProviderModelGroup,
 } from "./types";
 
-const MODEL_RESTART_GRACE_MS = 20_000;
-const MODEL_RELOAD_RETRY_MS = 1_500;
-const MODEL_RELOAD_MAX_ATTEMPTS = 12;
-const MODEL_POST_RESTART_STABILIZE_MS = 1_000;
-
 function generateRequestId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
@@ -154,9 +149,7 @@ export function useDashboardChat(instanceId: string) {
 
   const liveSocketRef = useRef<WebSocket | null>(null);
   const historySyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const modelReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const modelRestartClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const modelRestartUntilRef = useRef<number>(0);
+  const prevLiveConnectedRef = useRef(false);
   const activeRunIdRef = useRef<string | null>(null);
   const activeRunStartedAtRef = useRef<number | null>(null);
   const assistantCountAtRunStartRef = useRef<number | null>(null);
@@ -179,44 +172,7 @@ export function useDashboardChat(instanceId: string) {
     clearPendingRunState();
   }
 
-  function clearModelReloadTimer() {
-    if (modelReloadTimerRef.current) {
-      clearTimeout(modelReloadTimerRef.current);
-      modelReloadTimerRef.current = null;
-    }
-  }
-
-  function clearModelRestartClearTimer() {
-    if (modelRestartClearTimerRef.current) {
-      clearTimeout(modelRestartClearTimerRef.current);
-      modelRestartClearTimerRef.current = null;
-    }
-  }
-
-  function scheduleModelRestartClear() {
-    clearModelRestartClearTimer();
-    const remainingMs = Math.max(0, modelRestartUntilRef.current - Date.now());
-    modelRestartClearTimerRef.current = setTimeout(() => {
-      setModelRestarting(false);
-      modelRestartClearTimerRef.current = null;
-    }, remainingMs + MODEL_POST_RESTART_STABILIZE_MS);
-  }
-
-  function inModelRestartGrace(): boolean {
-    return Date.now() < modelRestartUntilRef.current;
-  }
-
-  function beginModelRestartGrace() {
-    modelRestartUntilRef.current = Date.now() + MODEL_RESTART_GRACE_MS;
-    setModelRestarting(true);
-    setModelMessage("Model updated. Gateway restarting; reconnecting...");
-    scheduleModelRestartClear();
-  }
-
   function clearModelState() {
-    clearModelReloadTimer();
-    clearModelRestartClearTimer();
-    modelRestartUntilRef.current = 0;
     setModelRestarting(false);
     setProviderGroups([]);
     setCurrentModelRef("");
@@ -329,44 +285,13 @@ export function useDashboardChat(instanceId: string) {
         setSelectedProvider(nextSelection.provider);
         setSelectedModelRef(nextSelection.modelRef);
       }
-      if (inModelRestartGrace()) {
-        scheduleModelRestartClear();
-      } else {
-        setModelRestarting(false);
-        clearModelRestartClearTimer();
-      }
     } catch (error) {
-      if (inModelRestartGrace()) {
-        setModelMessage("Gateway restarting; reconnecting...");
-        return false;
-      }
       setModelsError(error instanceof Error ? error.message : String(error));
       return false;
     } finally {
       setModelsLoading(false);
     }
     return true;
-  }
-
-  function scheduleModelReload(instId: string, attemptsLeft: number) {
-    clearModelReloadTimer();
-    modelReloadTimerRef.current = setTimeout(() => {
-      void fetchModels(instId).then((ok) => {
-        if (ok) {
-          clearModelReloadTimer();
-          return;
-        }
-        if (attemptsLeft > 1) {
-          scheduleModelReload(instId, attemptsLeft - 1);
-          return;
-        }
-        if (inModelRestartGrace()) {
-          scheduleModelReload(instId, 1);
-          return;
-        }
-        setModelRestarting(false);
-      });
-    }, MODEL_RELOAD_RETRY_MS);
   }
 
   async function sendMessage() {
@@ -418,9 +343,9 @@ export function useDashboardChat(instanceId: string) {
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      if (inModelRestartGrace()) {
+      if (modelRestarting) {
         setMessage(userMessage);
-        setModelMessage("Gateway restarting; reconnecting...");
+        setModelMessage("Gateway restarting…");
         clearPendingRunState();
         return;
       }
@@ -460,8 +385,14 @@ export function useDashboardChat(instanceId: string) {
 
       const appliedRef = typeof data.modelRef === "string" ? data.modelRef : selectedModelRef;
       setCurrentModelRef(appliedRef);
-      beginModelRestartGrace();
-      scheduleModelReload(instance.id, MODEL_RELOAD_MAX_ATTEMPTS);
+
+      if (data.restart?.scheduled) {
+        setModelRestarting(true);
+        setModelMessage("Model updated. Gateway restarting…");
+      } else {
+        setModelMessage("Model updated.");
+        void fetchModels(instance.id);
+      }
     } catch (error) {
       setModelsError(error instanceof Error ? error.message : String(error));
     } finally {
@@ -525,6 +456,19 @@ export function useDashboardChat(instanceId: string) {
       void fetchModels(instance.id);
     }
   }, [instance?.status, instance?.id]);
+
+  // Recover after model restart: when the WebSocket reconnects, reload models
+  useEffect(() => {
+    const reconnected = liveConnected && !prevLiveConnectedRef.current;
+    prevLiveConnectedRef.current = liveConnected;
+
+    if (!reconnected || !modelRestarting || !instance?.id) {return;}
+
+    // Gateway reconnected after restart — resume normal operation
+    setModelRestarting(false);
+    setModelMessage(null);
+    void fetchModels(instance.id);
+  }, [liveConnected, modelRestarting, instance?.id]);
 
   // Sync selected model when provider changes
   useEffect(() => {
@@ -781,8 +725,6 @@ export function useDashboardChat(instanceId: string) {
       cancelled = true;
       setLiveConnected(false);
       setLiveError(null);
-      clearModelReloadTimer();
-      clearModelRestartClearTimer();
       if (reconnectTimer) {clearTimeout(reconnectTimer);}
       if (historySyncTimerRef.current) {
         clearTimeout(historySyncTimerRef.current);

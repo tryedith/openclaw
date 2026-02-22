@@ -34,6 +34,11 @@ import {
   SkillsInstallParamsSchema,
   SkillsStatusParamsSchema,
   SkillsUpdateParamsSchema,
+  WorkspaceTreeParamsSchema,
+  WorkspaceTreeResultSchema,
+  WorkspaceTreeEntrySchema,
+  WorkspaceReadParamsSchema,
+  WorkspaceReadResultSchema,
 } from "./agents-models-skills.js";
 import {
   ChannelPairingApproveParamsSchema,
@@ -225,6 +230,11 @@ export const ProtocolSchemas: Record<string, TSchema> = {
   AgentsFilesSetResult: AgentsFilesSetResultSchema,
   AgentsListParams: AgentsListParamsSchema,
   AgentsListResult: AgentsListResultSchema,
+  WorkspaceTreeParams: WorkspaceTreeParamsSchema,
+  WorkspaceTreeResult: WorkspaceTreeResultSchema,
+  WorkspaceTreeEntry: WorkspaceTreeEntrySchema,
+  WorkspaceReadParams: WorkspaceReadParamsSchema,
+  WorkspaceReadResult: WorkspaceReadResultSchema,
   ModelChoice: ModelChoiceSchema,
   ModelsListParams: ModelsListParamsSchema,
   ModelsListResult: ModelsListResultSchema,
