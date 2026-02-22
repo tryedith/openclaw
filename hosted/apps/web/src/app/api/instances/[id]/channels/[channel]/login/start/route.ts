@@ -3,15 +3,14 @@ import { NextResponse } from "next/server";
 import { gatewayRpc } from "@/lib/gateway/ws-client";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
 import { decryptGatewayToken } from "@/lib/crypto";
+import {
+  collectWhatsAppDebug as collectHostedWhatsAppDebug,
+  ensureOwnerOnlyWhatsAppAccess,
+} from "@/lib/gateway/whatsapp-security";
 
 interface WebLoginStartResult {
   qrDataUrl?: string;
   message: string;
-}
-
-interface ChannelsStatusPayload {
-  channels?: Record<string, unknown>;
-  channelAccounts?: Record<string, unknown>;
 }
 
 interface GatewayConfigPayload {
@@ -21,31 +20,6 @@ interface GatewayConfigPayload {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-async function collectWhatsAppDebug(params: { gatewayUrl: string; token: string }) {
-  const status = await gatewayRpc<ChannelsStatusPayload>({
-    gatewayUrl: params.gatewayUrl,
-    token: params.token,
-    method: "channels.status",
-    rpcParams: { probe: true, timeoutMs: 8000 },
-    timeoutMs: 12_000,
-  });
-  if (!status.ok) {
-    return {
-      at: new Date().toISOString(),
-      error: status.error ?? "channels.status failed",
-    };
-  }
-
-  const channel = status.payload?.channels?.whatsapp;
-  const accounts = status.payload?.channelAccounts?.whatsapp;
-  const account = Array.isArray(accounts) ? (accounts[0] ?? null) : null;
-  return {
-    at: new Date().toISOString(),
-    channel,
-    account,
-  };
 }
 
 function resolvePluginAllowlistWithWhatsApp(config: Record<string, unknown> | undefined): string[] | null {
@@ -208,6 +182,10 @@ export async function POST(
     timeoutMs?: number;
     accountId?: string;
   };
+  const requestedAccountId =
+    typeof body.accountId === "string" && body.accountId.trim().length > 0
+      ? body.accountId.trim()
+      : "default";
 
   try {
     let result = await gatewayRpc<WebLoginStartResult>({
@@ -237,7 +215,7 @@ export async function POST(
           timeoutMs: 45_000,
         });
       } else {
-        const debug = await collectWhatsAppDebug({ gatewayUrl, token });
+        const debug = await collectHostedWhatsAppDebug({ gatewayUrl, token });
         return NextResponse.json(
           { error: "Failed to start WhatsApp login", details: bootstrap.error, debug },
           { status: 500 }
@@ -246,7 +224,7 @@ export async function POST(
     }
 
     if (!result.ok) {
-      const debug = await collectWhatsAppDebug({ gatewayUrl, token });
+      const debug = await collectHostedWhatsAppDebug({ gatewayUrl, token });
       if (isGatewayRestartingError(result.error)) {
         return NextResponse.json(
           {
@@ -264,7 +242,27 @@ export async function POST(
       );
     }
 
-    const debug = await collectWhatsAppDebug({ gatewayUrl, token });
+    const debug = await collectHostedWhatsAppDebug({ gatewayUrl, token });
+    // Avoid patch/restart while an active QR linking session is in progress.
+    // Enforce owner-only access here only for already-linked/no-QR outcomes.
+    if (!result.payload?.qrDataUrl) {
+      const ensureResult = await ensureOwnerOnlyWhatsAppAccess({
+        gatewayUrl,
+        token,
+        fallbackAccountId: requestedAccountId,
+        debug,
+      });
+      if (!ensureResult.ok) {
+        return NextResponse.json(
+          {
+            error: "WhatsApp linked but failed to secure DM access",
+            details: ensureResult.error,
+            debug,
+          },
+          { status: 500 }
+        );
+      }
+    }
     return NextResponse.json({
       ok: true,
       qrDataUrl: result.payload?.qrDataUrl,
@@ -272,7 +270,7 @@ export async function POST(
       debug,
     });
   } catch (error) {
-    const debug = await collectWhatsAppDebug({ gatewayUrl, token }).catch(() => null);
+    const debug = await collectHostedWhatsAppDebug({ gatewayUrl, token }).catch(() => null);
     return NextResponse.json(
       { error: "Failed to reach gateway", details: String(error), debug },
       { status: 500 }

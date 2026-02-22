@@ -110,6 +110,18 @@ function respondProviderUnsupported(respond: RespondFn, providerId: string) {
   );
 }
 
+function shouldSuppressLoginErrorInSuccessMessage(message: string | undefined): boolean {
+  if (!message) {
+    return false;
+  }
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("status=515") &&
+    normalized.includes("unknown stream errored") &&
+    normalized.includes("restart required")
+  );
+}
+
 export const webHandlers: GatewayRequestHandlers = {
   "web.login.start": async ({ params, respond, context }) => {
     if (!validateWebLoginStartParams(params)) {
@@ -255,7 +267,9 @@ export const webHandlers: GatewayRequestHandlers = {
             ...result,
             connected: true,
             message:
-              result.message && result.message.trim()
+              result.message &&
+              result.message.trim() &&
+              !shouldSuppressLoginErrorInSuccessMessage(result.message)
                 ? `${result.message} Linked session detected; starting channel.`
                 : "Linked session detected; starting channel.",
           },

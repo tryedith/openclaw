@@ -3,15 +3,14 @@ import { NextResponse } from "next/server";
 import { gatewayRpc } from "@/lib/gateway/ws-client";
 import { resolveGatewayTarget } from "@/lib/gateway/target";
 import { decryptGatewayToken } from "@/lib/crypto";
+import {
+  collectWhatsAppDebug,
+  ensureOwnerOnlyWhatsAppAccess,
+} from "@/lib/gateway/whatsapp-security";
 
 interface WebLoginWaitResult {
   connected: boolean;
   message: string;
-}
-
-interface ChannelsStatusPayload {
-  channels?: Record<string, unknown>;
-  channelAccounts?: Record<string, unknown>;
 }
 
 function isGatewayRestartingError(error?: string): boolean {
@@ -25,110 +24,6 @@ function isGatewayRestartingError(error?: string): boolean {
   );
 }
 
-async function collectWhatsAppDebug(params: { gatewayUrl: string; token: string }) {
-  const status = await gatewayRpc<ChannelsStatusPayload>({
-    gatewayUrl: params.gatewayUrl,
-    token: params.token,
-    method: "channels.status",
-    rpcParams: { probe: true, timeoutMs: 8000 },
-    timeoutMs: 12_000,
-  });
-  if (!status.ok) {
-    return {
-      at: new Date().toISOString(),
-      error: status.error ?? "channels.status failed",
-    };
-  }
-  const channel = status.payload?.channels?.whatsapp;
-  const accounts = status.payload?.channelAccounts?.whatsapp;
-  const account = Array.isArray(accounts) ? (accounts[0] ?? null) : null;
-  return {
-    at: new Date().toISOString(),
-    channel,
-    account,
-  };
-}
-
-function extractLinkedSelfE164(debug: unknown): string | null {
-  if (!debug || typeof debug !== "object") {
-    return null;
-  }
-  const channel = (debug as { channel?: unknown }).channel;
-  if (!channel || typeof channel !== "object") {
-    return null;
-  }
-  const self = (channel as { self?: unknown }).self;
-  if (!self || typeof self !== "object") {
-    return null;
-  }
-  const e164 = (self as { e164?: unknown }).e164;
-  if (typeof e164 !== "string") {
-    return null;
-  }
-  const normalized = e164.trim();
-  return normalized.length > 0 ? normalized : null;
-}
-
-async function enforceOwnerOnlyWhatsAppAccess(params: {
-  gatewayUrl: string;
-  token: string;
-  ownerE164: string;
-  accountId: string;
-}) {
-  const configResult = await gatewayRpc<{ hash?: string; config?: Record<string, unknown> }>({
-    gatewayUrl: params.gatewayUrl,
-    token: params.token,
-    method: "config.get",
-    rpcParams: {},
-    timeoutMs: 10_000,
-  });
-  if (!configResult.ok || !configResult.payload?.hash) {
-    return { ok: false as const, error: configResult.error ?? "Config hash unavailable" };
-  }
-
-  const patchResult = await gatewayRpc({
-    gatewayUrl: params.gatewayUrl,
-    token: params.token,
-    method: "config.patch",
-    rpcParams: {
-      baseHash: configResult.payload.hash,
-      raw: JSON.stringify({
-        channels: {
-          whatsapp: {
-            accounts: {
-              [params.accountId]: {
-                dmPolicy: "allowlist",
-                allowFrom: [params.ownerE164],
-              },
-            },
-          },
-        },
-      }),
-      restartDelayMs: 1000,
-    },
-    timeoutMs: 15_000,
-  });
-  if (!patchResult.ok) {
-    return { ok: false as const, error: patchResult.error ?? "Failed to update WhatsApp policy" };
-  }
-  return { ok: true as const };
-}
-
-function extractAccountId(debug: unknown, fallback: string): string {
-  if (!debug || typeof debug !== "object") {
-    return fallback;
-  }
-  const account = (debug as { account?: unknown }).account;
-  if (!account || typeof account !== "object") {
-    return fallback;
-  }
-  const accountId = (account as { accountId?: unknown }).accountId;
-  if (typeof accountId !== "string") {
-    return fallback;
-  }
-  const trimmed = accountId.trim();
-  return trimmed.length > 0 ? trimmed : fallback;
-}
 
 // POST /api/instances/[id]/channels/[channel]/login/wait
 export async function POST(
@@ -219,25 +114,21 @@ export async function POST(
     const debug = await collectWhatsAppDebug({ gatewayUrl, token });
 
     if (result.payload?.connected === true) {
-      const ownerE164 = extractLinkedSelfE164(debug);
-      if (ownerE164) {
-        const resolvedAccountId = extractAccountId(debug, requestedAccountId);
-        const accessResult = await enforceOwnerOnlyWhatsAppAccess({
-          gatewayUrl,
-          token,
-          ownerE164,
-          accountId: resolvedAccountId,
-        });
-        if (!accessResult.ok) {
-          return NextResponse.json(
-            {
-              error: "WhatsApp linked but failed to secure DM access",
-              details: accessResult.error,
-              debug,
-            },
-            { status: 500 }
-          );
-        }
+      const accessResult = await ensureOwnerOnlyWhatsAppAccess({
+        gatewayUrl,
+        token,
+        fallbackAccountId: requestedAccountId,
+        debug,
+      });
+      if (!accessResult.ok) {
+        return NextResponse.json(
+          {
+            error: "WhatsApp linked but failed to secure DM access",
+            details: accessResult.error,
+            debug,
+          },
+          { status: 500 }
+        );
       }
     }
 
