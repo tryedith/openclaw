@@ -150,15 +150,15 @@ export function useDashboardChat(instanceId: string) {
   const liveSocketRef = useRef<WebSocket | null>(null);
   const historySyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevLiveConnectedRef = useRef(false);
+  const streamingAssistantRef = useRef<string | null>(null);
   const activeRunIdRef = useRef<string | null>(null);
   const activeRunStartedAtRef = useRef<number | null>(null);
   const assistantCountAtRunStartRef = useRef<number | null>(null);
 
-  function clearPendingRunState(opts?: { preserveStream?: boolean }) {
+  function clearPendingRunState() {
     setSending(false);
-    if (!opts?.preserveStream) {
-      setStreamingAssistant(null);
-    }
+    setStreamingAssistant(null);
+    streamingAssistantRef.current = null;
     setActiveRunId(null);
     activeRunIdRef.current = null;
     activeRunStartedAtRef.current = null;
@@ -222,6 +222,9 @@ export function useDashboardChat(instanceId: string) {
         setChatHistory((prev) => {
           if (isSameChatHistory(prev, messages)) {return prev;}
           if (shouldPreserveInFlightHistory(prev, messages, hasInFlightRun)) {return prev;}
+          // Don't let a stale server response remove a message we just added
+          // (e.g. the optimistic assistant message merged on "final").
+          if (messages.length < prev.length) {return prev;}
           return messages;
         });
 
@@ -661,7 +664,10 @@ export function useDashboardChat(instanceId: string) {
 
               if (canRenderDelta) {
                 const text = extractTextContent(payload?.message);
-                if (text) {setStreamingAssistant(text);}
+                if (text) {
+                  setStreamingAssistant(text);
+                  streamingAssistantRef.current = text;
+                }
                 setSending(true);
                 return;
               }
@@ -685,12 +691,16 @@ export function useDashboardChat(instanceId: string) {
               const isCurrentRun =
                 (runId && activeRunIdRef.current === runId) || (!runId && activeRunIdRef.current);
               if (isCurrentRun) {
-                if (state === "final") {
-                  // Keep the last streamed text visible until history sync lands the final message.
-                  clearPendingRunState({ preserveStream: true });
-                } else {
-                  clearPendingRunState();
+                if (state === "final" && streamingAssistantRef.current) {
+                  // Merge the streamed text into chatHistory before clearing the
+                  // streaming bubble so the message never disappears from screen.
+                  const finalText = streamingAssistantRef.current;
+                  setChatHistory((prev) => [
+                    ...prev,
+                    { role: "assistant" as const, content: finalText },
+                  ]);
                 }
+                clearPendingRunState();
               }
               scheduleHistoryRefresh();
             }
